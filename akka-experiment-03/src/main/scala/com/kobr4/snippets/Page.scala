@@ -8,15 +8,16 @@ trait WithHtml {
   def toHtml(readOnly: Boolean): Frag
 }
 
-case class Sample(name: String, mail: String) extends WithHtml {
+case class Sample(fname: String, mail: String) extends WithHtml {
   override def toHtml(readOnly: Boolean) = {
-    form(
+    form(action:="/test",method:="post")(
       Page.createTable(List(),
         List(
-          List(raw("name"), input(`type` := "text", value := name)),
-          List(raw("mail"), input(`type` := "text", value := mail))
+          List(raw("name"), input(`type` := "text", value := fname, name:="name")),
+          List(raw("mail"), input(`type` := "text", value := mail, name:="mail"))
         )
-      )
+      ),
+      input(`type`:="submit")
     )
   }
 }

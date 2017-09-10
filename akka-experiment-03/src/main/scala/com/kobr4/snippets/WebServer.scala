@@ -28,7 +28,12 @@ object WebServer {
         }
       } ~
       path("test") {
-        complete(HttpEntity(ContentTypes.`text/html(UTF-8)`, Page.helloWorld(Sample("toto","titi"))))
+        get {
+          complete(HttpEntity(ContentTypes.`text/html(UTF-8)`, Page.helloWorld(Sample("toto", "titi"))))
+        } ~
+        post { formField('name,'mail) {(name,mail) =>
+          complete(HttpEntity(ContentTypes.`text/html(UTF-8)`, Page.helloWorld(Sample(name, mail))))
+        }}
       }  ~
         path("quote" / Segment) { pairName =>
           get {
