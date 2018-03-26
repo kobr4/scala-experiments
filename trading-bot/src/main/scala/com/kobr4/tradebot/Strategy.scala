@@ -7,26 +7,26 @@ import com.kobr4.tradebot.Asset.Usd
 object Rule {
 
   trait Condition[T] {
-    def portfolioCash100(implicit portfolio: Portfolio): T
+    def whenCashAvailable(implicit portfolio: Portfolio): T
 
-    def belowMovingAverge(current: ZonedDateTime, currentPrice: BigDecimal, priceData: PairPrices): T
+    def whenBelowMovingAverge(current: ZonedDateTime, currentPrice: BigDecimal, priceData: PairPrices): T
 
-    def condition(v: Boolean): T
+    def when(v: Boolean): T
 
-    def buyPriceCondition(asset: Asset, f: (BigDecimal) => Boolean)(implicit portfolio: Portfolio): T
+    def whenLastBuyingPrice(asset: Asset, f: (BigDecimal) => Boolean)(implicit portfolio: Portfolio): T
   }
 
   object Condition {
 
     implicit class ConditionOrder[T <: Order](input: Option[T]) extends Condition[Option[T]] {
 
-      override def portfolioCash100(implicit portfolio: Portfolio): Option[T] = input.filter(_ => portfolio.assets(Asset.Usd).quantity > 100)
+      override def whenCashAvailable(implicit portfolio: Portfolio): Option[T] = input.filter(_ => portfolio.assets(Asset.Usd).quantity > 100)
 
-      override def belowMovingAverge(current: ZonedDateTime, currentPrice: BigDecimal, priceData: PairPrices): Option[T] = priceData.movingAverage(current, 60).filter(_ > currentPrice).flatMap(_ => input)
+      override def whenBelowMovingAverge(current: ZonedDateTime, currentPrice: BigDecimal, priceData: PairPrices): Option[T] = priceData.movingAverage(current, 60).filter(_ > currentPrice).flatMap(_ => input)
 
-      override def condition(v: Boolean): Option[T] = input.filter(_ => v)
+      override def when(v: Boolean): Option[T] = input.filter(_ => v)
 
-      override def buyPriceCondition(asset: Asset, f: (BigDecimal) => Boolean)(implicit portfolio: Portfolio): Option[T] =
+      override def whenLastBuyingPrice(asset: Asset, f: (BigDecimal) => Boolean)(implicit portfolio: Portfolio): Option[T] =
         portfolio.orderList.flatMap {
           case o@Buy(ass, _, _) if ass == asset => Some(o)
           case _ => None
@@ -48,19 +48,24 @@ object Strategy {
     val ethPrice = priceData.currentPrice(current)
     implicit val port = portfolio
 
+    val maybeBuy = Option(Buy(Asset.Eth, ethPrice, portfolio.assets(Asset.Usd).quantity / ethPrice))
 
-    Option(Buy(Asset.Eth, ethPrice, portfolio.assets(Asset.Usd).quantity / ethPrice))
-      .portfolioCash100
-      .belowMovingAverge(current, ethPrice, priceData)
+    // Sexy DSL ! <3       
+    maybeBuy
+      .whenCashAvailable
+      .whenBelowMovingAverge(current, ethPrice, priceData)
   }
 
   /* sell if 20% gain or 10% loss */
   def sellStrategy(portfolio: Portfolio, current: ZonedDateTime, priceData: PairPrices): Option[Sell] = {
     val currentPrice = priceData.currentPrice(current)
     implicit val port = portfolio
-    Option(Sell(Asset.Eth, currentPrice, portfolio.assets(Asset.Eth).quantity))
-      .condition(portfolio.assets(Asset.Eth).quantity > 0)
-      .buyPriceCondition(Asset.Eth, (buyPrice) => { buyPrice + buyPrice * 20 / 100 < currentPrice || buyPrice - buyPrice * 10 / 100 > currentPrice} )
+
+    val maybeSellAll = Option(Sell(Asset.Eth, currentPrice, portfolio.assets(Asset.Eth).quantity))
+
+    maybeSellAll
+      .when(portfolio.assets(Asset.Eth).quantity > 0)
+      .whenLastBuyingPrice(Asset.Eth, (buyPrice) => { buyPrice + buyPrice * 20 / 100 < currentPrice || buyPrice - buyPrice * 10 / 100 > currentPrice} )
   }
 
 
