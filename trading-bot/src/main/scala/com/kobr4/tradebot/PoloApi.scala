@@ -1,6 +1,7 @@
 package com.kobr4.tradebot
 
 import akka.actor.ActorSystem
+import akka.http.scaladsl.model.headers.{ModeledCustomHeader, RawHeader}
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.unmarshalling.Unmarshal
@@ -11,13 +12,16 @@ import play.api.libs.json.{JsObject, Json}
 import scala.concurrent.{ExecutionContext, Future}
 
 
-class PoloApi(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext) {
+class PoloApi(val poloUrl: String = PoloApi.rootUrl)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext) {
+
+  private val tradingUrl = s"$poloUrl/${PoloApi.tradingApi}"
 
   case class PoloOrder(orderNumber: Long, rate: BigDecimal, amount: BigDecimal)
 
   def returnBalances: Future[Map[Asset, Quantity]] =
-    PoloApi.httpRequest(PoloApi.tradingUrl, PoloApi.ReturnBalances.ReturnBalances).map { message =>
-      val fvalueList = Json.parse(message).as[JsObject].fields.map { case (s, v) => (s.toUpperCase, BigDecimal(v.as[Double])) }
+    PoloApi.httpRequestPost(tradingUrl, PoloApi.ReturnBalances.ReturnBalances).map { message =>
+      val fvalueList = Json.parse(message).as[JsObject].fields.map {
+        case (s, v) => (s.toUpperCase, BigDecimal(v.as[String])) }
         .flatMap { case (s, v) => s match {
           case "ETH" => Option((Asset.Eth, Quantity(v)))
           case "BTC" => Option((Asset.Btc, Quantity(v)))
@@ -30,28 +34,26 @@ class PoloApi(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionCon
     }
 
   def returnDepositAddresses =
-    PoloApi.httpRequestPost(PoloApi.tradingUrl, ReturnDepositAddresses.build())
+    PoloApi.httpRequestPost(tradingUrl, ReturnDepositAddresses.build())
 
   def returnOpenOrders() =
-    PoloApi.httpRequestPost(PoloApi.tradingUrl, ReturnOpenOrders.build())
+    PoloApi.httpRequestPost(tradingUrl, ReturnOpenOrders.build())
 
   def buy(currencyPair: String, rate: BigDecimal, amount: BigDecimal) =
-    PoloApi.httpRequestPost(PoloApi.tradingUrl, BuySell.build(currencyPair, rate, amount, true))
+    PoloApi.httpRequestPost(tradingUrl, BuySell.build(currencyPair, rate, amount, true))
 
   def sell(currencyPair: String, rate: BigDecimal, amount: BigDecimal) =
-    PoloApi.httpRequestPost(PoloApi.tradingUrl, BuySell.build(currencyPair, rate, amount, false))
+    PoloApi.httpRequestPost(tradingUrl, BuySell.build(currencyPair, rate, amount, false))
 }
 
 
 object PoloApi {
 
-  private val rootUrl = "https://poloniex.com"
+  val rootUrl = "https://poloniex.com"
 
-  private val tradingApi = "tradingApi"
+  val tradingApi = "tradingApi"
 
   val Command = "command"
-
-  val tradingUrl = s"$rootUrl/$tradingApi"
 
   object BuySell {
 
@@ -89,9 +91,8 @@ object PoloApi {
 
     val sign = "Sign"
 
-
     def build(key: String, sign: String): List[HttpHeader] = {
-      List(HttpHeader(AuthHeader.key, key), HttpHeader(AuthHeader.sign, sign))
+      List(RawHeader(AuthHeader.key, key), RawHeader(AuthHeader.sign, sign))
     }
   }
 
