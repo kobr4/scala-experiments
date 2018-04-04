@@ -7,37 +7,48 @@ import akka.http.scaladsl.model._
 import akka.http.scaladsl.unmarshalling.Unmarshal
 import akka.stream.ActorMaterializer
 import com.kobr4.tradebot.PoloApi.{BuySell, ReturnDepositAddresses, ReturnOpenOrders}
-import play.api.libs.json.{JsObject, Json}
+import play.api.libs.json._
 
 import scala.concurrent.{ExecutionContext, Future}
 
+case class PoloOrder(orderNumber: Long, rate: BigDecimal, amount: BigDecimal)
 
 class PoloApi(val poloUrl: String = PoloApi.rootUrl)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext) {
 
   private val tradingUrl = s"$poloUrl/${PoloApi.tradingApi}"
 
-  case class PoloOrder(orderNumber: Long, rate: BigDecimal, amount: BigDecimal)
+
+  import play.api.libs.functional.syntax._
+  implicit val locationReads: Reads[PoloOrder] = (
+    (JsPath \ "orderNumber").read[String].map(s => s.toLong) and
+      (JsPath \ "rate").read[BigDecimal] and
+      (JsPath \ "amount").read[BigDecimal]
+    )(PoloOrder.apply _)
 
   def returnBalances: Future[Map[Asset, Quantity]] =
     PoloApi.httpRequestPost(tradingUrl, PoloApi.ReturnBalances.ReturnBalances).map { message =>
-      val fvalueList = Json.parse(message).as[JsObject].fields.map {
-        case (s, v) => (s.toUpperCase, BigDecimal(v.as[String])) }
-        .flatMap { case (s, v) => s match {
-          case "ETH" => Option((Asset.Eth, Quantity(v)))
-          case "BTC" => Option((Asset.Btc, Quantity(v)))
-          case "USD" => Option((Asset.Usd, Quantity(v)))
-          case _ => None
-        }
-        }
-
-      fvalueList.toMap
+      Json.parse(message).as[JsObject].fields.flatMap { case (s, v) => s.toUpperCase match {
+        case "ETH" => Option((Asset.Eth, Quantity(BigDecimal(v.as[String]))))
+        case "BTC" => Option((Asset.Btc, Quantity(BigDecimal(v.as[String]))))
+        case "USD" => Option((Asset.Usd, Quantity(BigDecimal(v.as[String]))))
+        case _ => None
+      }}.toMap
     }
 
   def returnDepositAddresses =
-    PoloApi.httpRequestPost(tradingUrl, ReturnDepositAddresses.build())
+    PoloApi.httpRequestPost(tradingUrl, ReturnDepositAddresses.build()).map { message =>
+      Json.parse(message).as[JsObject].fields.flatMap { case (s, v) => s.toUpperCase match {
+        case "ETH" => Option((Asset.Eth, v.as[String]))
+        case "BTC" => Option((Asset.Btc, v.as[String]))
+        case "USD" => Option((Asset.Usd, v.as[String]))
+        case _ => None
+      }}.toMap
+    }
 
   def returnOpenOrders() =
-    PoloApi.httpRequestPost(tradingUrl, ReturnOpenOrders.build())
+    PoloApi.httpRequestPost(tradingUrl, ReturnOpenOrders.build()).map { message =>
+      Json.parse(message).as[JsArray].value.map { order => order.as[PoloOrder] }.toList
+    }
 
   def buy(currencyPair: String, rate: BigDecimal, amount: BigDecimal) =
     PoloApi.httpRequestPost(tradingUrl, BuySell.build(currencyPair, rate, amount, true))
