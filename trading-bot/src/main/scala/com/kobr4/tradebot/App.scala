@@ -17,6 +17,12 @@ object Asset {
 
   case object Usd extends Asset
 
+  def fromString(s: String) = s match {
+    case "ETH" => Some(Asset.Eth)
+    case "BTC" => Some(Asset.Btc)
+    case "USD" => Some(Asset.Usd)
+    case _ => None
+  }
 }
 
 object App {

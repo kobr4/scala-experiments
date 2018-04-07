@@ -1,5 +1,10 @@
 package com.kobr4.tradebot
 
+import akka.actor.ActorSystem
+import akka.stream.ActorMaterializer
+
+import scala.concurrent.ExecutionContext
+
 sealed trait Order
 
 case class Buy(asset: Asset, price: BigDecimal, quantity: BigDecimal) extends Order
@@ -17,7 +22,7 @@ object Order {
     }
   }
 
-  def process(order: Order): Unit = {
+  def process(order: Order)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Unit = {
     val api = new PoloApi()
     order match {
       case b: Buy => api.buy(getCurrencyPair(b.asset), b.price, b.quantity)
