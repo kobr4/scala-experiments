@@ -116,4 +116,9 @@ class PoloApiTest extends FlatSpec with Matchers with ScalaFutures with BeforeAn
     quoteList.head.last shouldBe BigDecimal("0.0251")
   }
 
+  "API" should "provide HMAC-512 signature" in {
+    val signature = PoloApi.generateHMAC512("toto","command=returnBalances")
+
+    signature shouldBe "5e6ec0bd24181eeef34ef1c70eb65e116dcbfabd96f4c5409d64f2f028fffaac14295dd6f86e8876f31eee845913edca53e4052b121739497a19b46f5e49ca75"
+  }
 }

@@ -8,6 +8,8 @@ import akka.http.scaladsl.unmarshalling.Unmarshal
 import akka.stream.ActorMaterializer
 import com.kobr4.tradebot.PoloApi._
 import play.api.libs.json._
+import javax.crypto.Mac
+import javax.crypto.spec.SecretKeySpec
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -181,6 +183,14 @@ object PoloApi {
     ).flatMap { response =>
       Unmarshal(response.entity).to[String]
     }
+  }
+
+  def generateHMAC512(sharedSecret: String, preHashString: String): String = {
+    val secret = new SecretKeySpec(sharedSecret.getBytes, "HmacSHA512")
+    val mac = Mac.getInstance("HmacSHA512")
+    mac.init(secret)
+    val hashString: Array[Byte] = mac.doFinal(preHashString.getBytes)
+    hashString.toList.map("%02x" format _).mkString
   }
 
 }
