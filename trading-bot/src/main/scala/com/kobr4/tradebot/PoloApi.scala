@@ -168,16 +168,16 @@ object PoloApi {
     def build(): RequestEntity = akka.http.scaladsl.model.FormData(Map(PoloApi.Command -> CancelOrder)).toEntity(HttpCharsets.`UTF-8`)
   }
 
-  def httpRequest(url: String, command: String)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[String] = {
+  private def httpRequest(url: String, command: String)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[String] = {
     Http().singleRequest(HttpRequest(uri = s"$url?command=$command")).flatMap { response =>
       Unmarshal(response.entity).to[String]
     }
   }
 
-  def httpRequestPost(url: String, body: RequestEntity)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[String] = {
+  private def httpRequestPost(url: String, body: RequestEntity)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[String] = {
     Http().singleRequest(HttpRequest(
       method = HttpMethods.POST,
-      headers = AuthHeader.build("toto", "sign"),
+      headers = AuthHeader.build("toto", generateHMAC512("toto", body.toString)),
       entity = body,
       uri = url)
     ).flatMap { response =>
@@ -185,7 +185,7 @@ object PoloApi {
     }
   }
 
-  def generateHMAC512(sharedSecret: String, preHashString: String): String = {
+  private[tradebot] def generateHMAC512(sharedSecret: String, preHashString: String): String = {
     val secret = new SecretKeySpec(sharedSecret.getBytes, "HmacSHA512")
     val mac = Mac.getInstance("HmacSHA512")
     mac.init(secret)
