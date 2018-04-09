@@ -21,6 +21,7 @@ object Asset {
     case "ETH" => Some(Asset.Eth)
     case "BTC" => Some(Asset.Btc)
     case "USD" => Some(Asset.Usd)
+    case "USDT" => Some(Asset.Usd)
     case _ => None
   }
 }
