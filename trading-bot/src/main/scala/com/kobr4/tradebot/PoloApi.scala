@@ -15,13 +15,17 @@ import scala.concurrent.{ExecutionContext, Future}
 
 case class PoloOrder(orderNumber: Long, rate: BigDecimal, amount: BigDecimal)
 
-case class CurrencyPair(left: Asset, right: Asset)
+case class CurrencyPair(left: Asset, right: Asset) {
+  override def toString : String = {
+    s"${left.toString}_${right.toString}"
+  }
+}
 
 case class Quote(pair: CurrencyPair, last: BigDecimal, lowestAsk: BigDecimal, highestBid: BigDecimal, percentChange: BigDecimal,
                  baseVolume: BigDecimal, quoteVolume: BigDecimal)
 
 
-class PoloApi(val poloUrl: String = PoloApi.rootUrl)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext) {
+class PoloApi(val poloUrl: String = PoloApi.rootUrl)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext) extends PoloAPIInterface {
 
   private val tradingUrl = s"$poloUrl/${PoloApi.tradingApi}"
 
@@ -46,7 +50,7 @@ class PoloApi(val poloUrl: String = PoloApi.rootUrl)(implicit arf: ActorSystem, 
     ) (Quote.apply _)
 
 
-  def returnBalances: Future[Map[Asset, Quantity]] =
+  override def returnBalances: Future[Map[Asset, Quantity]] =
     PoloApi.httpRequestPost(tradingUrl, PoloApi.ReturnBalances.ReturnBalances).map { message =>
       Json.parse(message).as[JsObject].fields.flatMap { case (s, v) => Asset.fromString(s.toUpperCase).map { asset =>
         (asset, Quantity(BigDecimal(v.as[String])))
@@ -54,7 +58,7 @@ class PoloApi(val poloUrl: String = PoloApi.rootUrl)(implicit arf: ActorSystem, 
       }.toMap
     }
 
-  def returnDepositAddresses: Future[Map[Asset, String]] =
+  override def returnDepositAddresses: Future[Map[Asset, String]] =
     PoloApi.httpRequestPost(tradingUrl, ReturnDepositAddresses.build()).map { message =>
       Json.parse(message).as[JsObject].fields.flatMap { case (s, v) => Asset.fromString(s.toUpperCase).map { asset =>
         (asset, v.as[String])
@@ -62,12 +66,12 @@ class PoloApi(val poloUrl: String = PoloApi.rootUrl)(implicit arf: ActorSystem, 
       }.toMap
     }
 
-  def returnOpenOrders() =
+  override def returnOpenOrders(): Future[List[PoloOrder]] =
     PoloApi.httpRequestPost(tradingUrl, ReturnOpenOrders.build()).map { message =>
       Json.parse(message).as[JsArray].value.map { order => order.as[PoloOrder] }.toList
     }
 
-  def cancelOrder(orderNumber: Long) = {
+  override def cancelOrder(orderNumber: Long) = {
     PoloApi.httpRequestPost(tradingUrl, CancelOrder.build()).map { message =>
       Json.parse(message).as[JsObject].value.get("success").exists(_.as[Int] match {
         case 1 => true
@@ -76,13 +80,13 @@ class PoloApi(val poloUrl: String = PoloApi.rootUrl)(implicit arf: ActorSystem, 
     }
   }
 
-  def buy(currencyPair: String, rate: BigDecimal, amount: BigDecimal) =
+  override def buy(currencyPair: String, rate: BigDecimal, amount: BigDecimal) : Future[String] =
     PoloApi.httpRequestPost(tradingUrl, BuySell.build(currencyPair, rate, amount, true))
 
-  def sell(currencyPair: String, rate: BigDecimal, amount: BigDecimal) =
+  override def sell(currencyPair: String, rate: BigDecimal, amount: BigDecimal) : Future[String] =
     PoloApi.httpRequestPost(tradingUrl, BuySell.build(currencyPair, rate, amount, false))
 
-  def returnTicker(): Future[List[Quote]] = PoloApi.httpRequest(publicUrl, Public.returnTicker).map { message =>
+  override def returnTicker(): Future[List[Quote]] = PoloApi.httpRequest(publicUrl, Public.returnTicker).map { message =>
     Json.parse(message).as[JsObject].fields.flatMap { case (s, v) =>
       s.toUpperCase.split('_').map(s => Asset.fromString(s)).toList match {
         case Some(a) :: Some(b) :: Nil => v.asOpt[Quote](quoteReads(CurrencyPair(a, b)))

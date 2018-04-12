@@ -2,7 +2,7 @@ package com.kobr4.tradebot
 
 import scala.concurrent.ExecutionContext
 
-class TradingOps(val api: PoloApi)(implicit ec: ExecutionContext) {
+class TradingOps(val api: PoloAPIInterface)(implicit ec: ExecutionContext) {
 
   private def getAmount(currencyPair: CurrencyPair, asset: Asset, rate: BigDecimal, quantity: BigDecimal): BigDecimal = {
     if (currencyPair.left == asset)

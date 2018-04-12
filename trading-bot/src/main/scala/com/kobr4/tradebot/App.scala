@@ -11,11 +11,11 @@ sealed trait Asset
 
 object Asset {
 
-  case object Eth extends Asset
+  case object Eth extends Asset { override def toString: String = "ETH"}
 
-  case object Btc extends Asset
+  case object Btc extends Asset { override def toString: String = "BTC"}
 
-  case object Usd extends Asset
+  case object Usd extends Asset { override def toString: String = "USDT"}
 
   def fromString(s: String) = s match {
     case "ETH" => Some(Asset.Eth)
