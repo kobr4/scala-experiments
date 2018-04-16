@@ -25,7 +25,7 @@ case class Quote(pair: CurrencyPair, last: BigDecimal, lowestAsk: BigDecimal, hi
                  baseVolume: BigDecimal, quoteVolume: BigDecimal)
 
 
-class PoloApi(val poloUrl: String = PoloApi.rootUrl)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext) extends PoloAPIInterface {
+class PoloApi(var nonce: Int, val poloUrl: String = PoloApi.rootUrl)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext) extends PoloAPIInterface {
 
   private val tradingUrl = s"$poloUrl/${PoloApi.tradingApi}"
 
@@ -51,7 +51,7 @@ class PoloApi(val poloUrl: String = PoloApi.rootUrl)(implicit arf: ActorSystem, 
 
 
   override def returnBalances: Future[Map[Asset, Quantity]] =
-    PoloApi.httpRequestPost(tradingUrl, PoloApi.ReturnBalances.ReturnBalances).map { message =>
+    PoloApi.httpRequestPost(tradingUrl, PoloApi.ReturnBalances.build(nonce)).map { message =>
       Json.parse(message).as[JsObject].fields.flatMap { case (s, v) => Asset.fromString(s.toUpperCase).map { asset =>
         (asset, Quantity(BigDecimal(v.as[String])))
       }
@@ -59,7 +59,7 @@ class PoloApi(val poloUrl: String = PoloApi.rootUrl)(implicit arf: ActorSystem, 
     }
 
   override def returnDepositAddresses: Future[Map[Asset, String]] =
-    PoloApi.httpRequestPost(tradingUrl, ReturnDepositAddresses.build()).map { message =>
+    PoloApi.httpRequestPost(tradingUrl, ReturnDepositAddresses.build(nonce)).map { message =>
       Json.parse(message).as[JsObject].fields.flatMap { case (s, v) => Asset.fromString(s.toUpperCase).map { asset =>
         (asset, v.as[String])
       }
@@ -67,12 +67,12 @@ class PoloApi(val poloUrl: String = PoloApi.rootUrl)(implicit arf: ActorSystem, 
     }
 
   override def returnOpenOrders(): Future[List[PoloOrder]] =
-    PoloApi.httpRequestPost(tradingUrl, ReturnOpenOrders.build()).map { message =>
+    PoloApi.httpRequestPost(tradingUrl, ReturnOpenOrders.build(nonce)).map { message =>
       Json.parse(message).as[JsArray].value.map { order => order.as[PoloOrder] }.toList
     }
 
   override def cancelOrder(orderNumber: Long) = {
-    PoloApi.httpRequestPost(tradingUrl, CancelOrder.build()).map { message =>
+    PoloApi.httpRequestPost(tradingUrl, CancelOrder.build(nonce)).map { message =>
       Json.parse(message).as[JsObject].value.get("success").exists(_.as[Int] match {
         case 1 => true
         case _ => false
@@ -81,10 +81,10 @@ class PoloApi(val poloUrl: String = PoloApi.rootUrl)(implicit arf: ActorSystem, 
   }
 
   override def buy(currencyPair: String, rate: BigDecimal, amount: BigDecimal) : Future[String] =
-    PoloApi.httpRequestPost(tradingUrl, BuySell.build(currencyPair, rate, amount, true))
+    PoloApi.httpRequestPost(tradingUrl, BuySell.build(nonce, currencyPair, rate, amount, true))
 
   override def sell(currencyPair: String, rate: BigDecimal, amount: BigDecimal) : Future[String] =
-    PoloApi.httpRequestPost(tradingUrl, BuySell.build(currencyPair, rate, amount, false))
+    PoloApi.httpRequestPost(tradingUrl, BuySell.build(nonce, currencyPair, rate, amount, false))
 
   override def returnTicker(): Future[List[Quote]] = PoloApi.httpRequest(publicUrl, Public.returnTicker).map { message =>
     Json.parse(message).as[JsObject].fields.flatMap { case (s, v) =>
@@ -105,6 +105,8 @@ object PoloApi {
 
   val Command = "command"
 
+  val Nonce = "nonce"
+
   object Public {
 
     val returnTicker = "returnTicker"
@@ -122,12 +124,13 @@ object PoloApi {
 
     val sell = "sell"
 
-    def build(currencyPair: String, rate: BigDecimal, amount: BigDecimal, isBuy: Boolean) = {
+    def build(nonce: Int, currencyPair: String, rate: BigDecimal, amount: BigDecimal, isBuy: Boolean) = {
       akka.http.scaladsl.model.FormData(Map(
         BuySell.currencyPair -> currencyPair,
         BuySell.rate -> rate.toString(),
         BuySell.amount -> amount.toString(),
-        PoloApi.Command -> (if (isBuy) BuySell.buy else BuySell.sell)
+        PoloApi.Command -> (if (isBuy) BuySell.buy else BuySell.sell),
+        PoloApi.Nonce -> nonce.toString
       )).toEntity(HttpCharsets.`UTF-8`)
     }
   }
@@ -136,7 +139,7 @@ object PoloApi {
 
     val ReturnBalances = "returnBalances"
 
-    def build(): RequestEntity = akka.http.scaladsl.model.FormData(Map(PoloApi.Command -> ReturnBalances)).toEntity(HttpCharsets.`UTF-8`)
+    def build(nonce: Int): RequestEntity = akka.http.scaladsl.model.FormData(Map(PoloApi.Command -> ReturnBalances, PoloApi.Nonce -> nonce.toString)).toEntity(HttpCharsets.`UTF-8`)
   }
 
 
@@ -155,21 +158,21 @@ object PoloApi {
 
     val ReturnOpenOrders = "returnOpenOrders"
 
-    def build(): RequestEntity = akka.http.scaladsl.model.FormData(Map(PoloApi.Command -> ReturnOpenOrders)).toEntity(HttpCharsets.`UTF-8`)
+    def build(nonce: Int): RequestEntity = akka.http.scaladsl.model.FormData(Map(PoloApi.Command -> ReturnOpenOrders, PoloApi.Nonce -> nonce.toString)).toEntity(HttpCharsets.`UTF-8`)
   }
 
   object ReturnDepositAddresses {
 
     val ReturnDepositAddresses = "returnDepositAddresses"
 
-    def build(): RequestEntity = akka.http.scaladsl.model.FormData(Map(PoloApi.Command -> ReturnDepositAddresses)).toEntity(HttpCharsets.`UTF-8`)
+    def build(nonce: Int): RequestEntity = akka.http.scaladsl.model.FormData(Map(PoloApi.Command -> ReturnDepositAddresses, PoloApi.Nonce -> nonce.toString)).toEntity(HttpCharsets.`UTF-8`)
   }
 
   object CancelOrder {
 
     val CancelOrder = "cancelOrder"
 
-    def build(): RequestEntity = akka.http.scaladsl.model.FormData(Map(PoloApi.Command -> CancelOrder)).toEntity(HttpCharsets.`UTF-8`)
+    def build(nonce: Int): RequestEntity = akka.http.scaladsl.model.FormData(Map(PoloApi.Command -> CancelOrder, PoloApi.Nonce -> nonce.toString)).toEntity(HttpCharsets.`UTF-8`)
   }
 
   private def httpRequest(url: String, command: String)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[String] = {

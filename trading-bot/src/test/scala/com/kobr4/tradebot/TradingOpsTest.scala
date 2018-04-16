@@ -30,4 +30,16 @@ class TradingOpsTest extends FlatSpec with Matchers with ScalaFutures with Mocki
 
     verify(apiMock).buy("USDT_BTC",7890.55745487,7890.55745487)
   }
+
+  "TradingOps" should "place a sell order at market value" in {
+
+    val apiMock = mock[PoloAPIInterface]
+    when(apiMock.returnTicker()).thenReturn(Future.successful(List(btcUsd)))
+
+    val tradingOps = new TradingOps(apiMock)
+
+    tradingOps.sellAtMarketValue(pair, Asset.Btc, Quantity(1))
+
+    verify(apiMock).sell("USDT_BTC",7890.55745487,7890.55745487)
+  }
 }
