@@ -29,7 +29,7 @@ class TradingOps(val api: PoloAPIInterface)(implicit ec: ExecutionContext) {
     }
   }
 
-  def cancelAllOpenOrders(): Unit = {
+  def cancelAllOpenOrders(): Future[Unit] = {
     api.returnOpenOrders().map { orderList => orderList.map { order => api.cancelOrder(order.orderNumber) }}
   }
 }
