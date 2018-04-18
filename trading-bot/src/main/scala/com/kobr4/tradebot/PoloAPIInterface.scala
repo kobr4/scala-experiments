@@ -1,6 +1,6 @@
 package com.kobr4.tradebot
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 trait PoloAPIInterface {
 
@@ -16,5 +16,5 @@ trait PoloAPIInterface {
 
   def sell(currencyPair: String, rate: BigDecimal, amount: BigDecimal): Future[String]
 
-  def returnTicker(): Future[List[Quote]]
+  def returnTicker()(implicit ec: ExecutionContext): Future[List[Quote]]
 }

@@ -1,6 +1,6 @@
 package com.kobr4.tradebot
 
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 
 class TradingOps(val api: PoloAPIInterface)(implicit ec: ExecutionContext) {
 
@@ -11,21 +11,21 @@ class TradingOps(val api: PoloAPIInterface)(implicit ec: ExecutionContext) {
       quantity * rate
   }
 
-  def buyAtMarketValue(currencyPair: CurrencyPair, asset: Asset, quantity: Quantity): Unit = {
-    api.returnTicker().map { quoteList =>
-      quoteList.filter(q => (q.pair.left == currencyPair.left)
-        && (q.pair.right == currencyPair.right)).foreach { q =>
+  def buyAtMarketValue(currencyPair: CurrencyPair, asset: Asset, quantity: Quantity): Future[String] = {
+    api.returnTicker().flatMap { quoteList =>
+      quoteList.find(q => (q.pair.left == currencyPair.left)
+        && (q.pair.right == currencyPair.right)).map { q =>
         api.buy(currencyPair.toString, q.last, getAmount(currencyPair, asset, q.last, quantity.quantity))
-      }
+      }.getOrElse(Future.failed(new RuntimeException("Currency pair not found")))
     }
   }
 
-  def sellAtMarketValue(currencyPair: CurrencyPair, asset: Asset, quantity: Quantity): Unit = {
-    api.returnTicker().map { quoteList =>
-      quoteList.filter(q => (q.pair.left == currencyPair.left)
-        && (q.pair.right == currencyPair.right)).foreach { q =>
+  def sellAtMarketValue(currencyPair: CurrencyPair, asset: Asset, quantity: Quantity): Future[String] = {
+    api.returnTicker().flatMap { quoteList =>
+      quoteList.find(q => (q.pair.left == currencyPair.left)
+        && (q.pair.right == currencyPair.right)).map { q =>
         api.sell(currencyPair.toString, q.last, getAmount(currencyPair, asset, q.last, quantity.quantity))
-      }
+      }.getOrElse(Future.failed(new RuntimeException("Currency pair not found")))
     }
   }
 

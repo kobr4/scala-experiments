@@ -3,11 +3,13 @@ package com.kobr4.tradebot
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import org.mockito.Mockito._
+import org.scalatest.concurrent.PatienceConfiguration.Timeout
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{BeforeAndAfterEach, FlatSpec, Matchers}
-
+import org.mockito.Matchers.any
 import scala.concurrent.Future
+import scala.concurrent.duration._
 
 class TradingOpsTest extends FlatSpec with Matchers with ScalaFutures with MockitoSugar with BeforeAndAfterEach {
 
@@ -23,22 +25,24 @@ class TradingOpsTest extends FlatSpec with Matchers with ScalaFutures with Mocki
 
     val apiMock = mock[PoloAPIInterface]
     when(apiMock.returnTicker()).thenReturn(Future.successful(List(btcUsd)))
+    when(apiMock.buy(any[String], any[BigDecimal], any[BigDecimal])).thenReturn(Future.successful("success"))
 
     val tradingOps = new TradingOps(apiMock)
 
-    tradingOps.buyAtMarketValue(pair, Asset.Btc, Quantity(1))
+    tradingOps.buyAtMarketValue(pair, Asset.Btc, Quantity(1)).futureValue(Timeout(10 seconds))
 
-    verify(apiMock).buy("USDT_BTC",7890.55745487,7890.55745487)
+    verify(apiMock).buy("USDT_BTC",BigDecimal("7890.55745487"),BigDecimal("7890.55745487"))
   }
 
   "TradingOps" should "place a sell order at market value" in {
 
     val apiMock = mock[PoloAPIInterface]
     when(apiMock.returnTicker()).thenReturn(Future.successful(List(btcUsd)))
+    when(apiMock.sell(any[String], any[BigDecimal], any[BigDecimal])).thenReturn(Future.successful("success"))
 
     val tradingOps = new TradingOps(apiMock)
 
-    tradingOps.sellAtMarketValue(pair, Asset.Btc, Quantity(1))
+    tradingOps.sellAtMarketValue(pair, Asset.Btc, Quantity(1)).futureValue(Timeout(10 seconds))
 
     verify(apiMock).sell("USDT_BTC",7890.55745487,7890.55745487)
   }

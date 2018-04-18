@@ -86,7 +86,7 @@ class PoloApi(var nonce: Int, val poloUrl: String = PoloApi.rootUrl)(implicit ar
   override def sell(currencyPair: String, rate: BigDecimal, amount: BigDecimal) : Future[String] =
     PoloApi.httpRequestPost(tradingUrl, BuySell.build(nonce, currencyPair, rate, amount, false))
 
-  override def returnTicker(): Future[List[Quote]] = PoloApi.httpRequest(publicUrl, Public.returnTicker).map { message =>
+  override def returnTicker()(implicit ec: ExecutionContext): Future[List[Quote]] = PoloApi.httpRequest(publicUrl, Public.returnTicker).map { message =>
     Json.parse(message).as[JsObject].fields.flatMap { case (s, v) =>
       s.toUpperCase.split('_').map(s => Asset.fromString(s)).toList match {
         case Some(a) :: Some(b) :: Nil => v.asOpt[Quote](quoteReads(CurrencyPair(a, b)))
