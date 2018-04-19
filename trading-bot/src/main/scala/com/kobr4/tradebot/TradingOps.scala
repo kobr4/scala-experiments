@@ -32,4 +32,12 @@ class TradingOps(val api: PoloAPIInterface)(implicit ec: ExecutionContext) {
   def cancelAllOpenOrders(): Future[Unit] = {
     api.returnOpenOrders().map { orderList => orderList.map { order => api.cancelOrder(order.orderNumber) }}
   }
+
+  def loadPortfolio(): Future[Portfolio] = {
+    api.returnBalances.map { assetMap =>
+      val port = Portfolio.create
+      assetMap.toList.map(kv => port.assets.put(kv._1, kv._2))
+      port
+    }
+  }
 }

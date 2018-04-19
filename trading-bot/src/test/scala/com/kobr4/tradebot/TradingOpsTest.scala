@@ -59,4 +59,16 @@ class TradingOpsTest extends FlatSpec with Matchers with ScalaFutures with Mocki
 
     verify(apiMock).cancelOrder(1)
   }
+
+  "TradingOps" should "load portfolio" in {
+
+    val apiMock = mock[PoloAPIInterface]
+    when(apiMock.returnBalances).thenReturn(Future.successful(Map[Asset,Quantity](Asset.Eth -> Quantity(1))))
+
+    val tradingOps = new TradingOps(apiMock)
+
+    val port = tradingOps.loadPortfolio().futureValue(Timeout(10 seconds))
+
+    port.assets(Asset.Eth) shouldBe Quantity(1)
+  }
 }
