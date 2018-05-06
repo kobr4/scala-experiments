@@ -6,7 +6,7 @@ import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers.RawHeader
 import akka.http.scaladsl.unmarshalling.Unmarshal
 import akka.stream.ActorMaterializer
-import com.kobr4.tradebot.PoloApi._
+import com.typesafe.scalalogging.StrictLogging
 import play.api.libs.json._
 import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
@@ -25,8 +25,11 @@ case class Quote(pair: CurrencyPair, last: BigDecimal, lowestAsk: BigDecimal, hi
                  baseVolume: BigDecimal, quoteVolume: BigDecimal)
 
 
-class PoloApi(var nonce: Int, val poloUrl: String = PoloApi.rootUrl)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext) extends PoloAPIInterface {
+class PoloApi(val poloUrl: String = PoloApi.rootUrl)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext) extends PoloAPIInterface {
 
+  def nonce = System.currentTimeMillis()
+
+  import PoloApi._
   private val tradingUrl = s"$poloUrl/${PoloApi.tradingApi}"
 
   private val publicUrl = s"$poloUrl/public"
@@ -97,7 +100,7 @@ class PoloApi(var nonce: Int, val poloUrl: String = PoloApi.rootUrl)(implicit ar
 }
 
 
-object PoloApi {
+object PoloApi extends StrictLogging{
 
   val rootUrl = "https://poloniex.com"
 
@@ -124,14 +127,14 @@ object PoloApi {
 
     val sell = "sell"
 
-    def build(nonce: Int, currencyPair: String, rate: BigDecimal, amount: BigDecimal, isBuy: Boolean) = {
+    def build(nonce: Long, currencyPair: String, rate: BigDecimal, amount: BigDecimal, isBuy: Boolean) = {
       akka.http.scaladsl.model.FormData(Map(
         BuySell.currencyPair -> currencyPair,
         BuySell.rate -> rate.toString(),
         BuySell.amount -> amount.toString(),
         PoloApi.Command -> (if (isBuy) BuySell.buy else BuySell.sell),
         PoloApi.Nonce -> nonce.toString
-      )).toEntity(HttpCharsets.`UTF-8`)
+      ))
     }
   }
 
@@ -139,7 +142,7 @@ object PoloApi {
 
     val ReturnBalances = "returnBalances"
 
-    def build(nonce: Int): RequestEntity = akka.http.scaladsl.model.FormData(Map(PoloApi.Command -> ReturnBalances, PoloApi.Nonce -> nonce.toString)).toEntity(HttpCharsets.`UTF-8`)
+    def build(nonce: Long): FormData = akka.http.scaladsl.model.FormData(Map(PoloApi.Command -> ReturnBalances, PoloApi.Nonce -> nonce.toString))
   }
 
 
@@ -158,21 +161,21 @@ object PoloApi {
 
     val ReturnOpenOrders = "returnOpenOrders"
 
-    def build(nonce: Int): RequestEntity = akka.http.scaladsl.model.FormData(Map(PoloApi.Command -> ReturnOpenOrders, PoloApi.Nonce -> nonce.toString)).toEntity(HttpCharsets.`UTF-8`)
+    def build(nonce: Long): FormData = akka.http.scaladsl.model.FormData(Map(PoloApi.Command -> ReturnOpenOrders, PoloApi.Nonce -> nonce.toString))
   }
 
   object ReturnDepositAddresses {
 
     val ReturnDepositAddresses = "returnDepositAddresses"
 
-    def build(nonce: Int): RequestEntity = akka.http.scaladsl.model.FormData(Map(PoloApi.Command -> ReturnDepositAddresses, PoloApi.Nonce -> nonce.toString)).toEntity(HttpCharsets.`UTF-8`)
+    def build(nonce: Long): FormData = akka.http.scaladsl.model.FormData(Map(PoloApi.Command -> ReturnDepositAddresses, PoloApi.Nonce -> nonce.toString))
   }
 
   object CancelOrder {
 
     val CancelOrder = "cancelOrder"
 
-    def build(nonce: Int): RequestEntity = akka.http.scaladsl.model.FormData(Map(PoloApi.Command -> CancelOrder, PoloApi.Nonce -> nonce.toString)).toEntity(HttpCharsets.`UTF-8`)
+    def build(nonce: Long): FormData = akka.http.scaladsl.model.FormData(Map(PoloApi.Command -> CancelOrder, PoloApi.Nonce -> nonce.toString))
   }
 
   private def httpRequest(url: String, command: String)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[String] = {
@@ -181,14 +184,19 @@ object PoloApi {
     }
   }
 
-  private def httpRequestPost(url: String, body: RequestEntity)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[String] = {
+  private def httpRequestPost(url: String, body: FormData)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[String] = {
+    logger.info(s"Sending post request to $url")
+    logger.info(s"Body: ${body.fields.toString}")
     Http().singleRequest(HttpRequest(
       method = HttpMethods.POST,
-      headers = AuthHeader.build("toto", generateHMAC512("toto", body.toString)),
-      entity = body,
+      headers = AuthHeader.build(DefaultConfiguration.PoloApi.Key, generateHMAC512(DefaultConfiguration.PoloApi.Secret, body.fields.toString)),
+      entity = body.toEntity(HttpCharsets.`UTF-8`),
       uri = url)
     ).flatMap { response =>
-      Unmarshal(response.entity).to[String]
+      if (response.status == StatusCodes.OK)
+        Unmarshal(response.entity).to[String]
+      else
+        throw new RuntimeException("Return code was "+response.status)
     }
   }
 
@@ -197,7 +205,9 @@ object PoloApi {
     val mac = Mac.getInstance("HmacSHA512")
     mac.init(secret)
     val hashString: Array[Byte] = mac.doFinal(preHashString.getBytes)
-    hashString.toList.map("%02x" format _).mkString
+    val hmacsign = hashString.toList.map("%02x" format _).mkString
+    logger.debug(s"HMAC sha512 signature: $hmacsign")
+    hmacsign
   }
 
 }
