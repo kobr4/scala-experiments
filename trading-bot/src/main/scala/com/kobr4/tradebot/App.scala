@@ -34,7 +34,7 @@ object App {
   def main(args: Array[String]): Unit = {
 
 
-    val date = ZonedDateTime.parse("2017-01-01T01:00:00.000Z")
+    val date = ZonedDateTime.parse("2018-02-01T01:00:00.000Z")
 
     val priceData = PairPrice.fromUrl(ethPricesUrl)
     priceData.prices.filter(_.date.isAfter(date)).foreach { p =>

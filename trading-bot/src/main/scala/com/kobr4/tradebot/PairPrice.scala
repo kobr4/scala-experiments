@@ -34,12 +34,16 @@ case class PairPrices(prices: List[PairPrice]) {
 object PairPrice {
   def fromUrl(s: String): PairPrices = {
     val bufferedSource = io.Source.fromURL(s)
+
+    val priceLines = bufferedSource.getLines.toList
+    val priceLineId = priceLines.head.split(',').zipWithIndex.find( _._1 == "price(USD)" ).map(_._2).getOrElse(throw new RuntimeException("Invalid file"))
     val prices =
-      for (line <- bufferedSource.getLines.toList.tail) yield {
+      for (line <- priceLines.tail) yield {
         val splitted = line.split(',')
         val date = LocalDate.parse(splitted(0), formatter)
         val time = LocalTime.MIDNIGHT
-        EthUsd(ZonedDateTime.of(date, time, ZoneId.of("UTC")), BigDecimal(splitted(4)))
+        EthUsd(ZonedDateTime.of(date, time, ZoneId.of("UTC")),
+          if (splitted(priceLineId) != "") BigDecimal(splitted(priceLineId)) else BigDecimal(0))
       }
     PairPrices(prices)
   }
