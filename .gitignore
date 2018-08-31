@@ -3,4 +3,3 @@
 .idea/
 target/
 *.iml
-application.conf
