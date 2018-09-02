@@ -11,3 +11,24 @@ libraryDependencies += "com.github.tomakehurst" % "wiremock" % "2.16.0" % Test
 libraryDependencies += "org.mockito" % "mockito-all" % "1.9.5" % Test
 
 Test / testOptions := Seq(Tests.Filter(s => s.endsWith("Test")))
+
+enablePlugins(DockerPlugin)
+
+dockerfile in docker := {
+  // The assembly task generates a fat JAR file
+  val artifact: File = assembly.value
+  val artifactTargetPath = s"/app/${artifact.name}"
+
+  new Dockerfile {
+    from("openjdk:8-jre")
+    add(artifact, artifactTargetPath)
+    entryPoint("java", "-jar", artifactTargetPath)
+  }
+}
+
+imageNames in docker := {
+  Seq(ImageName(
+    registry = Some("10.8.0.1:5000"),
+    repository = "trading-bot",
+    tag = Some("latest")))
+}
