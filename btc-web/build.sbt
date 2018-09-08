@@ -28,3 +28,10 @@ lazy val root = (project in file(".")).enablePlugins(SbtWeb).
     )
   )
 
+
+JsEngineKeys.engineType := JsEngineKeys.EngineType.Node
+
+BabelKeys.options := WebJs.JS.Object(
+  "presets" -> List("react")
+  // More options ...
+)

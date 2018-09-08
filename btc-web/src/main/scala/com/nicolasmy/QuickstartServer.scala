@@ -1,13 +1,13 @@
 package com.nicolasmy
 
 //#quick-start-server
-import akka.actor.{ActorRef, ActorSystem}
+import akka.actor.{ ActorRef, ActorSystem }
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.server.Route
 import akka.stream.ActorMaterializer
 import akka.http.scaladsl.server.Directives._
 
-import scala.concurrent.{Await, ExecutionContext}
+import scala.concurrent.{ Await, ExecutionContext }
 import scala.concurrent.duration.Duration
 
 //#main-class

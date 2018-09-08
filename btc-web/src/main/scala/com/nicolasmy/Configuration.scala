@@ -1,6 +1,6 @@
 package com.nicolasmy
 
-import com.typesafe.config.{Config, ConfigFactory}
+import com.typesafe.config.{ Config, ConfigFactory }
 
 class Configuration(config: Config) {
 
@@ -8,6 +8,5 @@ class Configuration(config: Config) {
   val RpcUser = config.getString("rpc.user")
   val RpcPassword = config.getString("rpc.password")
 }
-
 
 object DefaultConfiguration extends Configuration(ConfigFactory.load())

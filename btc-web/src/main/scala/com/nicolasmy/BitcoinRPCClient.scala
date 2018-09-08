@@ -9,7 +9,7 @@ import akka.stream.ActorMaterializer
 import com.typesafe.scalalogging.StrictLogging
 import play.api.libs.json._
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{ ExecutionContext, Future }
 
 case class BlockchainInfo(chain: String, blocks: Long, headers: Long, bestblockhash: String, difficulty: BigDecimal)
 
@@ -35,8 +35,7 @@ object HttpSender extends StrictLogging {
       method = HttpMethods.POST,
       entity = HttpEntity(ContentTypes.`application/json`, body),
       headers = List(authorization),
-      uri = url)
-    ).flatMap { response =>
+      uri = url)).flatMap { response =>
       if (response.status == StatusCodes.OK)
         Unmarshal(response.entity).to[String].map(Some(_))
       else {
@@ -46,7 +45,6 @@ object HttpSender extends StrictLogging {
     }
   }
 }
-
 
 class BitcoinRPCClient(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext) extends BitcoinAPI {
 

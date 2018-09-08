@@ -3,10 +3,12 @@ package com.nicolasmy
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import org.scalatest.concurrent.PatienceConfiguration.Timeout
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.{ FlatSpec, Ignore, Matchers }
 import org.scalatest.concurrent.ScalaFutures
+
 import scala.concurrent.duration._
 
+@Ignore
 class BitcoinRPCClientIT extends FlatSpec with Matchers with ScalaFutures {
 
   implicit val as = ActorSystem()
@@ -19,7 +21,7 @@ class BitcoinRPCClientIT extends FlatSpec with Matchers with ScalaFutures {
 
     val blockchainInfo = client.getBlockchainInfo().futureValue(Timeout(10 seconds))
 
-    blockchainInfo shouldNot be (empty)
+    blockchainInfo shouldNot be(empty)
 
   }
 
@@ -29,7 +31,7 @@ class BitcoinRPCClientIT extends FlatSpec with Matchers with ScalaFutures {
 
     val response = client.getNetworkInfo().futureValue(Timeout(10 seconds))
 
-    response shouldNot be (empty)
+    response shouldNot be(empty)
 
   }
 
@@ -39,7 +41,7 @@ class BitcoinRPCClientIT extends FlatSpec with Matchers with ScalaFutures {
 
     val response = client.getMempoolInfo().futureValue(Timeout(10 seconds))
 
-    response shouldNot be (empty)
+    response shouldNot be(empty)
 
   }
 
@@ -49,7 +51,7 @@ class BitcoinRPCClientIT extends FlatSpec with Matchers with ScalaFutures {
 
     val response = client.getPeerInfo().futureValue(Timeout(10 seconds))
 
-    response shouldNot be (empty)
+    response shouldNot be(empty)
 
   }
 
@@ -59,7 +61,7 @@ class BitcoinRPCClientIT extends FlatSpec with Matchers with ScalaFutures {
 
     val response = client.getNetTotals().futureValue(Timeout(10 seconds))
 
-    response shouldNot be (empty)
+    response shouldNot be(empty)
 
   }
 
