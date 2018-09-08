@@ -19,7 +19,48 @@ class BitcoinRPCClientIT extends FlatSpec with Matchers with ScalaFutures {
 
     val blockchainInfo = client.getBlockchainInfo().futureValue(Timeout(10 seconds))
 
-    blockchainInfo.bestblockhash shouldNot be (empty)
+    blockchainInfo shouldNot be (empty)
 
   }
+
+  "API" should "return getnetworkinfo" in {
+
+    val client = new BitcoinRPCClient()
+
+    val response = client.getNetworkInfo().futureValue(Timeout(10 seconds))
+
+    response shouldNot be (empty)
+
+  }
+
+  "API" should "return getmempoolinfo" in {
+
+    val client = new BitcoinRPCClient()
+
+    val response = client.getMempoolInfo().futureValue(Timeout(10 seconds))
+
+    response shouldNot be (empty)
+
+  }
+
+  "API" should "return getpeerinfo" in {
+
+    val client = new BitcoinRPCClient()
+
+    val response = client.getPeerInfo().futureValue(Timeout(10 seconds))
+
+    response shouldNot be (empty)
+
+  }
+
+  "API" should "return getnettotals" in {
+
+    val client = new BitcoinRPCClient()
+
+    val response = client.getNetTotals().futureValue(Timeout(10 seconds))
+
+    response shouldNot be (empty)
+
+  }
+
 }

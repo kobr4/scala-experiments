@@ -14,7 +14,16 @@ import scala.concurrent.{ExecutionContext, Future}
 case class BlockchainInfo(chain: String, blocks: Long, headers: Long, bestblockhash: String, difficulty: BigDecimal)
 
 trait BitcoinAPI {
-  def getBlockchainInfo(): Future[BlockchainInfo]
+
+  def getBlockchainInfo: Future[String]
+
+  def getNetworkInfo: Future[String]
+
+  def getMempoolInfo: Future[String]
+
+  def getPeerInfo: Future[String]
+
+  def getNetTotals: Future[String]
 }
 
 object HttpSender extends StrictLogging {
@@ -43,12 +52,20 @@ class BitcoinRPCClient(implicit arf: ActorSystem, am: ActorMaterializer, ec: Exe
 
   private implicit val BlockchainInfoReads: Reads[BlockchainInfo] = Json.reads[BlockchainInfo]
 
-  override def getBlockchainInfo(): Future[BlockchainInfo] = {
-
-    HttpSender.httpRequestPost(DefaultConfiguration.RpcUrl, "{ \"method\": \"getblockchaininfo\" }").map { maybeResponse =>
-      maybeResponse.flatMap(response => Json.fromJson[BlockchainInfo]((Json.parse(response) \ "result").get).asOpt
-      ).getOrElse(throw new RuntimeException("Unable to parse response"))
+  private def httpCall(body: String): Future[String] = {
+    HttpSender.httpRequestPost(DefaultConfiguration.RpcUrl, body).map { maybeResponse =>
+      maybeResponse.getOrElse(throw new RuntimeException("Unable to parse response"))
     }
-
   }
+
+  override def getBlockchainInfo(): Future[String] = httpCall("{ \"method\": \"getblockchaininfo\" }")
+
+  override def getNetworkInfo(): Future[String] = httpCall("{ \"method\": \"getnetworkinfo\" }")
+
+  override def getMempoolInfo(): Future[String] = httpCall("{ \"method\": \"getmempoolinfo\" }")
+
+  override def getPeerInfo(): Future[String] = httpCall("{ \"method\": \"getpeerinfo\" }")
+
+  override def getNetTotals(): Future[String] = httpCall("{ \"method\": \"getnettotals\" }")
+
 }
