@@ -42,9 +42,7 @@ trait BtcRoutes {
         getFromResourceDirectory("public")
       } ~ path("getblockchaininfo") {
         get {
-          onSuccess(client.getBlockchainInfo()) { response =>
-            complete(response.toString)
-          }
+          onSuccess(client.getBlockchainInfo()) { complete(_) }
         }
       }
     }
