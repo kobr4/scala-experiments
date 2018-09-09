@@ -33,5 +33,6 @@ JsEngineKeys.engineType := JsEngineKeys.EngineType.Node
 
 BabelKeys.options := WebJs.JS.Object(
   "presets" -> List("react")
+  //"presets" -> List("stage-0")
   // More options ...
 )

@@ -1,10 +1,5 @@
 'use strict';
 
-ReactDOM.render(
-  <h1>Hello, world!</h1>,
-  document.getElementById('toto')
-);
-
 function ApiResponseField(props) {
   return <tr><td>{props.name}</td><td>{props.field}</td></tr>;
 }
@@ -14,7 +9,7 @@ class ApiResponse extends React.Component {
   constructor(props) {
     super(props);
 
-    this.state = { responseFields = [] }
+    this.state = { responseFields : [] }
   }
 
   render() {
@@ -29,4 +24,8 @@ class ApiResponse extends React.Component {
   }
 }
 
+ReactDOM.render(
+  <ApiResponse />,
+  document.getElementById('toto')
+);
 
