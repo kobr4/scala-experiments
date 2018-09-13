@@ -1,8 +1,32 @@
 'use strict';
 
+import React from 'react'
+import ReactDOM from 'react-dom'
+import { BrowserRouter, Route, Link } from 'react-router-dom'
+
 function ApiResponseField(props) {
   return <tr><td>{props.name}</td><td>{props.value}</td></tr>;
 }
+
+function performRestReq(updateCallback) {
+    var xhttp = new XMLHttpRequest();
+    xhttp.onreadystatechange = function() {
+         if (this.readyState == 4 && this.status == 200) {
+             var jsonResponse = JSON.parse(this.responseText)
+             var fields = [];
+             Object.keys(jsonResponse.result).forEach(function (key) {
+               var value = JSON.stringify(jsonResponse.result[key]);
+                var field = <ApiResponseField name={key} value={value} key={key} />
+                fields.push(field);
+             });
+             updateCallback(fields);
+         }
+    };
+    xhttp.open("GET", "http://localhost:8080/btc-api/getblockchaininfo", true);
+    xhttp.setRequestHeader("Content-type", "application/json");
+    xhttp.send();
+}c
+
 
 class ApiResponse extends React.Component {
 
@@ -15,27 +39,9 @@ class ApiResponse extends React.Component {
     this.setState( { responseFields : fields });
   }
 
-  updateTimed(target) {
-    var xhttp = new XMLHttpRequest();
-    xhttp.onreadystatechange = function() {
-         if (this.readyState == 4 && this.status == 200) {
-             var jsonResponse = JSON.parse(this.responseText)
-             var fields = [];
-             Object.keys(jsonResponse.result).forEach(function (key) {
-               var value = JSON.stringify(jsonResponse.result[key]);
-                var field = <ApiResponseField name={key} value={value} key={key} />
-                fields.push(field);
-             });
-             target.updateState(fields);
-         }
-    };
-    xhttp.open("GET", "http://localhost:8080/btc-api/getblockchaininfo", true);
-    xhttp.setRequestHeader("Content-type", "application/json");
-    xhttp.send();
-  }
-
   componentDidMount() {
-    this.interval = setInterval(() => this.updateTimed(this), 5000);
+    performRestReq((fields) => this.updateState(fields));
+    this.interval = setInterval(() => performRestReq( (fields) => this.updateState(fields) ), 5000);
   }
 
   render() {

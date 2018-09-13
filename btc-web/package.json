@@ -1,0 +1,17 @@
+{
+  "name": "btc-web-front",
+  "description": "BTC React front-endsb",
+  "version": "0.0.1",
+  "dependencies": {
+    "react": "^16.5.0",
+    "react-dom": "^16.5.0",
+    "react-router-dom": "^4.3.1"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.0.1",
+    "@babel/preset-env": "^7.0.0",
+    "@babel/preset-react": "^7.0.0",
+    "babel-loader": "^8.0.2",
+    "webpack": "^4.18.1"
+  }
+}

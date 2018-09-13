@@ -9,6 +9,7 @@ lazy val root = (project in file(".")).enablePlugins(SbtWeb).
     )),
     (managedClasspath in Runtime) += (packageBin in Assets).value,
     WebKeys.packagePrefix in Assets := "public/",
+    WebKeys.pipeline := WebKeys.pipeline.dependsOn(webpack.toTask("")).value,
     name := "btc-web",
     libraryDependencies ++= Seq(
       "com.typesafe.akka" %% "akka-http"            % akkaHttpVersion,
@@ -31,8 +32,3 @@ lazy val root = (project in file(".")).enablePlugins(SbtWeb).
 
 JsEngineKeys.engineType := JsEngineKeys.EngineType.Node
 
-BabelKeys.options := WebJs.JS.Object(
-  "presets" -> List("react")
-  //"presets" -> List("stage-0")
-  // More options ...
-)
