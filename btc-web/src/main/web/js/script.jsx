@@ -2,7 +2,7 @@
 
 import React from 'react'
 import ReactDOM from 'react-dom'
-import { BrowserRouter, Route, Link } from 'react-router-dom'
+import { BrowserRouter, Route, Switch, Layout } from 'react-router-dom'
 
 function ApiResponseField(props) {
   return <tr><td>{props.name}</td><td>{props.value}</td></tr>;
@@ -25,7 +25,7 @@ function performRestReq(updateCallback) {
     xhttp.open("GET", "http://localhost:8080/btc-api/getblockchaininfo", true);
     xhttp.setRequestHeader("Content-type", "application/json");
     xhttp.send();
-}c
+}
 
 
 class ApiResponse extends React.Component {
@@ -58,8 +58,16 @@ class ApiResponse extends React.Component {
   }
 }
 
+
 ReactDOM.render(
-  <ApiResponse />,
+    <BrowserRouter>
+      <Switch>
+        <Route path='/' render={() => (
+          <ApiResponse />
+        )} />
+        <Route component={ApiResponse}/>
+      </Switch>
+    </BrowserRouter>,
   document.getElementById('toto')
 );
 
