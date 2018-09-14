@@ -8,7 +8,7 @@ function ApiResponseField(props) {
   return <tr><td>{props.name}</td><td>{props.value}</td></tr>;
 }
 
-function performRestReq(updateCallback) {
+function performRestReq(updateCallback, method) {
     var xhttp = new XMLHttpRequest();
     xhttp.onreadystatechange = function() {
          if (this.readyState == 4 && this.status == 200) {
@@ -22,7 +22,7 @@ function performRestReq(updateCallback) {
              updateCallback(fields);
          }
     };
-    xhttp.open("GET", "http://localhost:8080/btc-api/getblockchaininfo", true);
+    xhttp.open("GET", "http://localhost:8080/btc-api/"+method, true);
     xhttp.setRequestHeader("Content-type", "application/json");
     xhttp.send();
 }
@@ -40,8 +40,8 @@ class ApiResponse extends React.Component {
   }
 
   componentDidMount() {
-    performRestReq((fields) => this.updateState(fields));
-    this.interval = setInterval(() => performRestReq( (fields) => this.updateState(fields) ), 5000);
+    performRestReq((fields) => this.updateState(fields), this.props.method);
+    this.interval = setInterval(() => performRestReq( (fields) => this.updateState(fields) , this.props.method), 5000);
   }
 
   render() {
@@ -62,10 +62,12 @@ class ApiResponse extends React.Component {
 ReactDOM.render(
     <BrowserRouter>
       <Switch>
-        <Route path='/' render={() => (
-          <ApiResponse />
-        )} />
-        <Route component={ApiResponse}/>
+        <Route path='/btc-api/api/getblockchaininfo' render={() => ( <ApiResponse method='getblockchaininfo'/>)} /> 
+        <Route path='/btc-api/api/getnetworkinfo' render={() => ( <ApiResponse method='getnetworkinfo'/>)} /> 
+        <Route path='/btc-api/api/getmempoolinfo' render={() => ( <ApiResponse method='getmempoolinfo'/>)} /> 
+        <Route path='/btc-api/api/getpeerinfo' render={() => ( <ApiResponse method='getpeerinfo'/>)} />
+        <Route path='/btc-api/api/getnettotals' render={() => ( <ApiResponse method='getnettotals'/>)} />
+        <Route path='/' render={() => ( <ApiResponse method='getblockchaininfo'/>)} />
       </Switch>
     </BrowserRouter>,
   document.getElementById('toto')

@@ -28,21 +28,39 @@ trait BtcRoutes {
 
   lazy val btcRoutes: Route =
     pathPrefix("btc-api") {
-      path("src/main/assets/api.html") {
-        get {
-          //complete(StatusCodes.OK)
-          getFromResource("src/main/assets/api.html")
-        }
-      } ~ path("js" / "script.js") {
-        get {
-          //complete(StatusCodes.OK)
-          getFromResource("webjars/btc-web/0.1.0-SNAPSHOT/js/script.js")
-        }
-      } ~ pathPrefix("public") {
+      pathPrefix("public") {
         getFromResourceDirectory("public")
+      } ~ pathPrefix("api") {
+        getFromResource("public/api.html")
       } ~ path("getblockchaininfo") {
         get {
-          onSuccess(client.getBlockchainInfo()) { complete(_) }
+          onSuccess(client.getBlockchainInfo()) {
+            complete(_)
+          }
+        }
+      } ~ path("getnetworkinfo") {
+        get {
+          onSuccess(client.getNetworkInfo()) {
+            complete(_)
+          }
+        }
+      } ~ path("getmempoolinfo") {
+        get {
+          onSuccess(client.getMempoolInfo()) {
+            complete(_)
+          }
+        }
+      } ~ path("getpeerinfo") {
+        get {
+          onSuccess(client.getPeerInfo()) {
+            complete(_)
+          }
+        }
+      } ~ path("getnettotals") {
+        get {
+          onSuccess(client.getNetTotals()) {
+            complete(_)
+          }
         }
       }
     }
