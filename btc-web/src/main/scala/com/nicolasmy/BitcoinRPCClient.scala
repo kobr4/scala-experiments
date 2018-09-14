@@ -37,12 +37,9 @@ object HttpSender extends StrictLogging {
       headers = List(authorization),
       uri = url)).flatMap { response =>
       if (response.status == StatusCodes.OK) {
-        logger.info("Response OK : " + Unmarshal(response.entity).to[String])
         Unmarshal(response.entity).to[String].map(Some(_))
       } else {
         logger.error("Error code was " + response.status)
-        println("Error code was " + response.status)
-        println(DefaultConfiguration.RpcPassword)
         Future(None)
       }
     }
