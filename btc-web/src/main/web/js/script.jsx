@@ -22,7 +22,10 @@ function performRestReq(updateCallback, method) {
              updateCallback(fields);
          }
     };
-    xhttp.open("GET", "http://localhost:8080/btc-api/"+method, true);
+    var protocol = location.protocol;
+    var slashes = protocol.concat("//");
+    var host = slashes.concat(window.location.hostname);
+    xhttp.open("GET", host+"/btc-api/"+method, true);
     xhttp.setRequestHeader("Content-type", "application/json");
     xhttp.send();
 }
