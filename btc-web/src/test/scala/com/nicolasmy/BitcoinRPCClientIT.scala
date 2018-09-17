@@ -8,7 +8,7 @@ import org.scalatest.concurrent.ScalaFutures
 
 import scala.concurrent.duration._
 
-//@Ignore
+@Ignore
 class BitcoinRPCClientIT extends FlatSpec with Matchers with ScalaFutures {
 
   implicit val as = ActorSystem()
