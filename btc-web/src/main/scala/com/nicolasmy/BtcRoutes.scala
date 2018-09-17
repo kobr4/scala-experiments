@@ -62,6 +62,18 @@ trait BtcRoutes {
             complete(_)
           }
         }
+      } ~ path("getblockcount") {
+        get {
+          onSuccess(client.getBlockCount()) {
+            complete(_)
+          }
+        }
+      } ~ path("getrawmempool") {
+        get {
+          onSuccess(client.getRawMemPool()) {
+            complete(_)
+          }
+        }
       }
     }
 }

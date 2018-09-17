@@ -24,6 +24,10 @@ trait BitcoinAPI {
   def getPeerInfo: Future[String]
 
   def getNetTotals: Future[String]
+
+  def getBlockCount: Future[String]
+
+  def getRawMemPool: Future[String]
 }
 
 object HttpSender extends StrictLogging {
@@ -66,4 +70,7 @@ class BitcoinRPCClient(implicit arf: ActorSystem, am: ActorMaterializer, ec: Exe
 
   override def getNetTotals(): Future[String] = httpCall("{ \"method\": \"getnettotals\" }")
 
+  override def getBlockCount(): Future[String] = httpCall("{ \"method\": \"getblockcount\" }")
+
+  override def getRawMemPool(): Future[String] = httpCall("{ \"method\": \"getrawmempool\" }")
 }

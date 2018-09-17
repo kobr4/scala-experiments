@@ -8,7 +8,7 @@ import org.scalatest.concurrent.ScalaFutures
 
 import scala.concurrent.duration._
 
-@Ignore
+//@Ignore
 class BitcoinRPCClientIT extends FlatSpec with Matchers with ScalaFutures {
 
   implicit val as = ActorSystem()
@@ -60,6 +60,26 @@ class BitcoinRPCClientIT extends FlatSpec with Matchers with ScalaFutures {
     val client = new BitcoinRPCClient()
 
     val response = client.getNetTotals().futureValue(Timeout(10 seconds))
+
+    response shouldNot be(empty)
+
+  }
+
+  "API" should "return getblockcount" in {
+
+    val client = new BitcoinRPCClient()
+
+    val response = client.getBlockCount().futureValue(Timeout(10 seconds))
+
+    response shouldNot be(empty)
+
+  }
+
+  "API" should "return getrawmempool" in {
+
+    val client = new BitcoinRPCClient()
+
+    val response = client.getRawMemPool().futureValue(Timeout(10 seconds))
 
     response shouldNot be(empty)
 

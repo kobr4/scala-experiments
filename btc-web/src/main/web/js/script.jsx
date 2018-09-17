@@ -15,7 +15,7 @@ function performRestReq(updateCallback, method) {
              var jsonResponse = JSON.parse(this.responseText)
              var fields = [];
              Object.keys(jsonResponse.result).forEach(function (key) {
-               var value = JSON.stringify(jsonResponse.result[key]);
+               var value = JSON.stringify(jsonResponse.result[key], null, 2);
                 var field = <ApiResponseField name={key} value={value} key={key} />
                 fields.push(field);
              });
