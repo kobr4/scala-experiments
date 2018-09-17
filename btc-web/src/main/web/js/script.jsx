@@ -70,6 +70,8 @@ ReactDOM.render(
         <Route path='/btc-api/api/getmempoolinfo' render={() => ( <ApiResponse method='getmempoolinfo'/>)} /> 
         <Route path='/btc-api/api/getpeerinfo' render={() => ( <ApiResponse method='getpeerinfo'/>)} />
         <Route path='/btc-api/api/getnettotals' render={() => ( <ApiResponse method='getnettotals'/>)} />
+        <Route path='/btc-api/api/getblockcount' render={() => ( <ApiResponse method='getblockcount'/>)} />
+        <Route path='/btc-api/api/getrawmempool' render={() => ( <ApiResponse method='getrawmempool'/>)} />
         <Route path='/' render={() => ( <ApiResponse method='getblockchaininfo'/>)} />
       </Switch>
     </BrowserRouter>,
