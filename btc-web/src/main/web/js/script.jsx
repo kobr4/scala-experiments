@@ -8,14 +8,14 @@ function ApiResponseField(props) {
   return <tr><td>{props.name}</td><td>{props.value}</td></tr>;
 }
 
-function performRestReq(updateCallback, method, params = []) {
+function performRestReq(updateCallback, method, params = [], jsField = (json) => { return json.result } ) {
     var xhttp = new XMLHttpRequest();
     xhttp.onreadystatechange = function() {
          if (this.readyState == 4 && this.status == 200) {
              var jsonResponse = JSON.parse(this.responseText)
              var fields = [];
-             Object.keys(jsonResponse.result).forEach(function (key) {
-               var value = JSON.stringify(jsonResponse.result[key], null, 2);
+             Object.keys(jsField(jsonResponse)).forEach(function (key) {
+               var value = JSON.stringify(jsField(jsonResponse)[key], null, 2);
                 var field = <ApiResponseField name={key} value={value} key={key} />
                 fields.push(field);
              });
@@ -24,8 +24,8 @@ function performRestReq(updateCallback, method, params = []) {
     };
     var protocol = location.protocol;
     var slashes = protocol.concat("//");
-    var host = slashes.concat(window.location.hostname);
-    var paramsString = params.map(field => field(0)+"="+field(1)+"&")
+    var host = slashes.concat(window.location.hostname+(window.location.port==8080?":8080":""));
+    var paramsString = params.map(field => field[0]+"="+field[1]+"&")
     xhttp.open("GET", host+"/btc-api/"+method+"?"+paramsString, true);
     xhttp.setRequestHeader("Content-type", "application/json");
     xhttp.send();
@@ -67,16 +67,24 @@ class ApiInputResult extends React.Component {
   constructor(props) {
     super(props);
     this.state = { responseFields : [] }
+
+    this.handleSubmit = this.handleSubmit.bind(this);
+    this.handleChange = this.handleChange.bind(this);
   }
 
   handleChange(event) {
     this.setState({value: event.target.value});
   }
 
-  handleSubmit() {
-    performRestReq((fields) => this.updateState(fields), this.props.method, ['TXID', this.state.value]);
+  handleSubmit(event) {
+    performRestReq((fields) => this.updateState(fields), this.props.method, [['TXID', this.state.value]], (json) => { return json }) ;
     event.preventDefault();
   }
+
+  updateState(fields) {
+    this.setState( { responseFields : fields });
+  }
+
 
   render() {
     return (

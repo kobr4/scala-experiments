@@ -73,7 +73,7 @@ trait BtcRoutes {
         }
       } ~ path("getrawtransaction") {
         get {
-          parameters("txid") { txid =>
+          parameters("TXID") { txid =>
             onSuccess(client.getRawTransaction(txid)) {
               complete(_)
             }
