@@ -69,8 +69,13 @@ class ApiInputResult extends React.Component {
     this.state = { responseFields : [] }
   }
 
+  handleChange(event) {
+    this.setState({value: event.target.value});
+  }
+
   handleSubmit() {
     performRestReq((fields) => this.updateState(fields), this.props.method, ['TXID', this.state.value]);
+    event.preventDefault();
   }
 
   render() {
@@ -79,7 +84,7 @@ class ApiInputResult extends React.Component {
        <form onSubmit={this.handleSubmit}>
          <label>
            Name:
-           <input type="text" value={this.state.value} name="TXID" />
+           <input type="text" value={this.state.value} name="TXID" onChange={this.handleChange} />
          </label>
          <input type="submit" value="Submit" />
        </form>
