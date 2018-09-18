@@ -25,7 +25,7 @@ function performRestReq(updateCallback, method, params = [], jsField = (json) =>
     var protocol = location.protocol;
     var slashes = protocol.concat("//");
     var host = slashes.concat(window.location.hostname+(window.location.port==8080?":8080":""));
-    var paramsString = params.map(field => field[0]+"="+field[1]+"&")
+    var paramsString = params.map(field => field[0]+"="+field[1]+"&").join('')
     xhttp.open("GET", host+"/btc-api/"+method+"?"+paramsString, true);
     xhttp.setRequestHeader("Content-type", "application/json");
     xhttp.send();
@@ -66,18 +66,24 @@ class ApiInputResult extends React.Component {
 
   constructor(props) {
     super(props);
-    this.state = { responseFields : [] }
+    this.state = { responseFields : [], value : '', verbose: 'true' }
 
     this.handleSubmit = this.handleSubmit.bind(this);
     this.handleChange = this.handleChange.bind(this);
+    this.handleRadioChange = this.handleRadioChange.bind(this);
   }
 
   handleChange(event) {
     this.setState({value: event.target.value});
   }
 
+  handleRadioChange(event) {
+    //if (event.target.name==='')
+    this.setState({verbose: event.target.value});
+  }
+
   handleSubmit(event) {
-    performRestReq((fields) => this.updateState(fields), this.props.method, [['TXID', this.state.value]], (json) => { return json }) ;
+    performRestReq((fields) => this.updateState(fields), this.props.method, [['TXID', this.state.value], ['verbose', this.state.verbose]], (json) => { return json }) ;
     event.preventDefault();
   }
 
@@ -91,9 +97,14 @@ class ApiInputResult extends React.Component {
        <div>
        <form onSubmit={this.handleSubmit}>
          <label>
-           Name:
+           TXID:
            <input type="text" value={this.state.value} name="TXID" onChange={this.handleChange} />
          </label>
+         <label>
+            Decode:
+            <input type="radio" name="verbose" value="true" checked={this.state.verbose === 'true'} onChange={this.handleRadioChange}/>true
+            <input type="radio" name="verbose" value="false" checked={this.state.verbose === 'false'} onChange={this.handleRadioChange}/>false
+          </label>
          <input type="submit" value="Submit" />
        </form>
        <table>

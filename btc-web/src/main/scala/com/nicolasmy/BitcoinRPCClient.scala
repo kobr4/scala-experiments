@@ -29,7 +29,7 @@ trait BitcoinAPI {
 
   def getRawMemPool: Future[String]
 
-  def getRawTransaction(txid: String): Future[String]
+  def getRawTransaction(txid: String, verbose: Boolean): Future[String]
 }
 
 object HttpSender extends StrictLogging {
@@ -77,6 +77,6 @@ class BitcoinRPCClient(implicit arf: ActorSystem, am: ActorMaterializer, ec: Exe
 
   override def getRawMemPool(): Future[String] = httpCall("{ \"method\": \"getrawmempool\" }")
 
-  override def getRawTransaction(txid: String): Future[String] =
-    httpCall(s"""{ "method": "getrawtransaction", "params" : [ "$txid" ] }""")
+  override def getRawTransaction(txid: String, verbose: Boolean): Future[String] =
+    httpCall(s"""{ "method": "getrawtransaction", "params" : [ "$txid" , $verbose ] }""")
 }
