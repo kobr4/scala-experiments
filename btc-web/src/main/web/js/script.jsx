@@ -5,7 +5,7 @@ import ReactDOM from 'react-dom'
 import { BrowserRouter, Route, Switch, Layout } from 'react-router-dom'
 
 function ApiResponseField(props) {
-  return <tr><td>{props.name}</td><td>{props.value}</td></tr>;
+  return <tr><td>{props.name}</td><td><pre>{props.value}</pre></td></tr>;
 }
 
 function performRestReq(updateCallback, method, params = [], jsField = (json) => { return json.result } ) {
