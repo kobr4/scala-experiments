@@ -28,6 +28,8 @@ trait BitcoinAPI {
   def getBlockCount: Future[String]
 
   def getRawMemPool: Future[String]
+
+  def getRawTransaction(txid: String): Future[String]
 }
 
 object HttpSender extends StrictLogging {
@@ -44,6 +46,7 @@ object HttpSender extends StrictLogging {
         Unmarshal(response.entity).to[String].map(Some(_))
       } else {
         logger.error("Error code was " + response.status)
+        Unmarshal(response.entity).to[String].map(logger.error(_))
         Future(None)
       }
     }
@@ -73,4 +76,7 @@ class BitcoinRPCClient(implicit arf: ActorSystem, am: ActorMaterializer, ec: Exe
   override def getBlockCount(): Future[String] = httpCall("{ \"method\": \"getblockcount\" }")
 
   override def getRawMemPool(): Future[String] = httpCall("{ \"method\": \"getrawmempool\" }")
+
+  override def getRawTransaction(txid: String): Future[String] =
+    httpCall(s"""{ "method": "getrawtransaction", "params" : [ "$txid" ] }""")
 }

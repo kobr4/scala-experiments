@@ -23,9 +23,6 @@ trait BtcRoutes {
 
   private lazy val client = new BitcoinRPCClient()(system, am, ec)
 
-  // other dependencies that UserRoutes use
-  //def userRegistryActor: ActorRef
-
   lazy val btcRoutes: Route =
     pathPrefix("btc-api") {
       pathPrefix("public") {
@@ -72,6 +69,14 @@ trait BtcRoutes {
         get {
           onSuccess(client.getRawMemPool()) {
             complete(_)
+          }
+        }
+      } ~ path("getrawtransaction") {
+        get {
+          parameters("txid") { txid =>
+            onSuccess(client.getRawTransaction(txid)) {
+              complete(_)
+            }
           }
         }
       }

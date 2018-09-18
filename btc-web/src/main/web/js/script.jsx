@@ -8,7 +8,7 @@ function ApiResponseField(props) {
   return <tr><td>{props.name}</td><td>{props.value}</td></tr>;
 }
 
-function performRestReq(updateCallback, method) {
+function performRestReq(updateCallback, method, params = []) {
     var xhttp = new XMLHttpRequest();
     xhttp.onreadystatechange = function() {
          if (this.readyState == 4 && this.status == 200) {
@@ -25,7 +25,8 @@ function performRestReq(updateCallback, method) {
     var protocol = location.protocol;
     var slashes = protocol.concat("//");
     var host = slashes.concat(window.location.hostname);
-    xhttp.open("GET", host+"/btc-api/"+method, true);
+    var paramsString = params.map(field => field(0)+"="+field(1)+"&")
+    xhttp.open("GET", host+"/btc-api/"+method+"?"+paramsString, true);
     xhttp.setRequestHeader("Content-type", "application/json");
     xhttp.send();
 }
@@ -61,6 +62,40 @@ class ApiResponse extends React.Component {
   }
 }
 
+class ApiInputResult extends React.Component {
+
+  constructor(props) {
+    super(props);
+    this.state = { responseFields : [] }
+  }
+
+  handleSubmit() {
+    performRestReq((fields) => this.updateState(fields), this.props.method, ['TXID', this.state.value]);
+  }
+
+  render() {
+    return (
+       <div>
+       <form onSubmit={this.handleSubmit}>
+         <label>
+           Name:
+           <input type="text" value={this.state.value} name="TXID" />
+         </label>
+         <input type="submit" value="Submit" />
+       </form>
+       <table>
+       <tbody>
+       <tr><th>Name</th><th>Value</th></tr>
+       {
+         this.state.responseFields.map(field => field)
+       }
+       </tbody>
+       </table>
+       </div>
+    );
+  }
+}
+
 
 ReactDOM.render(
     <BrowserRouter>
@@ -72,6 +107,7 @@ ReactDOM.render(
         <Route path='/btc-api/api/getnettotals' render={() => ( <ApiResponse method='getnettotals'/>)} />
         <Route path='/btc-api/api/getblockcount' render={() => ( <ApiResponse method='getblockcount'/>)} />
         <Route path='/btc-api/api/getrawmempool' render={() => ( <ApiResponse method='getrawmempool'/>)} />
+        <Route path='/btc-api/api/getrawtransaction' render={() => ( <ApiInputResult method='getrawtransaction'/>)} />
         <Route path='/' render={() => ( <ApiResponse method='getblockchaininfo'/>)} />
       </Switch>
     </BrowserRouter>,
