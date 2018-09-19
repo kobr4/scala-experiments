@@ -4,8 +4,6 @@ import java.time.ZonedDateTime
 
 import com.kobr4.tradebot.Asset.Usd
 
-
-
 object Strategy {
 
   import Rule.Condition._
@@ -18,7 +16,7 @@ object Strategy {
 
     val maybeBuy = Option(Buy(Asset.Eth, ethPrice, portfolio.assets(Asset.Usd).quantity / ethPrice))
 
-    // Sexy DSL ! <3       
+    // Sexy DSL ! <3
     maybeBuy
       .whenCashAvailable
       .whenBelowMovingAverge(current, ethPrice, priceData)
@@ -34,15 +32,13 @@ object Strategy {
     val maybeFirst = maybeSellAll
       .when(portfolio.assets(Asset.Eth).quantity > 0)
       .whenAboveMovingAverge(current, currentPrice, priceData)
-      .whenLastBuyingPrice(Asset.Eth, (buyPrice) => { buyPrice + buyPrice * 20 / 100 < currentPrice || buyPrice - buyPrice * 10 / 100 > currentPrice} )
+      .whenLastBuyingPrice(Asset.Eth, (buyPrice) => { buyPrice + buyPrice * 20 / 100 < currentPrice || buyPrice - buyPrice * 10 / 100 > currentPrice })
 
     maybeFirst.orElse(
       maybeSellAll
         .whenBelowMovingAverge(current, currentPrice, priceData)
-        .whenLastBuyingPrice(Asset.Eth, (buyPrice) => { buyPrice + buyPrice * 20 / 100 < currentPrice || buyPrice - buyPrice * 10 / 100 > currentPrice} )
-    )
+        .whenLastBuyingPrice(Asset.Eth, (buyPrice) => { buyPrice + buyPrice * 20 / 100 < currentPrice || buyPrice - buyPrice * 10 / 100 > currentPrice }))
   }
-
 
   val portfolio = Portfolio.create
   portfolio.assets(Usd) = Quantity(BigDecimal(10000L))

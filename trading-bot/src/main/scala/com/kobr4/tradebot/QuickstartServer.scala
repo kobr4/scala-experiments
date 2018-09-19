@@ -1,13 +1,13 @@
 package com.kobr4.tradebot
 
 //#quick-start-server
-import akka.actor.{ActorRef, ActorSystem}
+import akka.actor.{ ActorRef, ActorSystem }
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.server.Route
 import akka.stream.ActorMaterializer
 
 import scala.concurrent.duration.Duration
-import scala.concurrent.{Await, ExecutionContext}
+import scala.concurrent.{ Await, ExecutionContext }
 
 //#main-class
 object QuickstartServer extends App with TradingBotRoutes {

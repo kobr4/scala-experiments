@@ -11,19 +11,18 @@ import play.api.libs.json._
 import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{ ExecutionContext, Future }
 
 case class PoloOrder(orderNumber: Long, rate: BigDecimal, amount: BigDecimal)
 
 case class CurrencyPair(left: Asset, right: Asset) {
-  override def toString : String = {
+  override def toString: String = {
     s"${left.toString}_${right.toString}"
   }
 }
 
 case class Quote(pair: CurrencyPair, last: BigDecimal, lowestAsk: BigDecimal, highestBid: BigDecimal, percentChange: BigDecimal,
-                 baseVolume: BigDecimal, quoteVolume: BigDecimal)
-
+  baseVolume: BigDecimal, quoteVolume: BigDecimal)
 
 class PoloApi(val poloUrl: String = PoloApi.rootUrl)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext) extends PoloAPIInterface {
 
@@ -38,34 +37,33 @@ class PoloApi(val poloUrl: String = PoloApi.rootUrl)(implicit arf: ActorSystem, 
 
   implicit val poloOrderReads: Reads[PoloOrder] = (
     (JsPath \ "orderNumber").read[String].map(s => s.toLong) and
-      (JsPath \ "rate").read[BigDecimal] and
-      (JsPath \ "amount").read[BigDecimal]
-    ) (PoloOrder.apply _)
+    (JsPath \ "rate").read[BigDecimal] and
+    (JsPath \ "amount").read[BigDecimal])(PoloOrder.apply _)
 
   def quoteReads(pair: CurrencyPair): Reads[Quote] = (
     Reads.pure(pair) and
-      (JsPath \ "last").read[BigDecimal] and
-      (JsPath \ "lowestAsk").read[BigDecimal] and
-      (JsPath \ "highestBid").read[BigDecimal] and
-      (JsPath \ "percentChange").read[BigDecimal] and
-      (JsPath \ "baseVolume").read[BigDecimal] and
-      (JsPath \ "quoteVolume").read[BigDecimal]
-    ) (Quote.apply _)
-
+    (JsPath \ "last").read[BigDecimal] and
+    (JsPath \ "lowestAsk").read[BigDecimal] and
+    (JsPath \ "highestBid").read[BigDecimal] and
+    (JsPath \ "percentChange").read[BigDecimal] and
+    (JsPath \ "baseVolume").read[BigDecimal] and
+    (JsPath \ "quoteVolume").read[BigDecimal])(Quote.apply _)
 
   override def returnBalances: Future[Map[Asset, Quantity]] =
     PoloApi.httpRequestPost(tradingUrl, PoloApi.ReturnBalances.build(nonce)).map { message =>
-      Json.parse(message).as[JsObject].fields.flatMap { case (s, v) => Asset.fromString(s.toUpperCase).map { asset =>
-        (asset, Quantity(BigDecimal(v.as[String])))
-      }
+      Json.parse(message).as[JsObject].fields.flatMap {
+        case (s, v) => Asset.fromString(s.toUpperCase).map { asset =>
+          (asset, Quantity(BigDecimal(v.as[String])))
+        }
       }.toMap
     }
 
   override def returnDepositAddresses: Future[Map[Asset, String]] =
     PoloApi.httpRequestPost(tradingUrl, ReturnDepositAddresses.build(nonce)).map { message =>
-      Json.parse(message).as[JsObject].fields.flatMap { case (s, v) => Asset.fromString(s.toUpperCase).map { asset =>
-        (asset, v.as[String])
-      }
+      Json.parse(message).as[JsObject].fields.flatMap {
+        case (s, v) => Asset.fromString(s.toUpperCase).map { asset =>
+          (asset, v.as[String])
+        }
       }.toMap
     }
 
@@ -74,7 +72,7 @@ class PoloApi(val poloUrl: String = PoloApi.rootUrl)(implicit arf: ActorSystem, 
       Json.parse(message).as[JsArray].value.map { order => order.as[PoloOrder] }.toList
     }
 
-  override def cancelOrder(orderNumber: Long) : Future[Boolean] = {
+  override def cancelOrder(orderNumber: Long): Future[Boolean] = {
     PoloApi.httpRequestPost(tradingUrl, CancelOrder.build(nonce)).map { message =>
       Json.parse(message).as[JsObject].value.get("success").exists(_.as[Int] match {
         case 1 => true
@@ -83,24 +81,24 @@ class PoloApi(val poloUrl: String = PoloApi.rootUrl)(implicit arf: ActorSystem, 
     }
   }
 
-  override def buy(currencyPair: String, rate: BigDecimal, amount: BigDecimal) : Future[String] =
+  override def buy(currencyPair: String, rate: BigDecimal, amount: BigDecimal): Future[String] =
     PoloApi.httpRequestPost(tradingUrl, BuySell.build(nonce, currencyPair, rate, amount, true))
 
-  override def sell(currencyPair: String, rate: BigDecimal, amount: BigDecimal) : Future[String] =
+  override def sell(currencyPair: String, rate: BigDecimal, amount: BigDecimal): Future[String] =
     PoloApi.httpRequestPost(tradingUrl, BuySell.build(nonce, currencyPair, rate, amount, false))
 
   override def returnTicker()(implicit ec: ExecutionContext): Future[List[Quote]] = PoloApi.httpRequest(publicUrl, Public.returnTicker).map { message =>
-    Json.parse(message).as[JsObject].fields.flatMap { case (s, v) =>
-      s.toUpperCase.split('_').map(s => Asset.fromString(s)).toList match {
-        case Some(a) :: Some(b) :: Nil => v.asOpt[Quote](quoteReads(CurrencyPair(a, b)))
-        case _ => None
-      }
+    Json.parse(message).as[JsObject].fields.flatMap {
+      case (s, v) =>
+        s.toUpperCase.split('_').map(s => Asset.fromString(s)).toList match {
+          case Some(a) :: Some(b) :: Nil => v.asOpt[Quote](quoteReads(CurrencyPair(a, b)))
+          case _ => None
+        }
     }.toList
   }
 }
 
-
-object PoloApi extends StrictLogging{
+object PoloApi extends StrictLogging {
 
   val rootUrl = "https://poloniex.com"
 
@@ -133,8 +131,7 @@ object PoloApi extends StrictLogging{
         BuySell.rate -> rate.toString(),
         BuySell.amount -> amount.toString(),
         PoloApi.Command -> (if (isBuy) BuySell.buy else BuySell.sell),
-        PoloApi.Nonce -> nonce.toString
-      ))
+        PoloApi.Nonce -> nonce.toString))
     }
   }
 
@@ -144,7 +141,6 @@ object PoloApi extends StrictLogging{
 
     def build(nonce: Long): FormData = akka.http.scaladsl.model.FormData(Map(PoloApi.Command -> ReturnBalances, PoloApi.Nonce -> nonce.toString))
   }
-
 
   object AuthHeader {
 
@@ -191,12 +187,11 @@ object PoloApi extends StrictLogging{
       method = HttpMethods.POST,
       headers = AuthHeader.build(DefaultConfiguration.PoloApi.Key, generateHMAC512(DefaultConfiguration.PoloApi.Secret, body.fields.toString)),
       entity = body.toEntity(HttpCharsets.`UTF-8`),
-      uri = url)
-    ).flatMap { response =>
+      uri = url)).flatMap { response =>
       if (response.status == StatusCodes.OK)
         Unmarshal(response.entity).to[String]
       else
-        throw new RuntimeException("Return code was "+response.status)
+        throw new RuntimeException("Return code was " + response.status)
     }
   }
 

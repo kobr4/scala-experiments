@@ -1,6 +1,6 @@
 package com.kobr4.tradebot
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{ ExecutionContext, Future }
 
 class TradingOps(val api: PoloAPIInterface)(implicit ec: ExecutionContext) {
 
@@ -30,7 +30,7 @@ class TradingOps(val api: PoloAPIInterface)(implicit ec: ExecutionContext) {
   }
 
   def cancelAllOpenOrders(): Future[Unit] = {
-    api.returnOpenOrders().map { orderList => orderList.map { order => api.cancelOrder(order.orderNumber) }}
+    api.returnOpenOrders().map { orderList => orderList.map { order => api.cancelOrder(order.orderNumber) } }
   }
 
   def loadPortfolio(): Future[Portfolio] = {

@@ -1,8 +1,8 @@
 package com.kobr4.tradebot
 
-import java.time.{LocalDate, LocalTime, ZoneId, ZonedDateTime}
+import java.time.{ LocalDate, LocalTime, ZoneId, ZonedDateTime }
 
-import com.kobr4.tradebot.App.formatter
+import com.kobr4.tradebot.AppNoRun.formatter
 
 sealed trait PairPrice {
   val date: ZonedDateTime
@@ -26,8 +26,7 @@ case class PairPrices(prices: List[PairPrice]) {
     prices.reduce((p1, p2) =>
       if (Math.abs(p1.date.toEpochSecond - current.toEpochSecond) < Math.abs(p2.date.toEpochSecond - current.toEpochSecond))
         p1
-      else p2
-    ).price
+      else p2).price
   }
 }
 
@@ -36,13 +35,14 @@ object PairPrice {
     val bufferedSource = io.Source.fromURL(s)
 
     val priceLines = bufferedSource.getLines.toList
-    val priceLineId = priceLines.head.split(',').zipWithIndex.find( _._1 == "price(USD)" ).map(_._2).getOrElse(throw new RuntimeException("Invalid file"))
+    val priceLineId = priceLines.head.split(',').zipWithIndex.find(_._1 == "price(USD)").map(_._2).getOrElse(throw new RuntimeException("Invalid file"))
     val prices =
       for (line <- priceLines.tail) yield {
         val splitted = line.split(',')
         val date = LocalDate.parse(splitted(0), formatter)
         val time = LocalTime.MIDNIGHT
-        EthUsd(ZonedDateTime.of(date, time, ZoneId.of("UTC")),
+        EthUsd(
+          ZonedDateTime.of(date, time, ZoneId.of("UTC")),
           if (splitted(priceLineId) != "") BigDecimal(splitted(priceLineId)) else BigDecimal(0))
       }
     PairPrices(prices)

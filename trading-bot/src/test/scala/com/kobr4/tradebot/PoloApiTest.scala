@@ -7,10 +7,9 @@ import com.github.tomakehurst.wiremock.client.WireMock._
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration.options
 import org.scalatest.concurrent.PatienceConfiguration.Timeout
 import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.{BeforeAndAfterEach, FlatSpec, Matchers}
+import org.scalatest.{ BeforeAndAfterEach, FlatSpec, Matchers }
 
 import scala.concurrent.duration._
-
 
 class PoloApiTest extends FlatSpec with Matchers with ScalaFutures with BeforeAndAfterEach {
 
@@ -27,7 +26,6 @@ class PoloApiTest extends FlatSpec with Matchers with ScalaFutures with BeforeAn
   override def afterEach {
     wireMockServer.stop()
   }
-
 
   "API" should "return balances" in {
 
@@ -67,7 +65,7 @@ class PoloApiTest extends FlatSpec with Matchers with ScalaFutures with BeforeAn
     val api = new PoloApi("http://127.0.0.1:2345")
     val list = api.returnOpenOrders().futureValue(Timeout(10 seconds))
 
-    list should contain(PoloOrder(120466,BigDecimal("0.025"),BigDecimal("100")))
+    list should contain(PoloOrder(120466, BigDecimal("0.025"), BigDecimal("100")))
   }
 
   "API" should "place a sell order" in {
@@ -99,14 +97,13 @@ class PoloApiTest extends FlatSpec with Matchers with ScalaFutures with BeforeAn
   "API" should "return ticker" in {
     wireMockServer.stubFor(get(urlEqualTo("/public?command=returnTicker"))
       .willReturn(aResponse()
-      .withHeader("Content-Type", "text/plain")
-      .withBody(
-        """
+        .withHeader("Content-Type", "text/plain")
+        .withBody(
+          """
           | {"BTC_USD":{"last":"0.0251","lowestAsk":"0.02589999","highestBid":"0.0251","percentChange":"0.02390438",
           |"baseVolume":"6.16485315","quoteVolume":"245.82513926"},"BTC_NXT":{"last":"0.00005730","lowestAsk":"0.00005710",
           |"highestBid":"0.00004903","percentChange":"0.16701570","baseVolume":"0.45347489","quoteVolume":"9094"}}
-        """.stripMargin
-      )))
+        """.stripMargin)))
 
     val api = new PoloApi("http://127.0.0.1:2345")
     val quoteList = api.returnTicker().futureValue(Timeout(10 seconds))
@@ -117,7 +114,7 @@ class PoloApiTest extends FlatSpec with Matchers with ScalaFutures with BeforeAn
   }
 
   "API" should "provide HMAC-512 signature" in {
-    val signature = PoloApi.generateHMAC512("toto","command=returnBalances")
+    val signature = PoloApi.generateHMAC512("toto", "command=returnBalances")
 
     signature shouldBe "5e6ec0bd24181eeef34ef1c70eb65e116dcbfabd96f4c5409d64f2f028fffaac14295dd6f86e8876f31eee845913edca53e4052b121739497a19b46f5e49ca75"
   }

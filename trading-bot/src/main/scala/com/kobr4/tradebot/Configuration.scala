@@ -1,6 +1,6 @@
 package com.kobr4.tradebot
 
-import com.typesafe.config.{Config, ConfigFactory}
+import com.typesafe.config.{ Config, ConfigFactory }
 
 class Configuration(config: Config) {
 
@@ -11,6 +11,5 @@ class Configuration(config: Config) {
   }
 
 }
-
 
 object DefaultConfiguration extends Configuration(ConfigFactory.load())

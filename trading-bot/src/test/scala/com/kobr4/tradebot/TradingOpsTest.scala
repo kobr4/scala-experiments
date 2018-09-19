@@ -6,7 +6,7 @@ import org.mockito.Mockito._
 import org.scalatest.concurrent.PatienceConfiguration.Timeout
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.mockito.MockitoSugar
-import org.scalatest.{BeforeAndAfterEach, FlatSpec, Matchers}
+import org.scalatest.{ BeforeAndAfterEach, FlatSpec, Matchers }
 import org.mockito.Matchers.any
 import scala.concurrent.Future
 import scala.concurrent.duration._
@@ -14,12 +14,11 @@ import scala.concurrent.duration._
 class TradingOpsTest extends FlatSpec with Matchers with ScalaFutures with MockitoSugar with BeforeAndAfterEach {
 
   val pair = CurrencyPair(Asset.Usd, Asset.Btc)
-  val btcUsd = Quote(pair,7890.55745487, 7892.13246374, 7887.41896173, 0.14273589, 32600437.50359336, 4360.51881670)
+  val btcUsd = Quote(pair, 7890.55745487, 7892.13246374, 7887.41896173, 0.14273589, 32600437.50359336, 4360.51881670)
 
   implicit val as = ActorSystem()
   implicit val am = ActorMaterializer()
   implicit val ec = as.dispatcher
-
 
   "TradingOps" should "place a buy order at market value" in {
 
@@ -31,7 +30,7 @@ class TradingOpsTest extends FlatSpec with Matchers with ScalaFutures with Mocki
 
     tradingOps.buyAtMarketValue(pair, Asset.Btc, Quantity(1)).futureValue(Timeout(10 seconds))
 
-    verify(apiMock).buy("USDT_BTC",BigDecimal("7890.55745487"),BigDecimal("7890.55745487"))
+    verify(apiMock).buy("USDT_BTC", BigDecimal("7890.55745487"), BigDecimal("7890.55745487"))
   }
 
   "TradingOps" should "place a sell order at market value" in {
@@ -44,7 +43,7 @@ class TradingOpsTest extends FlatSpec with Matchers with ScalaFutures with Mocki
 
     tradingOps.sellAtMarketValue(pair, Asset.Btc, Quantity(1)).futureValue(Timeout(10 seconds))
 
-    verify(apiMock).sell("USDT_BTC",7890.55745487,7890.55745487)
+    verify(apiMock).sell("USDT_BTC", 7890.55745487, 7890.55745487)
   }
 
   "TradingOps" should "cancel an order" in {
@@ -63,7 +62,7 @@ class TradingOpsTest extends FlatSpec with Matchers with ScalaFutures with Mocki
   "TradingOps" should "load portfolio" in {
 
     val apiMock = mock[PoloAPIInterface]
-    when(apiMock.returnBalances).thenReturn(Future.successful(Map[Asset,Quantity](Asset.Eth -> Quantity(1))))
+    when(apiMock.returnBalances).thenReturn(Future.successful(Map[Asset, Quantity](Asset.Eth -> Quantity(1))))
 
     val tradingOps = new TradingOps(apiMock)
 

@@ -20,7 +20,7 @@ case class Portfolio(assets: mutable.HashMap[Asset, Quantity], orderList: mutabl
 
   def balance(priceData: PairPrices): BigDecimal = {
     assets.keySet.map {
-      case k@Asset.Eth => assets(k).quantity * priceData.prices.last.price
+      case k @ Asset.Eth => assets(k).quantity * priceData.prices.last.price
       case k => assets(k).quantity
     }.sum
   }
@@ -29,6 +29,5 @@ case class Portfolio(assets: mutable.HashMap[Asset, Quantity], orderList: mutabl
 object Portfolio {
   def create = Portfolio(
     mutable.HashMap(Asset.Eth -> Quantity(0), Asset.Usd -> Quantity(0), Asset.Btc -> Quantity(0)),
-    mutable.ListBuffer.empty[Order]
-  )
+    mutable.ListBuffer.empty[Order])
 }

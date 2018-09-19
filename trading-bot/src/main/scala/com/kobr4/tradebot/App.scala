@@ -11,11 +11,11 @@ sealed trait Asset
 
 object Asset {
 
-  case object Eth extends Asset { override def toString: String = "ETH"}
+  case object Eth extends Asset { override def toString: String = "ETH" }
 
-  case object Btc extends Asset { override def toString: String = "BTC"}
+  case object Btc extends Asset { override def toString: String = "BTC" }
 
-  case object Usd extends Asset { override def toString: String = "USDT"}
+  case object Usd extends Asset { override def toString: String = "USDT" }
 
   def fromString(s: String) = s match {
     case "ETH" => Some(Asset.Eth)
@@ -26,13 +26,12 @@ object Asset {
   }
 }
 
-object App {
+object AppNoRun {
   val ethPricesUrl = "https://coinmetrics.io/data/eth.csv"
   val btcPrices = "https://coinmetrics.io/data/btc.csv"
 
   val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd").withZone(ZoneId.of("UTC"))
-  def main(args: Array[String]): Unit = {
-
+  def mainNoRun(args: Array[String]): Unit = {
 
     val date = ZonedDateTime.parse("2018-02-01T01:00:00.000Z")
 

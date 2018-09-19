@@ -7,7 +7,6 @@ import akka.stream.ActorMaterializer
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.directives.RouteDirectives.complete
 
-
 import scala.concurrent.ExecutionContext
 
 trait TradingBotRoutes {
@@ -20,8 +19,12 @@ trait TradingBotRoutes {
 
   implicit def ec: ExecutionContext
 
-  lazy val tradingBotRoutes : Route = {
-    get {
+  lazy val tradingBotRoutes: Route = {
+    pathPrefix("public") {
+      getFromResourceDirectory("public")
+    } ~ pathPrefix("api") {
+      getFromResource("public/api.html")
+    } ~ get {
       complete("Hello World")
     }
 

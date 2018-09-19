@@ -1,6 +1,6 @@
 package com.kobr4.tradebot
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{ ExecutionContext, Future }
 
 trait PoloAPIInterface {
 
@@ -10,7 +10,7 @@ trait PoloAPIInterface {
 
   def returnOpenOrders(): Future[List[PoloOrder]]
 
-  def cancelOrder(orderNumber: Long) : Future[Boolean]
+  def cancelOrder(orderNumber: Long): Future[Boolean]
 
   def buy(currencyPair: String, rate: BigDecimal, amount: BigDecimal): Future[String]
 
