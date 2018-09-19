@@ -8,17 +8,22 @@ function ApiResponseField(props) {
   return <tr><td>{props.name}</td><td><pre>{props.value}</pre></td></tr>;
 }
 
-function performRestReq(updateCallback, method, params = [], jsField = (json) => { return json.result } ) {
+function performRestReq(updateCallback, method, params = []) {
     var xhttp = new XMLHttpRequest();
     xhttp.onreadystatechange = function() {
          if (this.readyState == 4 && this.status == 200) {
              var jsonResponse = JSON.parse(this.responseText)
              var fields = [];
-             Object.keys(jsField(jsonResponse)).forEach(function (key) {
-               var value = JSON.stringify(jsField(jsonResponse)[key], null, 2);
-                var field = <ApiResponseField name={key} value={value} key={key} />
+             if (typeof jsonResponse.result === 'string' || typeof jsonResponse.result === 'number') {
+                var field = <ApiResponseField name='result' value={jsonResponse.result} key='result' />
                 fields.push(field);
-             });
+             } else {
+                 Object.keys(jsonResponse.result).forEach(function (key) {
+                   var value = JSON.stringify(jsonResponse.result[key], null, 2);
+                    var field = <ApiResponseField name={key} value={value} key={key} />
+                    fields.push(field);
+                 });
+             }
              updateCallback(fields);
          }
     };
@@ -50,7 +55,7 @@ class ApiResponse extends React.Component {
 
   render() {
     return (
-       <table>
+       <table class="table table-bordered table-hover">
        <tbody>
        <tr><th>Name</th><th>Value</th></tr>
        {
@@ -78,12 +83,11 @@ class ApiInputResult extends React.Component {
   }
 
   handleRadioChange(event) {
-    //if (event.target.name==='')
     this.setState({verbose: event.target.value});
   }
 
   handleSubmit(event) {
-    performRestReq((fields) => this.updateState(fields), this.props.method, [['TXID', this.state.value], ['verbose', this.state.verbose]], (json) => { return json }) ;
+    performRestReq((fields) => this.updateState(fields), this.props.method, [['TXID', this.state.value], ['verbose', this.state.verbose]]) ;
     event.preventDefault();
   }
 
@@ -107,7 +111,7 @@ class ApiInputResult extends React.Component {
           </label>
          <input type="submit" value="Submit" />
        </form>
-       <table>
+       <table class="table table-bordered table-hover">
        <tbody>
        <tr><th>Name</th><th>Value</th></tr>
        {
