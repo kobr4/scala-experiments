@@ -71,6 +71,18 @@ trait BtcRoutes {
             complete(_)
           }
         }
+      } ~ path("getmemoryinfo") {
+        get {
+          onSuccess(client.getMemoryInfo()) {
+            complete(_)
+          }
+        }
+      } ~ path("getdifficulty") {
+        get {
+          onSuccess(client.getDifficulty()) {
+            complete(_)
+          }
+        }
       } ~ path("getrawtransaction") {
         get {
           parameters("TXID", 'verbose.as[Boolean]) { (txid, verbose) =>
