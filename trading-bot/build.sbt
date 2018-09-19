@@ -1,5 +1,3 @@
-scalaVersion := "2.12.3"
-
 libraryDependencies += "com.typesafe.play" %% "play-json" % "2.6.0"
 libraryDependencies += "com.typesafe.akka" %% "akka-http" % "10.0.9"
 libraryDependencies += "ch.qos.logback" % "logback-classic" % "1.2.3"
@@ -12,7 +10,19 @@ libraryDependencies += "org.mockito" % "mockito-all" % "1.9.5" % Test
 
 Test / testOptions := Seq(Tests.Filter(s => s.endsWith("Test")))
 
-enablePlugins(DockerPlugin)
+lazy val root = (project in file(".")).enablePlugins(SbtWeb).enablePlugins(DockerPlugin).
+  settings(
+    inThisBuild(List(
+      organization    := "com.nicolasmy",
+      scalaVersion    := "2.12.6"
+    )),
+    (managedClasspath in Runtime) += (packageBin in Assets).value,
+    WebKeys.packagePrefix in Assets := "public/",
+    WebKeys.pipeline := WebKeys.pipeline.dependsOn(webpack.toTask("")).value,
+    name := "trading-bot",(managedClasspath in Runtime) += (packageBin in Assets).value,
+  )
+
+JsEngineKeys.engineType := JsEngineKeys.EngineType.Node
 
 dockerfile in docker := {
   // The assembly task generates a fat JAR file
