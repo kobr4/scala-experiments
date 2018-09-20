@@ -55,7 +55,7 @@ class ApiResponse extends React.Component {
 
   render() {
     return (
-       <table class="table table-bordered table-hover">
+       <table className="table table-bordered table-hover">
        <tbody>
        <tr><th>Name</th><th>Value</th></tr>
        {
@@ -65,6 +65,19 @@ class ApiResponse extends React.Component {
        </table>
     );
   }
+}
+
+function FormRadioField(props) {
+  return <span><input type="radio" name={props.name} value={props.value} checked={props.current === props.value} onChange={props.handleRadioChange}/>{props.value}</span>;
+}
+
+function FormRadioFieldList(props) {
+    var rlist = []
+    props.values.map(value => {
+        var radioField = <FormRadioField name={props.name} value={value} handleRadioChange={props.handleRadioChange} current={props.current} key={props.name+value}/>;
+        rlist.push(radioField);
+    });
+    return rlist;
 }
 
 class ApiInputResult extends React.Component {
@@ -106,12 +119,11 @@ class ApiInputResult extends React.Component {
          </label>
          <label>
             Decode:
-            <input type="radio" name="verbose" value="true" checked={this.state.verbose === 'true'} onChange={this.handleRadioChange}/>true
-            <input type="radio" name="verbose" value="false" checked={this.state.verbose === 'false'} onChange={this.handleRadioChange}/>false
+            <FormRadioFieldList name="verbose" values={['true','false']} current={this.state.verbose} handleRadioChange={this.handleRadioChange}/>
           </label>
          <input type="submit" value="Submit" />
        </form>
-       <table class="table table-bordered table-hover">
+       <table className="table table-bordered table-hover">
        <tbody>
        <tr><th>Name</th><th>Value</th></tr>
        {
