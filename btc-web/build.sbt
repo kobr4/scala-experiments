@@ -51,3 +51,5 @@ imageNames in docker := {
     repository = "btc-web",
     tag = Some("latest")))
 }
+
+test in assembly := {}

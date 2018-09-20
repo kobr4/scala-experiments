@@ -34,6 +34,11 @@ trait BitcoinAPI {
   def getMemoryInfo: Future[String]
 
   def getDifficulty: Future[String]
+
+  @deprecated
+  def estimateFee(blocks: Int): Future[String]
+
+  def getChainTips: Future[String]
 }
 
 object HttpSender extends StrictLogging {
@@ -87,4 +92,9 @@ class BitcoinRPCClient(implicit arf: ActorSystem, am: ActorMaterializer, ec: Exe
   override def getMemoryInfo(): Future[String] = httpCall("{ \"method\": \"getmemoryinfo\" }")
 
   override def getDifficulty(): Future[String] = httpCall("{ \"method\": \"getdifficulty\" }")
+
+  override def estimateFee(blocks: Int): Future[String] =
+    httpCall(s"""{ "method": "estimatefee", "params" : [ $blocks ] }""")
+
+  override def getChainTips(): Future[String] = httpCall("{ \"method\": \"getchaintips\" }")
 }

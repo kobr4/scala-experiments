@@ -91,6 +91,12 @@ trait BtcRoutes {
             }
           }
         }
+      } ~ path("getchaintips") {
+        get {
+          onSuccess(client.getChainTips()) {
+            complete(_)
+          }
+        }
       }
     }
 }

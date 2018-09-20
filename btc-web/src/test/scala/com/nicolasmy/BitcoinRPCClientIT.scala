@@ -5,17 +5,17 @@ import akka.stream.ActorMaterializer
 import org.scalatest.concurrent.PatienceConfiguration.Timeout
 import org.scalatest.{ FlatSpec, Ignore, Matchers }
 import org.scalatest.concurrent.ScalaFutures
-
+import play.api.libs.json._
 import scala.concurrent.duration._
 
-@Ignore
+//@Ignore
 class BitcoinRPCClientIT extends FlatSpec with Matchers with ScalaFutures {
 
   implicit val as = ActorSystem()
   implicit val am = ActorMaterializer()
   implicit val ec = as.dispatcher
 
-  "API" should "return blockchaininfo" in {
+  it should "return blockchaininfo" in {
 
     val client = new BitcoinRPCClient()
 
@@ -25,7 +25,7 @@ class BitcoinRPCClientIT extends FlatSpec with Matchers with ScalaFutures {
 
   }
 
-  "API" should "return getnetworkinfo" in {
+  it should "return getnetworkinfo" in {
 
     val client = new BitcoinRPCClient()
 
@@ -35,7 +35,7 @@ class BitcoinRPCClientIT extends FlatSpec with Matchers with ScalaFutures {
 
   }
 
-  "API" should "return getmempoolinfo" in {
+  it should "return getmempoolinfo" in {
 
     val client = new BitcoinRPCClient()
 
@@ -45,7 +45,7 @@ class BitcoinRPCClientIT extends FlatSpec with Matchers with ScalaFutures {
 
   }
 
-  "API" should "return getpeerinfo" in {
+  it should "return getpeerinfo" in {
 
     val client = new BitcoinRPCClient()
 
@@ -55,7 +55,7 @@ class BitcoinRPCClientIT extends FlatSpec with Matchers with ScalaFutures {
 
   }
 
-  "API" should "return getnettotals" in {
+  it should "return getnettotals" in {
 
     val client = new BitcoinRPCClient()
 
@@ -65,7 +65,7 @@ class BitcoinRPCClientIT extends FlatSpec with Matchers with ScalaFutures {
 
   }
 
-  "API" should "return getblockcount" in {
+  it should "return getblockcount" in {
 
     val client = new BitcoinRPCClient()
 
@@ -75,7 +75,7 @@ class BitcoinRPCClientIT extends FlatSpec with Matchers with ScalaFutures {
 
   }
 
-  "API" should "return getrawmempool" in {
+  it should "return getrawmempool" in {
 
     val client = new BitcoinRPCClient()
 
@@ -85,11 +85,37 @@ class BitcoinRPCClientIT extends FlatSpec with Matchers with ScalaFutures {
 
   }
 
-  "API" should "return getrawtransaction" in {
+  it should "return getrawtransaction after retrieving one from memomry pool" in {
 
     val client = new BitcoinRPCClient()
 
-    val response = client.getRawTransaction("0d35e11e157d056b6703dcc32f6771688db5b0fcb2722b6376251d5445672bf4", true).futureValue(Timeout(10 seconds))
+    val rawMemPool = client.getRawMemPool().futureValue(Timeout(10 seconds))
+
+    val jsValue = Json.parse(rawMemPool)
+
+    val headTxid = jsValue("result").head.as[String]
+
+    val response = client.getRawTransaction(headTxid, true).futureValue(Timeout(10 seconds))
+
+    response shouldNot be(empty)
+
+  }
+
+  ignore should "return estimatefee" in {
+
+    val client = new BitcoinRPCClient()
+
+    val response = client.estimateFee(6).futureValue(Timeout(10 seconds))
+
+    response shouldNot be(empty)
+
+  }
+
+  it should "return getchaintips" in {
+
+    val client = new BitcoinRPCClient()
+
+    val response = client.getChainTips().futureValue(Timeout(10 seconds))
 
     response shouldNot be(empty)
 

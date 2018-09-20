@@ -138,6 +138,7 @@ ReactDOM.render(
         <Route path='/btc-api/api/getrawtransaction' render={() => ( <ApiInputResult method='getrawtransaction'/>)} />
         <Route path='/btc-api/api/getmemoryinfo' render={() => ( <ApiResponse method='getmemoryinfo'/>)} />
         <Route path='/btc-api/api/getdifficulty' render={() => ( <ApiResponse method='getdifficulty'/>)} />
+        <Route path='/btc-api/api/getchaintips' render={() => ( <ApiResponse method='getchaintips'/>)} />
         <Route path='/' render={() => ( <ApiResponse method='getblockchaininfo'/>)} />
       </Switch>
     </BrowserRouter>,
