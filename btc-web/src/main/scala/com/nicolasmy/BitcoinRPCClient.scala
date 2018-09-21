@@ -39,6 +39,8 @@ trait BitcoinAPI {
   def estimateFee(blocks: Int): Future[String]
 
   def getChainTips: Future[String]
+
+  def help(method: Option[String]): Future[String]
 }
 
 object HttpSender extends StrictLogging {
@@ -97,4 +99,6 @@ class BitcoinRPCClient(implicit arf: ActorSystem, am: ActorMaterializer, ec: Exe
     httpCall(s"""{ "method": "estimatefee", "params" : [ $blocks ] }""")
 
   override def getChainTips(): Future[String] = httpCall("{ \"method\": \"getchaintips\" }")
+
+  override def help(method: Option[String] = None): Future[String] = httpCall(s"""{ "method": "help", "params":[ "${method.getOrElse("")}"] }""")
 }

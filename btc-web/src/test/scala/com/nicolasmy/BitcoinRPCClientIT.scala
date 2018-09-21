@@ -120,4 +120,14 @@ class BitcoinRPCClientIT extends FlatSpec with Matchers with ScalaFutures {
     response shouldNot be(empty)
 
   }
+
+  it should "return help" in {
+
+    val client = new BitcoinRPCClient()
+
+    val response = client.help().futureValue(Timeout(10 seconds))
+
+    response shouldNot be(empty)
+
+  }
 }

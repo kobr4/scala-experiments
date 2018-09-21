@@ -3,23 +3,8 @@
 import React from 'react'
 import ReactDOM from 'react-dom'
 import { BrowserRouter, Route, Switch, Layout } from 'react-router-dom'
+import {ApiResponseField, ResponseTable, FormRadioField, FormRadioFieldList, FormListField, FormContainer} from './components/generics'
 
-function ApiResponseField(props) {
-  return <tr><td>{props.name}</td><td><pre>{props.value}</pre></td></tr>;
-}
-
-function ResponseTable(props) {
-  return (
-       <table className="table table-bordered table-hover">
-       <tbody>
-       <tr><th>Name</th><th>Value</th></tr>
-       {
-         props.responseFields.map(field => field)
-       }
-       </tbody>
-       </table>
-  );
-}
 
 function performRestReq(updateCallback, method, params = []) {
     var xhttp = new XMLHttpRequest();
@@ -71,23 +56,6 @@ class ApiResponse extends React.Component {
   }
 }
 
-function FormRadioField(props) {
-  return <span><input type="radio" name={props.name} value={props.value} checked={props.current === props.value} onChange={props.handleRadioChange}/>{props.value}</span>;
-}
-
-function FormRadioFieldList(props) {
-    var rlist = []
-    props.values.map(value => {
-        var radioField = <FormRadioField name={props.name} value={value} handleRadioChange={props.handleRadioChange} current={props.current} key={props.name+value}/>;
-        rlist.push(radioField);
-    });
-    return <label>{props.name}:{rlist}</label>;
-}
-
-function FormListField(props) {
-  return <label>{props.name}<input type="text" value={props.value} name={props.name} onChange={props.handleTextChange} /></label>;
-}
-
 class ApiInputResult extends React.Component {
 
   constructor(props) {
@@ -106,15 +74,43 @@ class ApiInputResult extends React.Component {
     this.setState( { responseFields : fields });
   }
 
+  render() {
+    return (
+       <span>
+       <FormContainer handleSubmit={this.handleSubmit}>
+           <FormListField value={this.state.value} name="TXID" handleTextChange={(event) => this.setState({value: event.target.value}) } />
+           <FormRadioFieldList name="verbose" values={['true','false']} current={this.state.verbose} handleRadioChange={ (event) => this.setState({verbose: event.target.value}) }/>
+       </FormContainer>
+       <ResponseTable responseFields={this.state.responseFields}/>
+       </span>
+    );
+  }
+}
+
+class ApiHelpInputResult extends React.Component {
+
+  constructor(props) {
+    super(props);
+    this.state = { responseFields : [], method : '' }
+
+    this.handleSubmit = this.handleSubmit.bind(this);
+  }
+
+  handleSubmit(event) {
+    performRestReq((fields) => this.updateState(fields), this.props.method, [['method', this.state.method]]) ;
+    event.preventDefault();
+  }
+
+  updateState(fields) {
+    this.setState( { responseFields : fields });
+  }
 
   render() {
     return (
        <span>
-       <form onSubmit={this.handleSubmit}>
-           <FormListField value={this.state.value} name="TXID" handleTextChange={(event) => this.setState({value: event.target.value}) } />
-           <FormRadioFieldList name="verbose" values={['true','false']} current={this.state.verbose} handleRadioChange={ (event) => this.setState({verbose: event.target.value}) }/>
-         <input type="submit" value="Submit" />
-       </form>
+       <FormContainer handleSubmit={this.handleSubmit}>
+           <FormListField value={this.state.method} name="method" handleTextChange={(event) => this.setState({method: event.target.value}) } />
+       </FormContainer>
        <ResponseTable responseFields={this.state.responseFields}/>
        </span>
     );
@@ -136,6 +132,7 @@ ReactDOM.render(
         <Route path='/btc-api/api/getmemoryinfo' render={() => ( <ApiResponse method='getmemoryinfo'/>)} />
         <Route path='/btc-api/api/getdifficulty' render={() => ( <ApiResponse method='getdifficulty'/>)} />
         <Route path='/btc-api/api/getchaintips' render={() => ( <ApiResponse method='getchaintips'/>)} />
+        <Route path='/btc-api/api/help' render={() => ( <ApiHelpInputResult method='help'/>)} />
         <Route path='/' render={() => ( <ApiResponse method='getblockchaininfo'/>)} />
       </Switch>
     </BrowserRouter>,

@@ -97,6 +97,14 @@ trait BtcRoutes {
             complete(_)
           }
         }
+      } ~ path("help") {
+        get {
+          parameters("method".?) { (method) =>
+            onSuccess(client.help(method)) {
+              complete(_)
+            }
+          }
+        }
       }
     }
 }
