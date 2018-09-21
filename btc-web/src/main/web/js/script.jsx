@@ -8,6 +8,19 @@ function ApiResponseField(props) {
   return <tr><td>{props.name}</td><td><pre>{props.value}</pre></td></tr>;
 }
 
+function ResponseTable(props) {
+  return (
+       <table className="table table-bordered table-hover">
+       <tbody>
+       <tr><th>Name</th><th>Value</th></tr>
+       {
+         props.responseFields.map(field => field)
+       }
+       </tbody>
+       </table>
+  );
+}
+
 function performRestReq(updateCallback, method, params = []) {
     var xhttp = new XMLHttpRequest();
     xhttp.onreadystatechange = function() {
@@ -54,16 +67,7 @@ class ApiResponse extends React.Component {
   }
 
   render() {
-    return (
-       <table className="table table-bordered table-hover">
-       <tbody>
-       <tr><th>Name</th><th>Value</th></tr>
-       {
-         this.state.responseFields.map(field => field)
-       }
-       </tbody>
-       </table>
-    );
+    return <ResponseTable responseFields={this.state.responseFields}/>;
   }
 }
 
@@ -77,7 +81,11 @@ function FormRadioFieldList(props) {
         var radioField = <FormRadioField name={props.name} value={value} handleRadioChange={props.handleRadioChange} current={props.current} key={props.name+value}/>;
         rlist.push(radioField);
     });
-    return rlist;
+    return <label>{props.name}:{rlist}</label>;
+}
+
+function FormListField(props) {
+  return <label>{props.name}<input type="text" value={props.value} name={props.name} onChange={props.handleTextChange} /></label>;
 }
 
 class ApiInputResult extends React.Component {
@@ -87,16 +95,6 @@ class ApiInputResult extends React.Component {
     this.state = { responseFields : [], value : '', verbose: 'true' }
 
     this.handleSubmit = this.handleSubmit.bind(this);
-    this.handleChange = this.handleChange.bind(this);
-    this.handleRadioChange = this.handleRadioChange.bind(this);
-  }
-
-  handleChange(event) {
-    this.setState({value: event.target.value});
-  }
-
-  handleRadioChange(event) {
-    this.setState({verbose: event.target.value});
   }
 
   handleSubmit(event) {
@@ -111,27 +109,14 @@ class ApiInputResult extends React.Component {
 
   render() {
     return (
-       <div>
+       <span>
        <form onSubmit={this.handleSubmit}>
-         <label>
-           TXID:
-           <input type="text" value={this.state.value} name="TXID" onChange={this.handleChange} />
-         </label>
-         <label>
-            Decode:
-            <FormRadioFieldList name="verbose" values={['true','false']} current={this.state.verbose} handleRadioChange={this.handleRadioChange}/>
-          </label>
+           <FormListField value={this.state.value} name="TXID" handleTextChange={(event) => this.setState({value: event.target.value}) } />
+           <FormRadioFieldList name="verbose" values={['true','false']} current={this.state.verbose} handleRadioChange={ (event) => this.setState({verbose: event.target.value}) }/>
          <input type="submit" value="Submit" />
        </form>
-       <table className="table table-bordered table-hover">
-       <tbody>
-       <tr><th>Name</th><th>Value</th></tr>
-       {
-         this.state.responseFields.map(field => field)
-       }
-       </tbody>
-       </table>
-       </div>
+       <ResponseTable responseFields={this.state.responseFields}/>
+       </span>
     );
   }
 }
