@@ -147,6 +147,36 @@ class ApiBlockHashInputResult extends React.Component {
   }
 }
 
+class ApiBlockInputResult extends React.Component {
+
+  constructor(props) {
+    super(props);
+    this.state = { responseFields : [], blockhash : '', verbosity : '0' }
+
+    this.handleSubmit = this.handleSubmit.bind(this);
+  }
+
+  handleSubmit(event) {
+    performRestReq((fields) => this.updateState(fields), this.props.method, [['blockhash', this.state.blockhash],['verbosity', this.state.verbosity]]) ;
+    event.preventDefault();
+  }
+
+  updateState(fields) {
+    this.setState( { responseFields : fields });
+  }
+
+  render() {
+    return (
+       <span>
+       <FormContainer handleSubmit={this.handleSubmit}>
+           <FormListField value={this.state.blockhash} name="blockhash" handleTextChange={(event) => this.setState({blockhash: event.target.value}) } />
+           <FormRadioFieldList name="verbosity" values={['0','1','2']} current={this.state.verbosity} handleRadioChange={ (event) => this.setState({verbosity: event.target.value}) }/>
+       </FormContainer>
+       <ResponseTable responseFields={this.state.responseFields}/>
+       </span>
+    );
+  }
+}
 
 ReactDOM.render(
     <BrowserRouter>
@@ -163,6 +193,7 @@ ReactDOM.render(
         <Route path='/btc-api/api/getdifficulty' render={() => ( <ApiResponse method='getdifficulty'/>)} />
         <Route path='/btc-api/api/getchaintips' render={() => ( <ApiResponse method='getchaintips'/>)} />
         <Route path='/btc-api/api/getblockhash' render={() => ( <ApiBlockHashInputResult method='getblockhash'/>)} />
+        <Route path='/btc-api/api/getblock' render={() => ( <ApiBlockInputResult method='getblock'/>)} />
         <Route path='/btc-api/api/help' render={() => ( <ApiHelpInputResult method='help'/>)} />
         <Route path='/' render={() => ( <ApiResponse method='getblockchaininfo'/>)} />
       </Switch>

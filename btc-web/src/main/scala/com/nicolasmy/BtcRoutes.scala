@@ -99,6 +99,14 @@ trait BtcRoutes {
             }
           }
         }
+      } ~ path("getblock") {
+        get {
+          parameters("blockhash", 'verbosity.as[Long]) { (blockhash, verbosity) =>
+            onSuccess(client.getBlock(blockhash, verbosity)) {
+              complete(_)
+            }
+          }
+        }
       } ~ path("getchaintips") {
         get {
           onSuccess(client.getChainTips()) {

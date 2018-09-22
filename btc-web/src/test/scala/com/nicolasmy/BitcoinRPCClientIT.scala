@@ -131,6 +131,16 @@ class BitcoinRPCClientIT extends FlatSpec with Matchers with ScalaFutures {
 
   }
 
+  it should "return getblock" in {
+
+    val client = new BitcoinRPCClient()
+
+    val response = client.getBlock("000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f",0).futureValue(Timeout(10 seconds))
+
+    response shouldNot be(empty)
+
+  }
+
   it should "return help" in {
 
     val client = new BitcoinRPCClient()

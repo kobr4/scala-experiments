@@ -42,6 +42,8 @@ trait BitcoinAPI {
 
   def getBlockHash(height: Long): Future[String]
 
+  def getBlock(blockhash: String, height: Long): Future[String]
+
   def help(method: Option[String]): Future[String]
 }
 
@@ -103,6 +105,8 @@ class BitcoinRPCClient(implicit arf: ActorSystem, am: ActorMaterializer, ec: Exe
   override def getChainTips(): Future[String] = httpCall("{ \"method\": \"getchaintips\" }")
 
   override def getBlockHash(height: Long): Future[String] = httpCall(s"""{ "method": "getblockhash", "params":[ $height] }""")
+
+  override def getBlock(blockhash: String, height: Long): Future[String] = httpCall(s"""{ "method": "getblock", "params":[ "$blockhash", $height] }""")
 
   override def help(method: Option[String] = None): Future[String] = httpCall(s"""{ "method": "help", "params":[ "${method.getOrElse("")}"] }""")
 }
