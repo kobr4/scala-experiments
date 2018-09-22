@@ -91,6 +91,14 @@ trait BtcRoutes {
             }
           }
         }
+      } ~ path("getblockhash") {
+        get {
+          parameters('height.as[Long]) { (height) =>
+            onSuccess(client.getBlockHash(height)) {
+              complete(_)
+            }
+          }
+        }
       } ~ path("getchaintips") {
         get {
           onSuccess(client.getChainTips()) {

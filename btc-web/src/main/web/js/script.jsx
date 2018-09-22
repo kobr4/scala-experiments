@@ -117,6 +117,36 @@ class ApiHelpInputResult extends React.Component {
   }
 }
 
+class ApiBlockHashInputResult extends React.Component {
+
+  constructor(props) {
+    super(props);
+    this.state = { responseFields : [], height : '' }
+
+    this.handleSubmit = this.handleSubmit.bind(this);
+  }
+
+  handleSubmit(event) {
+    performRestReq((fields) => this.updateState(fields), this.props.method, [['height', this.state.height]]) ;
+    event.preventDefault();
+  }
+
+  updateState(fields) {
+    this.setState( { responseFields : fields });
+  }
+
+  render() {
+    return (
+       <span>
+       <FormContainer handleSubmit={this.handleSubmit}>
+           <FormListField value={this.state.height} name="height" handleTextChange={(event) => this.setState({height: event.target.value}) } />
+       </FormContainer>
+       <ResponseTable responseFields={this.state.responseFields}/>
+       </span>
+    );
+  }
+}
+
 
 ReactDOM.render(
     <BrowserRouter>
@@ -132,6 +162,7 @@ ReactDOM.render(
         <Route path='/btc-api/api/getmemoryinfo' render={() => ( <ApiResponse method='getmemoryinfo'/>)} />
         <Route path='/btc-api/api/getdifficulty' render={() => ( <ApiResponse method='getdifficulty'/>)} />
         <Route path='/btc-api/api/getchaintips' render={() => ( <ApiResponse method='getchaintips'/>)} />
+        <Route path='/btc-api/api/getblockhash' render={() => ( <ApiBlockHashInputResult method='getblockhash'/>)} />
         <Route path='/btc-api/api/help' render={() => ( <ApiHelpInputResult method='help'/>)} />
         <Route path='/' render={() => ( <ApiResponse method='getblockchaininfo'/>)} />
       </Switch>
