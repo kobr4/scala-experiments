@@ -4,6 +4,8 @@ import React from 'react'
 import ReactDOM from 'react-dom'
 import { BrowserRouter, Route, Switch, Layout } from 'react-router-dom'
 import {ApiResponseField, ResponseTable, FormRadioField, FormRadioFieldList, FormListField, FormContainer} from './components/generics'
+//var LineChart = require("react-chartjs").Line;
+import {Line} from 'react-chartjs'
 
 function performRestReq(updateCallback, method, params = []) {
   var xhttp = new XMLHttpRequest();
@@ -29,6 +31,23 @@ function performRestReq(updateCallback, method, params = []) {
   var host = slashes.concat(window.location.hostname+(window.location.port==8080?":8080":""));
   var paramsString = params.map(field => field[0]+"="+field[1]+"&").join('')
   xhttp.open("GET", host+"/btc-api/"+method+"?"+paramsString, true);
+  xhttp.setRequestHeader("Content-type", "application/json");
+  xhttp.send();
+}
+
+function performRestPriceReq(updateCallback, path, params = []) {
+  var xhttp = new XMLHttpRequest();
+  xhttp.onreadystatechange = function() {
+       if (this.readyState == 4 && this.status == 200) {
+           var jsonResponse = JSON.parse(this.responseText)
+           updateCallback(jsonResponse);
+       }
+  };
+  var protocol = location.protocol;
+  var slashes = protocol.concat("//");
+  var host = slashes.concat(window.location.hostname+(window.location.port==8080?":8080":""));
+  var paramsString = params.map(field => field[0]+"="+encodeURIComponent(field[1])+"&").join('')
+  xhttp.open("GET", host+path+"?"+paramsString, true);
   xhttp.setRequestHeader("Content-type", "application/json");
   xhttp.send();
 }
@@ -90,6 +109,54 @@ function HelloWorld(props) {
     return <div>Hello World !</div>;
 }
 
-ReactDOM.render(<HelloWorld />,
+class GraphResult extends React.Component {
+
+  constructor(props) {
+    super(props);
+
+    
+
+    var data = {
+      labels: ["January", "February", "March", "April", "May", "June", "July"],
+      datasets:  [ 0, 0, 0, 0, 0]
+    };    
+
+    this.state = { chartData : data }
+  }
+
+  componentDidMount() {
+
+    performRestPriceReq((prices) => {
+    var data = {
+      labels: ["January", "February", "March", "April", "May", "June", "July"],
+      datasets: [{
+      label: "My First dataset",
+      fillColor: "rgba(220,220,220,0.2)",
+      strokeColor: "rgba(220,220,220,1)",
+      pointColor: "rgba(220,220,220,1)",
+      pointStrokeColor: "#fff",
+      pointHighlightFill: "#fff",
+      pointHighlightStroke: "rgba(220,220,220,1)",
+      data: prices
+    }]
+    };
+    this.setState({chartData : data});
+    }, '/price_api/btc_history', [ ['start', new Date('2017-01-01T0:0:0Z').toISOString()], ['end',new Date().toISOString()]]);
+
+  }
+
+  render() {
+    return (<Line data={this.state.chartData} width="600" height="250"/>);
+   }
+}
+
+
+ReactDOM.render(
+    <BrowserRouter>
+      <Switch>
+        <Route path='/btc_price' render={() => ( <GraphResult />)} />
+        <Route path='/' render={() => ( <HelloWorld />)} />
+      </Switch>
+    </BrowserRouter>,
   document.getElementById('toto')
 );

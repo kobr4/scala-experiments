@@ -1,6 +1,6 @@
 package com.kobr4.tradebot
 
-import java.time.{LocalDate, LocalTime, ZoneId, ZonedDateTime}
+import java.time.{ LocalDate, LocalTime, ZoneId, ZonedDateTime }
 
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
@@ -9,7 +9,7 @@ import akka.http.scaladsl.unmarshalling.Unmarshal
 import akka.stream.ActorMaterializer
 import com.kobr4.tradebot.AppNoRun.formatter
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{ ExecutionContext, Future }
 
 sealed trait PairPrice {
   val date: ZonedDateTime
@@ -35,6 +35,12 @@ case class PairPrices(prices: List[PairPrice]) {
         p1
       else p2).price
   }
+
+  def groupByYear: List[(Int, List[PairPrice])] = prices.groupBy(p => p.date.getYear).toList.sortBy(_._1)
+
+  def groupByMonth: List[(Int, List[PairPrice])] = prices.groupBy(p => p.date.getYear * 100 + p.date.getMonthValue).toList.sortBy(_._1)
+
+  def filter(f: PairPrice => Boolean): PairPrices = PairPrices(prices.filter(f))
 }
 
 object PairPrice {
