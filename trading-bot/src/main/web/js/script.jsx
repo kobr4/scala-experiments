@@ -3,38 +3,34 @@
 import React from 'react'
 import ReactDOM from 'react-dom'
 import { BrowserRouter, Route, Switch, Layout } from 'react-router-dom'
-
-
-function ApiResponseField(props) {
-  return <tr><td>{props.name}</td><td><pre>{props.value}</pre></td></tr>;
-}
+import {ApiResponseField, ResponseTable, FormRadioField, FormRadioFieldList, FormListField, FormContainer} from './components/generics'
 
 function performRestReq(updateCallback, method, params = []) {
-    var xhttp = new XMLHttpRequest();
-    xhttp.onreadystatechange = function() {
-         if (this.readyState == 4 && this.status == 200) {
-             var jsonResponse = JSON.parse(this.responseText)
-             var fields = [];
-             if (typeof jsonResponse.result === 'string' || typeof jsonResponse.result === 'number') {
-                var field = <ApiResponseField name='result' value={jsonResponse.result} key='result' />
-                fields.push(field);
-             } else {
-                 Object.keys(jsonResponse.result).forEach(function (key) {
-                   var value = JSON.stringify(jsonResponse.result[key], null, 2);
-                    var field = <ApiResponseField name={key} value={value} key={key} />
-                    fields.push(field);
-                 });
-             }
-             updateCallback(fields);
-         }
-    };
-    var protocol = location.protocol;
-    var slashes = protocol.concat("//");
-    var host = slashes.concat(window.location.hostname+(window.location.port==8080?":8080":""));
-    var paramsString = params.map(field => field[0]+"="+field[1]+"&").join('')
-    xhttp.open("GET", host+"/btc-api/"+method+"?"+paramsString, true);
-    xhttp.setRequestHeader("Content-type", "application/json");
-    xhttp.send();
+  var xhttp = new XMLHttpRequest();
+  xhttp.onreadystatechange = function() {
+       if (this.readyState == 4 && this.status == 200) {
+           var jsonResponse = JSON.parse(this.responseText)
+           var fields = [];
+           if (typeof jsonResponse.result === 'string' || typeof jsonResponse.result === 'number') {
+              var field = <ApiResponseField name='result' value={jsonResponse.result} key='result' />
+              fields.push(field);
+           } else {
+               Object.keys(jsonResponse.result).forEach(function (key) {
+                 var value = JSON.stringify(jsonResponse.result[key], null, 2);
+                  var field = <ApiResponseField name={key} value={value} key={key} />
+                  fields.push(field);
+               });
+           }
+           updateCallback(fields);
+       }
+  };
+  var protocol = location.protocol;
+  var slashes = protocol.concat("//");
+  var host = slashes.concat(window.location.hostname+(window.location.port==8080?":8080":""));
+  var paramsString = params.map(field => field[0]+"="+field[1]+"&").join('')
+  xhttp.open("GET", host+"/btc-api/"+method+"?"+paramsString, true);
+  xhttp.setRequestHeader("Content-type", "application/json");
+  xhttp.send();
 }
 
 
@@ -55,41 +51,17 @@ class ApiResponse extends React.Component {
   }
 
   render() {
-    return (
-       <table class="table table-bordered table-hover">
-       <tbody>
-       <tr><th>Name</th><th>Value</th></tr>
-       {
-         this.state.responseFields.map(field => field)
-       }
-       </tbody>
-       </table>
-    );
+    return <ResponseTable responseFields={this.state.responseFields}/>;
   }
-}
-
-
-function FormRadioField(props) {
-  return <input type="radio" name="verbose" value="true" checked={props.verbose === 'true'} onChange={props.handleRadioChange}/>;
 }
 
 class ApiInputResult extends React.Component {
 
   constructor(props) {
     super(props);
-    this.state = { responseFields : [], formFields : [] }
+    this.state = { responseFields : [], value : '', verbose: 'true' }
 
     this.handleSubmit = this.handleSubmit.bind(this);
-    this.handleChange = this.handleChange.bind(this);
-    this.handleRadioChange = this.handleRadioChange.bind(this);
-  }
-
-  handleChange(event) {
-    this.setState({value: event.target.value});
-  }
-
-  handleRadioChange(event) {
-    this.setState({verbose: event.target.value});
   }
 
   handleSubmit(event) {
@@ -101,31 +73,15 @@ class ApiInputResult extends React.Component {
     this.setState( { responseFields : fields });
   }
 
-
   render() {
     return (
-       <div>
-       <form onSubmit={this.handleSubmit}>
-         <label>
-           TXID:
-           <input type="text" value={this.state.value} name="TXID" onChange={this.handleChange} />
-         </label>
-         <label>
-            Decode:
-            <input type="radio" name="verbose" value="true" checked={this.state.verbose === 'true'} onChange={this.handleRadioChange}/>true
-            <input type="radio" name="verbose" value="false" checked={this.state.verbose === 'false'} onChange={this.handleRadioChange}/>false
-          </label>
-         <input type="submit" value="Submit" />
-       </form>
-       <table class="table table-bordered table-hover">
-       <tbody>
-       <tr><th>Name</th><th>Value</th></tr>
-       {
-         this.state.responseFields.map(field => field)
-       }
-       </tbody>
-       </table>
-       </div>
+       <span>
+       <FormContainer handleSubmit={this.handleSubmit}>
+           <FormListField value={this.state.value} name="TXID" handleTextChange={(event) => this.setState({value: event.target.value}) } />
+           <FormRadioFieldList name="verbose" values={['true','false']} current={this.state.verbose} handleRadioChange={ (event) => this.setState({verbose: event.target.value}) }/>
+       </FormContainer>
+       <ResponseTable responseFields={this.state.responseFields}/>
+       </span>
     );
   }
 }

@@ -1,8 +1,15 @@
 package com.kobr4.tradebot
 
-import java.time.{ LocalDate, LocalTime, ZoneId, ZonedDateTime }
+import java.time.{LocalDate, LocalTime, ZoneId, ZonedDateTime}
 
+import akka.actor.ActorSystem
+import akka.http.scaladsl.Http
+import akka.http.scaladsl.model.HttpRequest
+import akka.http.scaladsl.unmarshalling.Unmarshal
+import akka.stream.ActorMaterializer
 import com.kobr4.tradebot.AppNoRun.formatter
+
+import scala.concurrent.{ExecutionContext, Future}
 
 sealed trait PairPrice {
   val date: ZonedDateTime
@@ -46,5 +53,28 @@ object PairPrice {
           if (splitted(priceLineId) != "") BigDecimal(splitted(priceLineId)) else BigDecimal(0))
       }
     PairPrices(prices)
+  }
+
+  private def httpGetRequest(url: String)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[String] = {
+    Http().singleRequest(HttpRequest(uri = url)).flatMap { response =>
+      Unmarshal(response.entity).to[String]
+    }
+  }
+
+  def fromUrlAsync(url: String)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[PairPrices] = {
+    httpGetRequest(url).map(body => {
+      val priceLines = body.lines.toList
+      val priceLineId = priceLines.head.split(',').zipWithIndex.find(_._1 == "price(USD)").map(_._2).getOrElse(throw new RuntimeException("Invalid file"))
+      val prices =
+        for (line <- priceLines.tail) yield {
+          val splitted = line.split(',')
+          val date = LocalDate.parse(splitted(0), formatter)
+          val time = LocalTime.MIDNIGHT
+          EthUsd(
+            ZonedDateTime.of(date, time, ZoneId.of("UTC")),
+            if (splitted(priceLineId) != "") BigDecimal(splitted(priceLineId)) else BigDecimal(0))
+        }
+      PairPrices(prices)
+    })
   }
 }

@@ -6,6 +6,7 @@ import akka.http.scaladsl.server.Route
 import akka.stream.ActorMaterializer
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.directives.RouteDirectives.complete
+import play.api.libs.json.Json
 
 import scala.concurrent.ExecutionContext
 
@@ -24,6 +25,14 @@ trait TradingBotRoutes {
       getFromResourceDirectory("public")
     } ~ pathPrefix("api") {
       getFromResource("public/api.html")
+    } ~ pathPrefix("price_api") {
+      path("btc_history") {
+        get {
+          onSuccess(PriceService.getBtcPriceHistory()) { priceList =>
+            complete(Json.toJson(priceList).toString())
+          }
+        }
+      }
     } ~ get {
       complete("Hello World")
     }
