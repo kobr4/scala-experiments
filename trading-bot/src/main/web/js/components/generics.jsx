@@ -33,15 +33,25 @@ export function FormRadioFieldList(props) {
     return <label>{props.name}:{rlist}</label>;
 }
 
-export function FormListField(props) {
+export function FormTextField(props) {
   return <label>{props.name}<input type="text" value={props.value} name={props.name} onChange={props.handleTextChange} /></label>;
+}
+
+export function FormInputField(props) {
+  return (
+    <input type="submit" value={props.submit} />
+  );
+}
+
+export function FormButton(props) {
+  return <button onClick={(event) => {event.preventDefault();props.handleClick(event)}}>{props.text}</button>
 }
 
 export function FormContainer(props) {
   return (
      <form onSubmit={props.handleSubmit}>
         {props.children}
-       <input type="submit" value="Submit" />
+        <input type="submit" value={props.submit} />
      </form>
   );
 }

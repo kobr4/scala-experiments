@@ -6,7 +6,7 @@ import scala.collection.mutable
 
 case class Portfolio(assets: mutable.HashMap[Asset, Quantity], orderList: mutable.ListBuffer[Order]) {
 
-  def update(order: Order): Unit = {
+  def update(order: Order): Order = {
     order match {
       case Buy(asset, price, quantity) =>
         assets(asset) = Quantity(assets(asset).quantity + quantity)
@@ -16,6 +16,7 @@ case class Portfolio(assets: mutable.HashMap[Asset, Quantity], orderList: mutabl
         assets(Usd) = Quantity(assets(Usd).quantity + quantity * price)
     }
     orderList.append(order)
+    order
   }
 
   def balance(priceData: PairPrices): BigDecimal = {

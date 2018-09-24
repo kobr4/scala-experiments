@@ -2,6 +2,7 @@ package com.kobr4.tradebot
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
+import play.api.libs.json.{ JsObject, Json, Writes }
 
 import scala.concurrent.ExecutionContext
 
@@ -27,6 +28,29 @@ object Order {
     order match {
       case b: Buy => api.buy(getCurrencyPair(b.asset), b.price, b.quantity)
       case s: Sell => api.sell(getCurrencyPair(s.asset), s.price, s.quantity)
+    }
+  }
+
+  implicit val buyWrites = new Writes[Buy] {
+    def writes(buy: Buy): JsObject = Json.obj(
+      "quantity" -> buy.quantity,
+      "price" -> buy.price,
+      "asset" -> buy.asset.toString,
+      "type" -> "BUY")
+  }
+
+  implicit val sellWrites = new Writes[Sell] {
+    def writes(sell: Sell): JsObject = Json.obj(
+      "quantity" -> sell.quantity,
+      "price" -> sell.price,
+      "asset" -> sell.asset.toString,
+      "type" -> "SELL")
+  }
+
+  implicit val orderWrites = new Writes[Order] {
+    def writes(order: Order): JsObject = order match {
+      case s: Sell => sellWrites.writes(s)
+      case b: Buy => buyWrites.writes(b)
     }
   }
 }

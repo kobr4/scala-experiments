@@ -9,12 +9,12 @@ object Strategy {
   import Rule.Condition._
 
   /* buy if below 30 days moving average */
-  def buyStrategy(portfolio: Portfolio, current: ZonedDateTime, priceData: PairPrices): Option[Buy] = {
+  def buyStrategy(asset: Asset, portfolio: Portfolio, current: ZonedDateTime, priceData: PairPrices): Option[Buy] = {
 
     val ethPrice = priceData.currentPrice(current)
     implicit val port = portfolio
 
-    val maybeBuy = Option(Buy(Asset.Eth, ethPrice, portfolio.assets(Asset.Usd).quantity / ethPrice))
+    val maybeBuy = Option(Buy(asset, ethPrice, portfolio.assets(Asset.Usd).quantity / ethPrice))
 
     // Sexy DSL ! <3
     maybeBuy
@@ -23,34 +23,45 @@ object Strategy {
   }
 
   /* sell if 20% gain or 10% loss */
-  def sellStrategy(portfolio: Portfolio, current: ZonedDateTime, priceData: PairPrices): Option[Sell] = {
+  def sellStrategy(asset: Asset, portfolio: Portfolio, current: ZonedDateTime, priceData: PairPrices): Option[Sell] = {
     val currentPrice = priceData.currentPrice(current)
     implicit val port = portfolio
 
-    val maybeSellAll = Option(Sell(Asset.Eth, currentPrice, portfolio.assets(Asset.Eth).quantity))
+    val maybeSellAll = Option(Sell(asset, currentPrice, portfolio.assets(asset).quantity))
 
     val maybeFirst = maybeSellAll
-      .when(portfolio.assets(Asset.Eth).quantity > 0)
+      .when(portfolio.assets(asset).quantity > 0)
       .whenAboveMovingAverge(current, currentPrice, priceData)
-      .whenLastBuyingPrice(Asset.Eth, (buyPrice) => { buyPrice + buyPrice * 20 / 100 < currentPrice || buyPrice - buyPrice * 10 / 100 > currentPrice })
+      .whenLastBuyingPrice(asset, (buyPrice) => {
+        buyPrice + buyPrice * 20 / 100 < currentPrice || buyPrice - buyPrice * 10 / 100 > currentPrice
+      })
 
     maybeFirst.orElse(
       maybeSellAll
         .whenBelowMovingAverge(current, currentPrice, priceData)
-        .whenLastBuyingPrice(Asset.Eth, (buyPrice) => { buyPrice + buyPrice * 20 / 100 < currentPrice || buyPrice - buyPrice * 10 / 100 > currentPrice }))
+        .whenLastBuyingPrice(Asset.Eth, (buyPrice) => {
+          buyPrice + buyPrice * 20 / 100 < currentPrice || buyPrice - buyPrice * 10 / 100 > currentPrice
+        }))
   }
 
-  val portfolio = Portfolio.create
-  portfolio.assets(Usd) = Quantity(BigDecimal(10000L))
-
-  def runStrategy(current: ZonedDateTime, priceData: PairPrices): Unit = {
-    buyStrategy(portfolio, current, priceData).foreach { order =>
+  def runStrategy(asset: Asset, current: ZonedDateTime, priceData: PairPrices, portfolio: Portfolio): Option[(ZonedDateTime, Order)] = {
+    buyStrategy(asset, portfolio, current, priceData).map { order =>
       println(s"[${current.getDayOfMonth}/${current.getMonthValue}/${current.getYear}] BUY: ${order.asset.toString.toUpperCase()} ${order.quantity} @ ${order.price}")
-      portfolio.update(order)
-    }
-    sellStrategy(portfolio, current, priceData).foreach { order =>
-      println(s"[${current.getDayOfMonth}/${current.getMonthValue}/${current.getYear}] SELL: ${order.asset.toString.toUpperCase()} ${order.quantity} @ ${order.price}")
-      portfolio.update(order)
-    }
+      (current, order)
+    }.orElse(
+      sellStrategy(asset, portfolio, current, priceData).map { order =>
+        println(s"[${current.getDayOfMonth}/${current.getMonthValue}/${current.getYear}] SELL: ${order.asset.toString.toUpperCase()} ${order.quantity} @ ${order.price}")
+        (current, order)
+      })
   }
+}
+
+object TradeBotService {
+
+  def run(asset: Asset, initialUsdAmount: BigDecimal, priceData: PairPrices): List[(ZonedDateTime, Order)] = {
+    val portfolio = Portfolio.create
+    portfolio.assets(Usd) = Quantity(initialUsdAmount)
+    priceData.prices.flatMap(p => Strategy.runStrategy(asset, p.date, priceData, portfolio).map(t => (t._1, portfolio.update(t._2))))
+  }
+
 }

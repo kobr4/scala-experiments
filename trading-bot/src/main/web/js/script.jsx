@@ -3,11 +3,14 @@
 import React from 'react'
 import ReactDOM from 'react-dom'
 import { BrowserRouter, Route, Switch, Layout } from 'react-router-dom'
-import {ApiResponseField, ResponseTable, FormRadioField, FormRadioFieldList, FormListField, FormContainer} from './components/generics'
-//var LineChart = require("react-chartjs").Line;
+import {ApiResponseField, ResponseTable, FormRadioField, FormRadioFieldList, FormTextField, FormButton, FormContainer} from './components/generics'
 import {Line} from 'react-chartjs'
 
-function performRestReq(updateCallback, method, params = []) {
+const btcEndpoint = '/price_api/btc_history';
+const ethEndpoint = '/price_api/eth_history';
+
+
+function performRestReq(updateCallback, path, params = []) {
   var xhttp = new XMLHttpRequest();
   xhttp.onreadystatechange = function() {
        if (this.readyState == 4 && this.status == 200) {
@@ -16,6 +19,11 @@ function performRestReq(updateCallback, method, params = []) {
            if (typeof jsonResponse.result === 'string' || typeof jsonResponse.result === 'number') {
               var field = <ApiResponseField name='result' value={jsonResponse.result} key='result' />
               fields.push(field);
+           } if (Array.isArray(jsonResponse)) {
+            jsonResponse.forEach(function(data){
+              var field = <ApiResponseField name='result' value= {JSON.stringify(data)}/>
+              fields.push(field);
+            })
            } else {
                Object.keys(jsonResponse.result).forEach(function (key) {
                  var value = JSON.stringify(jsonResponse.result[key], null, 2);
@@ -30,7 +38,7 @@ function performRestReq(updateCallback, method, params = []) {
   var slashes = protocol.concat("//");
   var host = slashes.concat(window.location.hostname+(window.location.port==8080?":8080":""));
   var paramsString = params.map(field => field[0]+"="+field[1]+"&").join('')
-  xhttp.open("GET", host+"/btc-api/"+method+"?"+paramsString, true);
+  xhttp.open("GET", host+path+"?"+paramsString, true);
   xhttp.setRequestHeader("Content-type", "application/json");
   xhttp.send();
 }
@@ -95,8 +103,8 @@ class ApiInputResult extends React.Component {
   render() {
     return (
        <span>
-       <FormContainer handleSubmit={this.handleSubmit}>
-           <FormListField value={this.state.value} name="TXID" handleTextChange={(event) => this.setState({value: event.target.value}) } />
+       <FormContainer handleSubmit={this.handleSubmit} submit='Run trade-bot'>
+           <FormTextField value={this.state.value} name="TXID" handleTextChange={(event) => this.setState({value: event.target.value}) } />
            <FormRadioFieldList name="verbose" values={['true','false']} current={this.state.verbose} handleRadioChange={ (event) => this.setState({verbose: event.target.value}) }/>
        </FormContainer>
        <ResponseTable responseFields={this.state.responseFields}/>
@@ -114,21 +122,21 @@ class GraphResult extends React.Component {
   constructor(props) {
     super(props);
 
-    
-
     var data = {
-      labels: ["January", "February", "March", "April", "May", "June", "July"],
+      labels: [],
       datasets:  [ 0, 0, 0, 0, 0]
     };    
 
-    this.state = { chartData : data }
+    this.state = { chartData : data, responseFields : [], start : new Date('2017-01-01T0:0:0Z').toISOString(), end : new Date().toISOString() }
+
+    this.handleSubmit = this.handleSubmit.bind(this);
   }
 
   componentDidMount() {
 
     performRestPriceReq((prices) => {
     var data = {
-      labels: ["January", "February", "March", "April", "May", "June", "July"],
+      labels: [],
       datasets: [{
       label: "My First dataset",
       fillColor: "rgba(220,220,220,0.2)",
@@ -141,12 +149,31 @@ class GraphResult extends React.Component {
     }]
     };
     this.setState({chartData : data});
-    }, '/price_api/btc_history', [ ['start', new Date('2017-01-01T0:0:0Z').toISOString()], ['end',new Date().toISOString()]]);
+    }, this.props.endpoint, [ ['start', this.state.start], ['end',this.state.end]]);
 
   }
 
+  handleSubmit(event) {
+    performRestReq((fields) => this.updateState(fields), '/trade_bot', [['start', this.state.start], ['end',this.state.end], ['initial', '10000']]) ;
+    event.preventDefault();
+  }
+
+  updateState(fields) {
+    this.setState( { responseFields : fields });
+  }
+
   render() {
-    return (<Line data={this.state.chartData} width="600" height="250"/>);
+    return (
+          <span>
+          <Line data={this.state.chartData} width="800" height="400"/>
+          <FormContainer handleSubmit={this.handleSubmit} submit="Run trade-bot">
+            <FormTextField value={this.state.start} name="start" handleTextChange={(event) => {try{ this.setState({start: new Date(event.target.value).toISOString()})}catch (e){}} } />
+            <FormTextField value={this.state.end} name="end" handleTextChange={(event) => {try{this.setState({value: new Date(event.target.value).toISOString()})}catch (e){}}  } />
+            <FormButton text='Update' handleClick={ (event) => this.componentDidMount() }/>
+          </FormContainer>
+          <ResponseTable responseFields={this.state.responseFields}/>
+          </span>  
+      );
    }
 }
 
@@ -154,7 +181,8 @@ class GraphResult extends React.Component {
 ReactDOM.render(
     <BrowserRouter>
       <Switch>
-        <Route path='/btc_price' render={() => ( <GraphResult />)} />
+        <Route path='/btc_price' render={() => ( <GraphResult endpoint={btcEndpoint} title='BTC backtest'/>)} />
+        <Route path='/eth_price' render={() => ( <GraphResult endpoint={ethEndpoint} title='ETH backtest'/>)} />
         <Route path='/' render={() => ( <HelloWorld />)} />
       </Switch>
     </BrowserRouter>,

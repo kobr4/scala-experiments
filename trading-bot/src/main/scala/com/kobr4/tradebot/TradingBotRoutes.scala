@@ -9,6 +9,8 @@ import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.server.directives.RouteDirectives.complete
 import akka.http.scaladsl.unmarshalling.Unmarshaller
 import akka.stream.ActorMaterializer
+import play.api.libs.functional.syntax._
+import play.api.libs.json.{ JsPath, Writes }
 
 import scala.concurrent.ExecutionContext
 
@@ -24,12 +26,20 @@ trait TradingBotRoutes extends PlayJsonSupport {
 
   private val stringToZonedDateTime = Unmarshaller.strict[String, ZonedDateTime](ZonedDateTime.parse)
 
+  private val stringToBigDecimal = Unmarshaller.strict[String, BigDecimal](BigDecimal.apply)
+
+  implicit val dateOrderWrites: Writes[(ZonedDateTime, Order)] = (
+    (JsPath \ "date").write[ZonedDateTime] and
+    (JsPath \ "order").write[Order]) { a: (ZonedDateTime, Order) => (a._1, a._2) }
+
   lazy val tradingBotRoutes: Route = {
     pathPrefix("public") {
       getFromResourceDirectory("public")
     } ~ pathPrefix("api") {
       getFromResource("public/api.html")
     } ~ path("btc_price") {
+      getFromResource("public/api.html")
+    } ~ path("eth_price") {
       getFromResource("public/api.html")
     } ~ pathPrefix("price_api") {
       path("btc_history") {
@@ -42,8 +52,18 @@ trait TradingBotRoutes extends PlayJsonSupport {
         }
       } ~ path("eth_history") {
         get {
-          onSuccess(PriceService.getEthPriceHistory()) { priceList =>
-            complete(priceList)
+          parameters('start.as(stringToZonedDateTime), 'end.as(stringToZonedDateTime)) { (start, end) =>
+            onSuccess(PriceService.getEthPriceHistory(start, end)) { priceList =>
+              complete(priceList)
+            }
+          }
+        }
+      }
+    } ~ path("trade_bot") {
+      get {
+        parameters('start.as(stringToZonedDateTime), 'end.as(stringToZonedDateTime), 'initial.as(stringToBigDecimal)) { (start, end, initial) =>
+          onSuccess(PriceService.getBtcPriceData(start, end).map(pdata => TradeBotService.run(Asset.Btc, initial, pdata))) { orderList =>
+            complete(orderList)
           }
         }
       }
