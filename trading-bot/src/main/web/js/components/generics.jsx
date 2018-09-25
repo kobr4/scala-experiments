@@ -7,11 +7,15 @@ export function ApiResponseField(props) {
   return <tr><td>{props.name}</td><td><pre>{props.value}</pre></td></tr>;
 }
 
+export function ApiResponseSpanField(props) {
+  return <tr><td colSpan='2'>{props.value}</td></tr>;
+}
+
 export function ResponseTable(props) {
   return (
        <table className="table table-bordered table-hover">
        <tbody>
-       <tr><th>Name</th><th>Value</th></tr>
+       <tr><th>{props.first}</th><th>{props.second}</th></tr>
        {
          props.responseFields.map(field => field)
        }

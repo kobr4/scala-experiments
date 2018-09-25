@@ -3,7 +3,7 @@
 import React from 'react'
 import ReactDOM from 'react-dom'
 import { BrowserRouter, Route, Switch, Layout } from 'react-router-dom'
-import {ApiResponseField, ResponseTable, FormRadioField, FormRadioFieldList, FormTextField, FormButton, FormContainer} from './components/generics'
+import {ApiResponseField, ApiResponseSpanField, ResponseTable, FormRadioField, FormRadioFieldList, FormTextField, FormButton, FormContainer} from './components/generics'
 import {Line} from 'react-chartjs'
 
 const btcEndpoint = '/price_api/btc_history';
@@ -21,9 +21,13 @@ function performRestReq(updateCallback, path, params = []) {
               fields.push(field);
            } if (Array.isArray(jsonResponse)) {
             jsonResponse.forEach(function(data){
-              var field = <ApiResponseField name='result' value= {JSON.stringify(data)}/>
+              var field = <ApiResponseField name={data.date} value= {JSON.stringify(data.order)}/>
               fields.push(field);
             })
+            var order = (jsonResponse.slice(-1)[0]).order;
+            
+            var toto = <ApiResponseSpanField value={'Final balance: '+order.price*order.quantity+' USD'} />
+            fields.push(toto);
            } else {
                Object.keys(jsonResponse.result).forEach(function (key) {
                  var value = JSON.stringify(jsonResponse.result[key], null, 2);
@@ -82,37 +86,6 @@ class ApiResponse extends React.Component {
   }
 }
 
-class ApiInputResult extends React.Component {
-
-  constructor(props) {
-    super(props);
-    this.state = { responseFields : [], value : '', verbose: 'true' }
-
-    this.handleSubmit = this.handleSubmit.bind(this);
-  }
-
-  handleSubmit(event) {
-    performRestReq((fields) => this.updateState(fields), this.props.method, [['TXID', this.state.value], ['verbose', this.state.verbose]]) ;
-    event.preventDefault();
-  }
-
-  updateState(fields) {
-    this.setState( { responseFields : fields });
-  }
-
-  render() {
-    return (
-       <span>
-       <FormContainer handleSubmit={this.handleSubmit} submit='Run trade-bot'>
-           <FormTextField value={this.state.value} name="TXID" handleTextChange={(event) => this.setState({value: event.target.value}) } />
-           <FormRadioFieldList name="verbose" values={['true','false']} current={this.state.verbose} handleRadioChange={ (event) => this.setState({verbose: event.target.value}) }/>
-       </FormContainer>
-       <ResponseTable responseFields={this.state.responseFields}/>
-       </span>
-    );
-  }
-}
-
 function HelloWorld(props) {
     return <div>Hello World !</div>;
 }
@@ -123,11 +96,13 @@ class GraphResult extends React.Component {
     super(props);
 
     var data = {
+      label: "BTC chart",
       labels: [],
       datasets:  [ 0, 0, 0, 0, 0]
     };    
 
-    this.state = { chartData : data, responseFields : [], start : new Date('2017-01-01T0:0:0Z').toISOString(), end : new Date().toISOString() }
+    this.state = { chartData : data, responseFields : [], initial : '10000', 
+      start : new Date('2017-01-01T0:0:0Z').toISOString(), end : new Date().toISOString() }
 
     this.handleSubmit = this.handleSubmit.bind(this);
   }
@@ -154,7 +129,7 @@ class GraphResult extends React.Component {
   }
 
   handleSubmit(event) {
-    performRestReq((fields) => this.updateState(fields), '/trade_bot', [['start', this.state.start], ['end',this.state.end], ['initial', '10000']]) ;
+    performRestReq((fields) => this.updateState(fields), '/trade_bot', [['start', this.state.start], ['end',this.state.end], ['initial', this.state.initial]]) ;
     event.preventDefault();
   }
 
@@ -168,10 +143,11 @@ class GraphResult extends React.Component {
           <Line data={this.state.chartData} width="800" height="400"/>
           <FormContainer handleSubmit={this.handleSubmit} submit="Run trade-bot">
             <FormTextField value={this.state.start} name="start" handleTextChange={(event) => {try{ this.setState({start: new Date(event.target.value).toISOString()})}catch (e){}} } />
-            <FormTextField value={this.state.end} name="end" handleTextChange={(event) => {try{this.setState({value: new Date(event.target.value).toISOString()})}catch (e){}}  } />
+            <FormTextField value={this.state.end} name="end" handleTextChange={(event) => {try{this.setState({end: new Date(event.target.value).toISOString()})}catch (e){}}  } />
+            <FormTextField value={this.state.initial} name="initial" handleTextChange={(event) => this.setState({initial: event.target.value})} />
             <FormButton text='Update' handleClick={ (event) => this.componentDidMount() }/>
           </FormContainer>
-          <ResponseTable responseFields={this.state.responseFields}/>
+          <ResponseTable first='Date' second='Order' responseFields={this.state.responseFields}/>
           </span>  
       );
    }
