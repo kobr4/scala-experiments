@@ -11,10 +11,11 @@ import akka.http.scaladsl.unmarshalling.Unmarshaller
 import akka.stream.ActorMaterializer
 import play.api.libs.functional.syntax._
 import play.api.libs.json.{ JsPath, Writes }
-
+import Quote._
 import scala.concurrent.ExecutionContext
 
 trait TradingBotRoutes extends PlayJsonSupport {
+
   // we leave these abstract, since they will be provided by the App
   implicit def system: ActorSystem
 
@@ -67,9 +68,14 @@ trait TradingBotRoutes extends PlayJsonSupport {
           }
         }
       }
+    } ~ path("ticker") {
+      get {
+        onSuccess(PriceService.priceTicker()) { quoteList =>
+          complete(quoteList)
+        }
+      }
     } ~ get {
       complete("Hello World")
     }
-
   }
 }

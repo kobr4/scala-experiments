@@ -59,3 +59,37 @@ export function FormContainer(props) {
      </form>
   );
 }
+
+export function Panel(props) {
+  return (
+    <div className='panel panel-default'>
+      <div className='panel-heading'>
+        {props.title}
+      </div>
+      <div className='panel-body'>
+        {props.children}
+      </div>
+    </div>
+  );
+}
+
+export function PanelTable(props) {
+  var headers = [];
+  for (let h of props.headers) {
+    headers.push(<th>{h}</th>);
+  }
+  return (
+    <div className='table-responsive'>
+    <table className='table table-striped table-bordered table-hover'>
+      <thead>
+        <tr>
+          {headers}
+        </tr>
+      </thead>
+      <tbody>
+        {props.children}
+      </tbody>
+    </table>
+    </div>
+  );
+}

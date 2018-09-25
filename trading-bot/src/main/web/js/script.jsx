@@ -3,7 +3,7 @@
 import React from 'react'
 import ReactDOM from 'react-dom'
 import { BrowserRouter, Route, Switch, Layout } from 'react-router-dom'
-import {ApiResponseField, ApiResponseSpanField, ResponseTable, FormRadioField, FormRadioFieldList, FormTextField, FormButton, FormContainer} from './components/generics'
+import {ApiResponseField, ApiResponseSpanField, ResponseTable, FormRadioField, FormRadioFieldList, FormTextField, FormButton, FormContainer, Panel, PanelTable} from './components/generics'
 import {Line} from 'react-chartjs'
 
 const btcEndpoint = '/price_api/btc_history';
@@ -96,13 +96,20 @@ class GraphResult extends React.Component {
     super(props);
 
     var data = {
-      label: "BTC chart",
       labels: [],
-      datasets:  [ 0, 0, 0, 0, 0]
+      datasets:  [ { 
+        label: "BTC chart",
+        fillColor: "rgba(220,220,220,0.2)",
+        strokeColor: "rgba(220,220,220,1)",
+        pointColor: "rgba(220,220,220,1)",
+        pointStrokeColor: "#fff",
+        pointHighlightFill: "#fff",
+        pointHighlightStroke: "rgba(220,220,220,1)",        
+        data: [0, 0, 0, 0, 0] }]
     };    
 
     this.state = { chartData : data, responseFields : [], initial : '10000', 
-      start : new Date('2017-01-01T0:0:0Z').toISOString(), end : new Date().toISOString() }
+      start : new Date('2017-01-01T0:0:0Z').toISOString(), end : new Date().toISOString(), currencyFields : [] }
 
     this.handleSubmit = this.handleSubmit.bind(this);
   }
@@ -126,6 +133,20 @@ class GraphResult extends React.Component {
     this.setState({chartData : data});
     }, this.props.endpoint, [ ['start', this.state.start], ['end',this.state.end]]);
 
+
+    performRestPriceReq((quotes) => {
+        let currencyFields = [];
+        for(let q of quotes) {
+          currencyFields.push(
+            <tr>
+              <td>{q.pair.right}</td>
+              <td>{q.last+' '+q.pair.left}</td>
+              <td>{q.percentChange}</td>
+            </tr>
+          );
+        }
+        this.setState({currencyFields : currencyFields});
+    }, '/ticker')
   }
 
   handleSubmit(event) {
@@ -140,14 +161,24 @@ class GraphResult extends React.Component {
   render() {
     return (
           <span>
-          <Line data={this.state.chartData} width="800" height="400"/>
-          <FormContainer handleSubmit={this.handleSubmit} submit="Run trade-bot">
-            <FormTextField value={this.state.start} name="start" handleTextChange={(event) => {try{ this.setState({start: new Date(event.target.value).toISOString()})}catch (e){}} } />
-            <FormTextField value={this.state.end} name="end" handleTextChange={(event) => {try{this.setState({end: new Date(event.target.value).toISOString()})}catch (e){}}  } />
-            <FormTextField value={this.state.initial} name="initial" handleTextChange={(event) => this.setState({initial: event.target.value})} />
-            <FormButton text='Update' handleClick={ (event) => this.componentDidMount() }/>
-          </FormContainer>
-          <ResponseTable first='Date' second='Order' responseFields={this.state.responseFields}/>
+          <Panel title='Real-time prices'>
+            <PanelTable headers={['Currency','Price', 'Change']}>
+              {this.state.currencyFields}
+            </PanelTable>
+          </Panel>
+
+          <Panel title='BTC price history'>
+            <Line data={this.state.chartData} width="800" height="400"/>
+            <FormContainer handleSubmit={this.handleSubmit} submit="Run trade-bot">
+              <FormTextField value={this.state.start} name="start" handleTextChange={(event) => {try{ this.setState({start: new Date(event.target.value).toISOString()})}catch (e){}} } />
+              <FormTextField value={this.state.end} name="end" handleTextChange={(event) => {try{this.setState({end: new Date(event.target.value).toISOString()})}catch (e){}}  } />
+              <FormTextField value={this.state.initial} name="initial" handleTextChange={(event) => this.setState({initial: event.target.value})} />
+              <FormButton text='Update' handleClick={ (event) => this.componentDidMount() }/>
+            </FormContainer>
+          </Panel>
+          <Panel title='Trade-bot output'>
+            <ResponseTable first='Date' second='Order' responseFields={this.state.responseFields}/>
+          </Panel>
           </span>  
       );
    }

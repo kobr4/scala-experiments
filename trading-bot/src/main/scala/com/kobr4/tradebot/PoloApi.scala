@@ -21,8 +21,17 @@ case class CurrencyPair(left: Asset, right: Asset) {
   }
 }
 
+object CurrencyPair {
+  import Asset._
+  implicit val currencyPairWrites = Json.writes[CurrencyPair]
+}
+
 case class Quote(pair: CurrencyPair, last: BigDecimal, lowestAsk: BigDecimal, highestBid: BigDecimal, percentChange: BigDecimal,
   baseVolume: BigDecimal, quoteVolume: BigDecimal)
+
+object Quote {
+  implicit val quoteWrites = Json.writes[Quote]
+}
 
 class PoloApi(val poloUrl: String = PoloApi.rootUrl)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext) extends PoloAPIInterface {
 

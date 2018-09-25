@@ -4,8 +4,11 @@ import java.time._
 import java.time.format.DateTimeFormatter
 
 import Asset.Usd
+import com.fasterxml.jackson.annotation.JsonValue
+import play.api.libs.json.{ Format, JsString, Json, Writes }
 
 import scala.collection.mutable
+import scala.util.parsing.json.JSONObject
 
 sealed trait Asset
 
@@ -24,6 +27,8 @@ object Asset {
     case "USDT" => Some(Asset.Usd)
     case _ => None
   }
+
+  implicit val assetWrites: Writes[Asset] = { a: Asset => JsString(a.toString) }
 }
 
 object AppNoRun {

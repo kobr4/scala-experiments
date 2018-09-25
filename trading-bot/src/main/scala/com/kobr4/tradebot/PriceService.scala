@@ -26,7 +26,11 @@ object PriceService {
   def getEthPriceHistory(startDate: ZonedDateTime, endDate: ZonedDateTime)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[List[BigDecimal]] =
     fetchPrice(ethPricesUrl, startDate, endDate)
 
-  def getBtcPriceData(startDate: ZonedDateTime, endDate: ZonedDateTime)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext) =
+  def getBtcPriceData(startDate: ZonedDateTime, endDate: ZonedDateTime)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[PairPrices] =
     fetchPriceAndFilter(btcPricesUrl, startDate, endDate)
 
+  def priceTicker()(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[List[Quote]] = {
+    val api = new PoloApi()
+    api.returnTicker()
+  }
 }
