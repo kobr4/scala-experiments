@@ -29,6 +29,8 @@ trait TradingBotRoutes extends PlayJsonSupport {
 
   private val stringToBigDecimal = Unmarshaller.strict[String, BigDecimal](BigDecimal.apply)
 
+  private val stringToAsset = Unmarshaller.strict[String, Asset](s => Asset.fromString(s).getOrElse(Asset.Btc))
+
   implicit val dateOrderWrites: Writes[(ZonedDateTime, Order)] = (
     (JsPath \ "date").write[ZonedDateTime] and
     (JsPath \ "order").write[Order]) { a: (ZonedDateTime, Order) => (a._1, a._2) }
@@ -43,27 +45,19 @@ trait TradingBotRoutes extends PlayJsonSupport {
     } ~ path("eth_price") {
       getFromResource("public/api.html")
     } ~ pathPrefix("price_api") {
-      path("btc_history") {
+      path("price_history") {
         get {
-          parameters('start.as(stringToZonedDateTime), 'end.as(stringToZonedDateTime)) { (start, end) =>
-            onSuccess(PriceService.getBtcPriceHistory(start, end)) { priceList =>
+          parameters('asset.as(stringToAsset), 'start.as(stringToZonedDateTime), 'end.as(stringToZonedDateTime)) { (asset, start, end) =>
+            onSuccess(PriceService.getPriceHistory(asset, start, end)) { priceList =>
               complete(priceList)
             }
           }
         }
       } ~
-        path("btc_moving") {
+        path("moving") {
           get {
-            parameters('start.as(stringToZonedDateTime), 'end.as(stringToZonedDateTime), 'days.as[Int]) { (start, end, days) =>
-              onSuccess(PriceService.getBtcMovingAverageHistory(start, end, days)) { priceList =>
-                complete(priceList)
-              }
-            }
-          }
-        } ~ path("eth_history") {
-          get {
-            parameters('start.as(stringToZonedDateTime), 'end.as(stringToZonedDateTime)) { (start, end) =>
-              onSuccess(PriceService.getEthPriceHistory(start, end)) { priceList =>
+            parameters('asset.as(stringToAsset), 'start.as(stringToZonedDateTime), 'end.as(stringToZonedDateTime), 'days.as[Int]) { (asset, start, end, days) =>
+              onSuccess(PriceService.getMovingAverageHistory(asset, start, end, days)) { priceList =>
                 complete(priceList)
               }
             }
@@ -71,8 +65,8 @@ trait TradingBotRoutes extends PlayJsonSupport {
         }
     } ~ path("trade_bot") {
       get {
-        parameters('start.as(stringToZonedDateTime), 'end.as(stringToZonedDateTime), 'initial.as(stringToBigDecimal)) { (start, end, initial) =>
-          onSuccess(PriceService.getBtcPriceData(start, end).map(pdata => TradeBotService.run(Asset.Btc, initial, pdata))) { orderList =>
+        parameters('asset.as(stringToAsset), 'start.as(stringToZonedDateTime), 'end.as(stringToZonedDateTime), 'initial.as(stringToBigDecimal)) { (asset, start, end, initial) =>
+          onSuccess(PriceService.getPriceData(asset, start, end).map(pdata => TradeBotService.run(Asset.Btc, initial, pdata))) { orderList =>
             complete(orderList)
           }
         }

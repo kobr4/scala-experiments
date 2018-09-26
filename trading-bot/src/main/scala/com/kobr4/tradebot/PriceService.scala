@@ -20,17 +20,23 @@ object PriceService {
   private def fetchPriceAndFilter(url: String, startDate: ZonedDateTime, endDate: ZonedDateTime)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext) =
     PairPrice.fromUrlAsync(url).map { pairPrices => pairPrices.filter(p => p.date.isAfter(startDate) && p.date.isBefore(endDate)) }
 
-  def getBtcPriceHistory(startDate: ZonedDateTime, endDate: ZonedDateTime)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[List[BigDecimal]] =
-    fetchPrice(btcPricesUrl, startDate, endDate)
+  def getPriceHistory(asset: Asset, startDate: ZonedDateTime, endDate: ZonedDateTime)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[List[BigDecimal]] =
+    asset match {
+      case Asset.Btc => fetchPrice(btcPricesUrl, startDate, endDate)
+      case Asset.Eth => fetchPrice(ethPricesUrl, startDate, endDate)
+    }
 
-  def getBtcMovingAverageHistory(startDate: ZonedDateTime, endDate: ZonedDateTime, days: Int)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[List[BigDecimal]] =
-    PairPrice.fromUrlAsync(btcPricesUrl).map(_.movingAverage(days).filter(p => p.date.isAfter(startDate) && p.date.isBefore(endDate)).groupByMonth.map(merge => merge._2.map(_.price).sum / merge._2.length))
+  def getMovingAverageHistory(asset: Asset, startDate: ZonedDateTime, endDate: ZonedDateTime, days: Int)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[List[BigDecimal]] =
+    asset match {
+      case Asset.Btc => PairPrice.fromUrlAsync(btcPricesUrl).map(_.movingAverage(days).filter(p => p.date.isAfter(startDate) && p.date.isBefore(endDate)).groupByMonth.map(merge => merge._2.map(_.price).sum / merge._2.length))
+      case Asset.Eth => PairPrice.fromUrlAsync(ethPricesUrl).map(_.movingAverage(days).filter(p => p.date.isAfter(startDate) && p.date.isBefore(endDate)).groupByMonth.map(merge => merge._2.map(_.price).sum / merge._2.length))
+    }
 
-  def getEthPriceHistory(startDate: ZonedDateTime, endDate: ZonedDateTime)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[List[BigDecimal]] =
-    fetchPrice(ethPricesUrl, startDate, endDate)
-
-  def getBtcPriceData(startDate: ZonedDateTime, endDate: ZonedDateTime)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[PairPrices] =
-    fetchPriceAndFilter(btcPricesUrl, startDate, endDate)
+  def getPriceData(asset: Asset, startDate: ZonedDateTime, endDate: ZonedDateTime)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[PairPrices] =
+    asset match {
+      case Asset.Btc => fetchPriceAndFilter(btcPricesUrl, startDate, endDate)
+      case Asset.Eth => fetchPriceAndFilter(ethPricesUrl, startDate, endDate)
+    }
 
   def priceTicker()(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[List[Quote]] = {
     val api = new PoloApi()

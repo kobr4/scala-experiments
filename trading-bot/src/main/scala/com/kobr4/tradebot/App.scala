@@ -20,7 +20,7 @@ object Asset {
 
   case object Usd extends Asset { override def toString: String = "USDT" }
 
-  def fromString(s: String) = s match {
+  def fromString(s: String): Option[Asset] = s match {
     case "ETH" => Some(Asset.Eth)
     case "BTC" => Some(Asset.Btc)
     case "USD" => Some(Asset.Usd)

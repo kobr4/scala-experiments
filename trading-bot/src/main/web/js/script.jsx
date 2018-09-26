@@ -6,9 +6,8 @@ import { BrowserRouter, Route, Switch, Layout } from 'react-router-dom'
 import {ApiResponseField, ApiResponseSpanField, ResponseTable, FormRadioField, FormRadioFieldList, FormTextField, FormButton, FormContainer, Panel, PanelTable} from './components/generics'
 import {Line} from 'react-chartjs'
 
-const btcEndpoint = '/price_api/btc_history';
-const btcMovingEndpoint = '/price_api/btc_moving';
-const ethEndpoint = '/price_api/eth_history';
+const priceEndpoint = '/price_api/price_history';
+const movingEndpoint = '/price_api/moving';
 
 
 function performRestReq(updateCallback, path, params = []) {
@@ -111,11 +110,11 @@ function GraphResultBase(props) {
 class GraphResult extends React.Component {
 
   requestBTC = () => performRestPriceReq((prices) => { this.setState({btcdatapoints : prices}) }, 
-    this.props.endpoint, [ ['start', this.state.start], ['end',this.state.end]]);
+    this.props.endpoint, [ ['asset', this.props.asset], ['start', this.state.start], ['end',this.state.end]]);
   
 
   requestMA30 = () => performRestPriceReq((prices) => { this.setState({ma30datapoints : prices})}, 
-    btcMovingEndpoint, [ ['start', this.state.start], ['end',this.state.end], ['days', 30] ]);
+    movingEndpoint, [ ['asset', this.props.asset], ['start', this.state.start], ['end',this.state.end], ['days', 30] ]);
 
 
   constructor(props) {
@@ -129,7 +128,7 @@ class GraphResult extends React.Component {
 
   componentDidMount() {
 
-    performRestPriceReq((quotes) => {
+    setInterval(() => performRestPriceReq((quotes) => {
         let currencyFields = [];
         for(let q of quotes) {
           currencyFields.push(
@@ -141,7 +140,7 @@ class GraphResult extends React.Component {
           );
         }
         this.setState({currencyFields : currencyFields});
-    }, '/ticker')
+    }, '/ticker'),5000);
       
     this.requestBTC();
     this.requestMA30();
@@ -149,7 +148,7 @@ class GraphResult extends React.Component {
   }
 
   handleSubmit(event) {
-    performRestReq((fields) => this.updateState(fields), '/trade_bot', [['start', this.state.start], ['end',this.state.end], ['initial', this.state.initial]]) ;
+    performRestReq((fields) => this.updateState(fields), '/trade_bot', [['asset', this.props.asset], ['start', this.state.start], ['end',this.state.end], ['initial', this.state.initial]]) ;
     event.preventDefault();
   }
 
@@ -166,8 +165,8 @@ class GraphResult extends React.Component {
             </PanelTable>
           </Panel>
 
-          <Panel title='BTC price history'>
-            <GraphResultBase datas={[ { name: 'BTC', color: 'rgba(220,220,220,1)', datapoints: this.state.btcdatapoints},
+          <Panel title={this.props.asset+' price history'}>
+            <GraphResultBase datas={[ { name: this.props.asset, color: 'rgba(220,220,220,1)', datapoints: this.state.btcdatapoints},
               { name: 'MA30', color: 'rgba(220,0,0,1)', datapoints: this.state.ma30datapoints } ]}/>
             <FormContainer handleSubmit={this.handleSubmit} submit="Run trade-bot">
               <FormTextField value={this.state.start} name="start" handleTextChange={(event) => {try{ this.setState({start: new Date(event.target.value).toISOString()})}catch (e){}} } />
@@ -188,8 +187,8 @@ class GraphResult extends React.Component {
 ReactDOM.render(
     <BrowserRouter>
       <Switch>
-        <Route path='/btc_price' render={() => ( <GraphResult endpoint={btcEndpoint} title='BTC backtest'/>)} />
-        <Route path='/eth_price' render={() => ( <GraphResult endpoint={ethEndpoint} title='ETH backtest'/>)} />
+        <Route path='/btc_price' render={() => ( <GraphResult endpoint={priceEndpoint} title='BTC backtest' asset='BTC'/>)} />
+        <Route path='/eth_price' render={() => ( <GraphResult endpoint={priceEndpoint} title='ETH backtest' asset='ETH'/>)} />
         <Route path='/' render={() => ( <HelloWorld />)} />
       </Switch>
     </BrowserRouter>,
