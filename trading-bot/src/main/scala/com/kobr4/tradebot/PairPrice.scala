@@ -22,7 +22,7 @@ case class PairPrices(prices: List[PairPrice]) {
 
   def movingAverage(base: ZonedDateTime, days: Int): Option[BigDecimal] = {
     val minDate = base.minusDays(days)
-    val priceSubset = prices.filter(price => minDate.isBefore(price.date))
+    val priceSubset = prices.filter(price => price.date.isAfter(minDate) && price.date.isBefore(base))
     priceSubset.length match {
       case 0 => None
       case len => Some(priceSubset.map(_.price).sum / len)
