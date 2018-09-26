@@ -91,67 +91,43 @@ function HelloWorld(props) {
     return <div>Hello World !</div>;
 }
 
+function GraphResultBase(props) {
+  let datas = props.datas.map(data => 
+    ({ 
+        label: data.name,
+        fillColor: 'rgba(0,0,0,0)',
+        strokeColor: data.color,
+        pointColor: data.color,
+        data : data.datapoints
+      })
+    )
+    let chartData = { labels : [],datasets : datas };
+  return (
+    <Line data={chartData} width="800" height="400"/>
+  );
+}
+
+
 class GraphResult extends React.Component {
+
+  requestBTC = () => performRestPriceReq((prices) => { this.setState({btcdatapoints : prices}) }, 
+    this.props.endpoint, [ ['start', this.state.start], ['end',this.state.end]]);
+  
+
+  requestMA30 = () => performRestPriceReq((prices) => { this.setState({ma30datapoints : prices})}, 
+    btcMovingEndpoint, [ ['start', this.state.start], ['end',this.state.end], ['days', 30] ]);
+
 
   constructor(props) {
     super(props);
-
-    var data = {
-      labels: [],
-      datasets:  [ 
-        { 
-        label: "BTC",
-        backgroundColor: "rgba(220,220,220,1)",
-        borderColor: "rgba(220,220,220,1)",        
-        fillColor: "rgba(220,220,220,0.2)",
-        strokeColor: "rgba(220,220,220,1)",
-        pointColor: "rgba(220,220,220,1)",
-        pointStrokeColor: "#fff",
-        pointHighlightFill: "#fff",
-        pointHighlightStroke: "rgba(220,220,220,1)",        
-        data: [0, 0, 0, 0, 0] 
-        }, 
-        {
-          label: "MA30",
-          fillColor: "rgba(220,0,0,0)",
-          strokeColor: "rgba(220,0,0,0.8)",
-          pointColor: "rgba(220,0,0,0.8)",
-          data: [0, 0, 0, 0, 0]
-        }]
-    };    
-
-    this.state = { chartData : data, responseFields : [], initial : '10000', 
+    
+    this.state = { ma30datapoints : [], btcdatapoints : [], responseFields : [], initial : '10000', 
       start : new Date('2017-01-01T0:0:0Z').toISOString(), end : new Date().toISOString(), currencyFields : [] }
 
     this.handleSubmit = this.handleSubmit.bind(this);
   }
 
   componentDidMount() {
-
-    performRestPriceReq((prices) => {
-    var data = {
-      labels: [],
-      datasets: [
-        { 
-          label: "BTC",
-          data: prices
-        }, 
-        {
-          label: "MA30",
-          data: this.state.chartData.datasets[1].data
-        }]
-    };
-    this.setState({chartData : data});
-    }, this.props.endpoint, [ ['start', this.state.start], ['end',this.state.end]]);
-
-    performRestPriceReq((prices) => {
-      var chartData = {
-        labels: [],
-        datasets: [ { data: this.state.chartData.datasets[0].data }, { data: prices}]
-      };
-      this.setState({chartData : chartData});
-      }, btcMovingEndpoint, [ ['start', this.state.start], ['end',this.state.end], ['days', 30] ]);
-
 
     performRestPriceReq((quotes) => {
         let currencyFields = [];
@@ -166,7 +142,10 @@ class GraphResult extends React.Component {
         }
         this.setState({currencyFields : currencyFields});
     }, '/ticker')
-  
+      
+    this.requestBTC();
+    this.requestMA30();
+
   }
 
   handleSubmit(event) {
@@ -188,7 +167,8 @@ class GraphResult extends React.Component {
           </Panel>
 
           <Panel title='BTC price history'>
-            <Line data={this.state.chartData} width="800" height="400"/>
+            <GraphResultBase datas={[ { name: 'BTC', color: 'rgba(220,220,220,1)', datapoints: this.state.btcdatapoints},
+              { name: 'MA30', color: 'rgba(220,0,0,1)', datapoints: this.state.ma30datapoints } ]}/>
             <FormContainer handleSubmit={this.handleSubmit} submit="Run trade-bot">
               <FormTextField value={this.state.start} name="start" handleTextChange={(event) => {try{ this.setState({start: new Date(event.target.value).toISOString()})}catch (e){}} } />
               <FormTextField value={this.state.end} name="end" handleTextChange={(event) => {try{this.setState({end: new Date(event.target.value).toISOString()})}catch (e){}}  } />
