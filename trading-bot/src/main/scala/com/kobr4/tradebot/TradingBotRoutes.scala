@@ -51,15 +51,24 @@ trait TradingBotRoutes extends PlayJsonSupport {
             }
           }
         }
-      } ~ path("eth_history") {
-        get {
-          parameters('start.as(stringToZonedDateTime), 'end.as(stringToZonedDateTime)) { (start, end) =>
-            onSuccess(PriceService.getEthPriceHistory(start, end)) { priceList =>
-              complete(priceList)
+      } ~
+        path("btc_moving") {
+          get {
+            parameters('start.as(stringToZonedDateTime), 'end.as(stringToZonedDateTime), 'days.as[Int]) { (start, end, days) =>
+              onSuccess(PriceService.getBtcMovingAverageHistory(start, end, days)) { priceList =>
+                complete(priceList)
+              }
+            }
+          }
+        } ~ path("eth_history") {
+          get {
+            parameters('start.as(stringToZonedDateTime), 'end.as(stringToZonedDateTime)) { (start, end) =>
+              onSuccess(PriceService.getEthPriceHistory(start, end)) { priceList =>
+                complete(priceList)
+              }
             }
           }
         }
-      }
     } ~ path("trade_bot") {
       get {
         parameters('start.as(stringToZonedDateTime), 'end.as(stringToZonedDateTime), 'initial.as(stringToBigDecimal)) { (start, end, initial) =>

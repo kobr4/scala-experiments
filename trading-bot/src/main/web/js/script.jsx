@@ -7,6 +7,7 @@ import {ApiResponseField, ApiResponseSpanField, ResponseTable, FormRadioField, F
 import {Line} from 'react-chartjs'
 
 const btcEndpoint = '/price_api/btc_history';
+const btcMovingEndpoint = '/price_api/btc_moving';
 const ethEndpoint = '/price_api/eth_history';
 
 
@@ -97,15 +98,26 @@ class GraphResult extends React.Component {
 
     var data = {
       labels: [],
-      datasets:  [ { 
-        label: "BTC chart",
+      datasets:  [ 
+        { 
+        label: "BTC",
+        backgroundColor: "rgba(220,220,220,1)",
+        borderColor: "rgba(220,220,220,1)",        
         fillColor: "rgba(220,220,220,0.2)",
         strokeColor: "rgba(220,220,220,1)",
         pointColor: "rgba(220,220,220,1)",
         pointStrokeColor: "#fff",
         pointHighlightFill: "#fff",
         pointHighlightStroke: "rgba(220,220,220,1)",        
-        data: [0, 0, 0, 0, 0] }]
+        data: [0, 0, 0, 0, 0] 
+        }, 
+        {
+          label: "MA30",
+          fillColor: "rgba(220,0,0,0)",
+          strokeColor: "rgba(220,0,0,0.8)",
+          pointColor: "rgba(220,0,0,0.8)",
+          data: [0, 0, 0, 0, 0]
+        }]
     };    
 
     this.state = { chartData : data, responseFields : [], initial : '10000', 
@@ -119,19 +131,26 @@ class GraphResult extends React.Component {
     performRestPriceReq((prices) => {
     var data = {
       labels: [],
-      datasets: [{
-      label: "My First dataset",
-      fillColor: "rgba(220,220,220,0.2)",
-      strokeColor: "rgba(220,220,220,1)",
-      pointColor: "rgba(220,220,220,1)",
-      pointStrokeColor: "#fff",
-      pointHighlightFill: "#fff",
-      pointHighlightStroke: "rgba(220,220,220,1)",
-      data: prices
-    }]
+      datasets: [
+        { 
+          label: "BTC",
+          data: prices
+        }, 
+        {
+          label: "MA30",
+          data: this.state.chartData.datasets[1].data
+        }]
     };
     this.setState({chartData : data});
     }, this.props.endpoint, [ ['start', this.state.start], ['end',this.state.end]]);
+
+    performRestPriceReq((prices) => {
+      var chartData = {
+        labels: [],
+        datasets: [ { data: this.state.chartData.datasets[0].data }, { data: prices}]
+      };
+      this.setState({chartData : chartData});
+      }, btcMovingEndpoint, [ ['start', this.state.start], ['end',this.state.end], ['days', 30] ]);
 
 
     performRestPriceReq((quotes) => {
@@ -147,6 +166,7 @@ class GraphResult extends React.Component {
         }
         this.setState({currencyFields : currencyFields});
     }, '/ticker')
+  
   }
 
   handleSubmit(event) {

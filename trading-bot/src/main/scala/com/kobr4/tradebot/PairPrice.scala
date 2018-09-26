@@ -41,6 +41,14 @@ case class PairPrices(prices: List[PairPrice]) {
   def groupByMonth: List[(Int, List[PairPrice])] = prices.groupBy(p => p.date.getYear * 100 + p.date.getMonthValue).toList.sortBy(_._1)
 
   def filter(f: PairPrice => Boolean): PairPrices = PairPrices(prices.filter(f))
+
+  def movingAverage(days: Int): PairPrices = {
+    PairPrices(prices.map { price => EthUsd(price.date, movingAverage(price.date, days).getOrElse(BigDecimal(0))) })
+  }
+
+  def filter(startDate: ZonedDateTime, endDate: ZonedDateTime): PairPrices =
+    filter(p => p.date.isAfter(startDate) && p.date.isBefore(endDate))
+
 }
 
 object PairPrice {

@@ -23,6 +23,9 @@ object PriceService {
   def getBtcPriceHistory(startDate: ZonedDateTime, endDate: ZonedDateTime)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[List[BigDecimal]] =
     fetchPrice(btcPricesUrl, startDate, endDate)
 
+  def getBtcMovingAverageHistory(startDate: ZonedDateTime, endDate: ZonedDateTime, days: Int)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[List[BigDecimal]] =
+    PairPrice.fromUrlAsync(btcPricesUrl).map(_.movingAverage(days).filter(p => p.date.isAfter(startDate) && p.date.isBefore(endDate)).groupByMonth.map(merge => merge._2.map(_.price).sum / merge._2.length))
+
   def getEthPriceHistory(startDate: ZonedDateTime, endDate: ZonedDateTime)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[List[BigDecimal]] =
     fetchPrice(ethPricesUrl, startDate, endDate)
 
