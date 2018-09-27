@@ -38,7 +38,7 @@ export function FormRadioFieldList(props) {
 }
 
 export function FormTextField(props) {
-  return <label>{props.name}<input type="text" value={props.value} name={props.name} onChange={props.handleTextChange} /></label>;
+  return <input type="text" value={props.value} name={props.name} onChange={props.handleTextChange} />;
 }
 
 export function FormInputField(props) {

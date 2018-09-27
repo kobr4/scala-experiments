@@ -66,7 +66,7 @@ trait TradingBotRoutes extends PlayJsonSupport {
     } ~ path("trade_bot") {
       get {
         parameters('asset.as(stringToAsset), 'start.as(stringToZonedDateTime), 'end.as(stringToZonedDateTime), 'initial.as(stringToBigDecimal)) { (asset, start, end, initial) =>
-          onSuccess(PriceService.getPriceData(asset, start, end).map(pdata => TradeBotService.run(Asset.Btc, initial, pdata))) { orderList =>
+          onSuccess(PriceService.getPriceData(asset, start, end).map(pdata => TradeBotService.run(asset, initial, pdata))) { orderList =>
             complete(orderList)
           }
         }

@@ -113,11 +113,11 @@ function GraphResultBase(props) {
 class GraphResult extends React.Component {
 
   requestBTC = () => performRestPriceReq((prices) => { this.setState({btcdatapoints : prices}) }, 
-    this.props.endpoint, [ ['asset', this.props.asset], ['start', this.state.start.format()], ['end',this.state.end.format()]]);
+    this.props.endpoint, [ ['asset', this.props.asset], ['start', this.state.start.format(moment.defaultFormatUtc)], ['end',this.state.end.format(moment.defaultFormatUtc)]]);
   
 
   requestMA30 = () => performRestPriceReq((prices) => { this.setState({ma30datapoints : prices})}, 
-    movingEndpoint, [ ['asset', this.props.asset], ['start', this.state.start.format()], ['end',this.state.end.format()], ['days', 30] ]);
+    movingEndpoint, [ ['asset', this.props.asset], ['start', this.state.start.format(moment.defaultFormatUtc)], ['end',this.state.end.format(moment.defaultFormatUtc)], ['days', 30] ]);
 
 
   constructor(props) {
@@ -153,7 +153,7 @@ class GraphResult extends React.Component {
   }
 
   handleSubmit(event) {
-    performRestReq((fields) => this.updateState(fields), '/trade_bot', [['asset', this.props.asset], ['start', this.state.start], ['end',this.state.end], ['initial', this.state.initial]]) ;
+    performRestReq((fields) => this.updateState(fields), '/trade_bot', [['asset', this.props.asset], ['start', this.state.start.format(moment.defaultFormatUtc)], ['end',this.state.end.format(moment.defaultFormatUtc)], ['initial', this.state.initial]]) ;
     event.preventDefault();
   }
 
@@ -173,16 +173,22 @@ class GraphResult extends React.Component {
           <Panel title={this.props.asset+' price history'}>
             <GraphResultBase datas={[ { name: this.props.asset, color: 'rgba(220,220,220,1)', datapoints: this.state.btcdatapoints},
               { name: 'MA30', color: 'rgba(220,0,0,1)', datapoints: this.state.ma30datapoints } ]}/>
-            <FormContainer handleSubmit={this.handleSubmit} submit="Run trade-bot">      
-              <DatePicker title='start' selected={this.state.start} onChange={(date) => this.setState({start: date})}/>
-              <DatePicker title='end' selected={this.state.end} onChange={(date) => this.setState({end: date})}/>
-              <FormTextField value={this.state.initial} name="initial" handleTextChange={(event) => this.setState({initial: event.target.value})} />
-              <FormButton text='Update' handleClick={ (event) => this.componentDidMount() }/>
+            <FormContainer handleSubmit={this.handleSubmit} submit="Run trade-bot">  
+              <table>
+              <tbody>      
+              <tr><td>Start</td><td><DatePicker title='start' selected={this.state.start} onChange={(date) => this.setState({start: date})}/></td></tr>
+              <tr><td>End</td><td><DatePicker title='end' selected={this.state.end} onChange={(date) => this.setState({end: date})}/></td></tr>
+              <tr><td>Initial amount (USD)</td><td><FormTextField value={this.state.initial} name="initial" handleTextChange={(event) => this.setState({initial: event.target.value})} /></td></tr>
+              <tr><td><FormButton text='Update' handleClick={ (event) => this.componentDidMount() }/></td></tr>
+              </tbody>
+              </table>
             </FormContainer>
           </Panel>
-          <Panel title='Trade-bot output'>
-            <ResponseTable first='Date' second='Order' responseFields={this.state.responseFields}/>
-          </Panel>
+          { this.state.responseFields.length > 0 &&
+            <Panel title='Trade-bot output'>
+              <ResponseTable first='Date' second='Order' responseFields={this.state.responseFields}/>
+            </Panel>
+          }
           </span>  
       );
    }
