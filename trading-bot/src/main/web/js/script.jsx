@@ -5,10 +5,13 @@ import ReactDOM from 'react-dom'
 import { BrowserRouter, Route, Switch, Layout } from 'react-router-dom'
 import {ApiResponseField, ApiResponseSpanField, ResponseTable, FormRadioField, FormRadioFieldList, FormTextField, FormButton, FormContainer, Panel, PanelTable} from './components/generics'
 import {Line} from 'react-chartjs'
+import DatePicker from 'react-datepicker';
+import moment from 'moment';
+
+import 'react-datepicker/dist/react-datepicker.css';
 
 const priceEndpoint = '/price_api/price_history';
 const movingEndpoint = '/price_api/moving';
-
 
 function performRestReq(updateCallback, path, params = []) {
   var xhttp = new XMLHttpRequest();
@@ -110,18 +113,20 @@ function GraphResultBase(props) {
 class GraphResult extends React.Component {
 
   requestBTC = () => performRestPriceReq((prices) => { this.setState({btcdatapoints : prices}) }, 
-    this.props.endpoint, [ ['asset', this.props.asset], ['start', this.state.start], ['end',this.state.end]]);
+    this.props.endpoint, [ ['asset', this.props.asset], ['start', this.state.start.format()], ['end',this.state.end.format()]]);
   
 
   requestMA30 = () => performRestPriceReq((prices) => { this.setState({ma30datapoints : prices})}, 
-    movingEndpoint, [ ['asset', this.props.asset], ['start', this.state.start], ['end',this.state.end], ['days', 30] ]);
+    movingEndpoint, [ ['asset', this.props.asset], ['start', this.state.start.format()], ['end',this.state.end.format()], ['days', 30] ]);
 
 
   constructor(props) {
     super(props);
     
     this.state = { ma30datapoints : [], btcdatapoints : [], responseFields : [], initial : '10000', 
-      start : new Date('2017-01-01T0:0:0Z').toISOString(), end : new Date().toISOString(), currencyFields : [] }
+      start : moment("2017-01-01")
+      //moment("20170101", "YYYYMMDD")
+      , end : moment(), currencyFields : [] }
 
     this.handleSubmit = this.handleSubmit.bind(this);
   }
@@ -168,9 +173,9 @@ class GraphResult extends React.Component {
           <Panel title={this.props.asset+' price history'}>
             <GraphResultBase datas={[ { name: this.props.asset, color: 'rgba(220,220,220,1)', datapoints: this.state.btcdatapoints},
               { name: 'MA30', color: 'rgba(220,0,0,1)', datapoints: this.state.ma30datapoints } ]}/>
-            <FormContainer handleSubmit={this.handleSubmit} submit="Run trade-bot">
-              <FormTextField value={this.state.start} name="start" handleTextChange={(event) => {try{ this.setState({start: new Date(event.target.value).toISOString()})}catch (e){}} } />
-              <FormTextField value={this.state.end} name="end" handleTextChange={(event) => {try{this.setState({end: new Date(event.target.value).toISOString()})}catch (e){}}  } />
+            <FormContainer handleSubmit={this.handleSubmit} submit="Run trade-bot">      
+              <DatePicker title='start' selected={this.state.start} onChange={(date) => this.setState({start: date})}/>
+              <DatePicker title='end' selected={this.state.end} onChange={(date) => this.setState({end: date})}/>
               <FormTextField value={this.state.initial} name="initial" handleTextChange={(event) => this.setState({initial: event.target.value})} />
               <FormButton text='Update' handleClick={ (event) => this.componentDidMount() }/>
             </FormContainer>
