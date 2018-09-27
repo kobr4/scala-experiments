@@ -19,7 +19,7 @@ object Strategy {
     // Sexy DSL ! <3
     maybeBuy
       .whenCashAvailable
-      .whenBelowMovingAverge(current, ethPrice, priceData)
+      .whenAboveMovingAverge(current, ethPrice, priceData)
   }
 
   /* sell if 20% gain or 10% loss */
@@ -31,17 +31,20 @@ object Strategy {
 
     val maybeFirst = maybeSellAll
       .when(portfolio.assets(asset).quantity > 0)
-      .whenAboveMovingAverge(current, currentPrice, priceData)
+      .whenBelowMovingAverge(current, currentPrice, priceData)
       .whenLastBuyingPrice(asset, (buyPrice) => {
         buyPrice + buyPrice * 20 / 100 < currentPrice || buyPrice - buyPrice * 10 / 100 > currentPrice
       })
 
     maybeFirst.orElse(
       maybeSellAll
-        .whenBelowMovingAverge(current, currentPrice, priceData)
-        .whenLastBuyingPrice(Asset.Eth, (buyPrice) => {
-          buyPrice + buyPrice * 20 / 100 < currentPrice || buyPrice - buyPrice * 10 / 100 > currentPrice
+        .when(portfolio.assets(asset).quantity > 0)
+        .whenAboveMovingAverge(current, currentPrice, priceData)
+        .whenLastBuyingPrice(asset, (buyPrice) => {
+          buyPrice + buyPrice * 20 / 100 < currentPrice //|| buyPrice - buyPrice * 10 / 100 > currentPrice
         }))
+
+    maybeFirst
   }
 
   def runStrategy(asset: Asset, current: ZonedDateTime, priceData: PairPrices, portfolio: Portfolio): Option[(ZonedDateTime, Order)] = {

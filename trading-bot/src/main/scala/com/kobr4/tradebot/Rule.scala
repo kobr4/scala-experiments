@@ -22,9 +22,9 @@ object Rule {
 
       override def whenCashAvailable(implicit portfolio: Portfolio): Option[T] = input.filter(_ => portfolio.assets(Asset.Usd).quantity > 100)
 
-      override def whenBelowMovingAverge(current: ZonedDateTime, currentPrice: BigDecimal, priceData: PairPrices): Option[T] = priceData.movingAverage(current, 30).filter(_ > currentPrice).flatMap(_ => input)
+      override def whenBelowMovingAverge(current: ZonedDateTime, currentPrice: BigDecimal, priceData: PairPrices): Option[T] = priceData.movingAverage(current, 20).filter(_ > currentPrice).flatMap(_ => input)
 
-      override def whenAboveMovingAverge(current: ZonedDateTime, currentPrice: BigDecimal, priceData: PairPrices): Option[T] = priceData.movingAverage(current, 30).filter(_ < currentPrice).flatMap(_ => input)
+      override def whenAboveMovingAverge(current: ZonedDateTime, currentPrice: BigDecimal, priceData: PairPrices): Option[T] = priceData.movingAverage(current, 20).filter(_ < currentPrice).flatMap(_ => input)
 
       override def when(v: Boolean): Option[T] = input.filter(_ => v)
 

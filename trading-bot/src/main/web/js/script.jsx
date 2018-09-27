@@ -23,14 +23,16 @@ function performRestReq(updateCallback, path, params = []) {
               var field = <ApiResponseField name='result' value={jsonResponse.result} key='result' />
               fields.push(field);
            } if (Array.isArray(jsonResponse)) {
+
+            var order = (jsonResponse.slice(-1)[0]).order;
+            var toto = <ApiResponseSpanField value={'Final balance: '+order.price*order.quantity+' USD | Order count: '+ jsonResponse.length} />
+            fields.push(toto);
+
             jsonResponse.forEach(function(data){
               var field = <ApiResponseField name={data.date} value= {JSON.stringify(data.order)}/>
               fields.push(field);
             })
-            var order = (jsonResponse.slice(-1)[0]).order;
-            
-            var toto = <ApiResponseSpanField value={'Final balance: '+order.price*order.quantity+' USD'} />
-            fields.push(toto);
+
            } else {
                Object.keys(jsonResponse.result).forEach(function (key) {
                  var value = JSON.stringify(jsonResponse.result[key], null, 2);
