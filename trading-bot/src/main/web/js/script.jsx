@@ -2,8 +2,11 @@
 
 import React from 'react'
 import ReactDOM from 'react-dom'
-import { BrowserRouter, Route, Switch, Layout } from 'react-router-dom'
-import {ApiResponseField, ApiResponseSpanField, ResponseTable, FormRadioField, FormRadioFieldList, FormTextField, FormButton, FormContainer, Panel, PanelTable} from './components/generics'
+import { BrowserRouter, Route, Switch } from 'react-router-dom'
+import { ResponseTable, FormRow, FormTable, FormTextField, FormButton, FormContainer, Panel, PanelTable} from './components/generics'
+
+import Helper from './components/helper'
+import RestUtils from './restutils'
 import {Line} from 'react-chartjs'
 import DatePicker from 'react-datepicker';
 import moment from 'moment';
@@ -15,74 +18,6 @@ const priceAtEndpoint = '/price_api/price_at';
 const movingEndpoint = '/price_api/moving';
 
 
-function buildResponseComponent(jsonResponse) {
-  var fields = [];
-  if (typeof jsonResponse.result === 'string' || typeof jsonResponse.result === 'number') {
-     var field = <ApiResponseField name='result' value={jsonResponse.result} key='result' />
-     fields.push(field);
-  } if (Array.isArray(jsonResponse)) {
-   jsonResponse.forEach(function(data){
-     var field = <ApiResponseField name={data.date} value= {JSON.stringify(data.order)}/>
-     fields.push(field);
-   })
-
-  } else {
-      Object.keys(jsonResponse.result).forEach(function (key) {
-        var value = JSON.stringify(jsonResponse.result[key], null, 2);
-         var field = <ApiResponseField name={key} value={value} key={key} />
-         fields.push(field);
-      });
-  }
-  return fields;
-}
-
-function rowsFromObjet(jsObj) {
-  var fields = [];  
-  Object.keys(jsObj).forEach(function (key) {
-    fields.push(<tr><td>{key}</td><td>{jsObj[key]}</td></tr>);
-  })
-  return fields;
-}
-
-function performRestReq(updateCallback, path, params = []) {
-  var xhttp = new XMLHttpRequest();
-  xhttp.onreadystatechange = function() {
-       if (this.readyState == 4 && this.status == 200) {
-           var jsonResponse = JSON.parse(this.responseText)
-           updateCallback(jsonResponse);
-       }
-  };
-  var protocol = location.protocol;
-  var slashes = protocol.concat("//");
-  var host = slashes.concat(window.location.hostname+(window.location.port==8080?":8080":""));
-  var paramsString = params.map(field => field[0]+"="+field[1]+"&").join('')
-  xhttp.open("GET", host+path+"?"+paramsString, true);
-  xhttp.setRequestHeader("Content-type", "application/json");
-  xhttp.send();
-}
-
-function performRestPriceReq(updateCallback, path, params = []) {
-  var xhttp = new XMLHttpRequest();
-  xhttp.onreadystatechange = function() {
-       if (this.readyState == 4 && this.status == 200) {
-           var jsonResponse = JSON.parse(this.responseText)
-           updateCallback(jsonResponse);
-       }
-  };
-  var protocol = location.protocol;
-  var slashes = protocol.concat("//");
-  var host = slashes.concat(window.location.hostname+(window.location.port==8080?":8080":""));
-  var paramsString = params.map(field => field[0]+"="+encodeURIComponent(field[1])+"&").join('')
-  xhttp.open("GET", host+path+"?"+paramsString, true);
-  xhttp.setRequestHeader("Content-type", "application/json");
-  xhttp.send();
-}
-
-function performRestPriceReqWithPromise(path, params = []) {
-  return new Promise( (resolve, reject) =>  {
-    performRestPriceReq( (jsonResponse) => resolve(jsonResponse), path, params);
-  })
-}
 
 function HelloWorld(props) {
     return <div>Hello World !</div>;
@@ -115,14 +50,14 @@ function computeExecutionResult(tradeBotResponse, initial, firstDayPrice, lastDa
 
   var buyAndHoldPerformance = (buyAndHoldValue * 100 / initial - 100).toFixed(2);
 
-  return {lastPortfolioValue: lastPortfolioValue, performance: performance+' %', buyAndHoldValue: buyAndHoldValue, buyAndHoldPerformance: buyAndHoldPerformance+' %'} 
+  return {lastPortfolioValue: lastPortfolioValue, performance: (performance > 0 ? '+':'')+performance+' %', buyAndHoldValue: buyAndHoldValue, buyAndHoldPerformance: (buyAndHoldPerformance > 0 ? '+':'')+buyAndHoldPerformance+' %'} 
 }
 
 
 function buildExecutionResult(tradeBotResponse, initial, asset, start, end, updateCallback) {
   var promises = [ 
-      performRestPriceReqWithPromise(priceAtEndpoint, [ ['asset', asset], ['date', start.format(moment.defaultFormatUtc)] ]), 
-      performRestPriceReqWithPromise(priceAtEndpoint, [ ['asset', asset], ['date', end.format(moment.defaultFormatUtc)] ])
+    RestUtils.performRestPriceReqWithPromise(priceAtEndpoint, [ ['asset', asset], ['date', start.format(moment.defaultFormatUtc)] ]), 
+    RestUtils.performRestPriceReqWithPromise(priceAtEndpoint, [ ['asset', asset], ['date', end.format(moment.defaultFormatUtc)] ])
     ];
   
   Promise.all(promises).then( (prices) => {
@@ -131,31 +66,19 @@ function buildExecutionResult(tradeBotResponse, initial, asset, start, end, upda
   });
 }
 
-
-function ExecutionResult(props) {
-  return (
-    <Panel title='TradeBot execution results'>
-    <PanelTable>
-      {props.executionResultFields}
-    </PanelTable>
-  </Panel>
-  );
-}
-
-
 class GraphResult extends React.Component {
 
-  requestBTC = () => performRestPriceReq((prices) => { this.setState({btcdatapoints : prices}) }, 
+  requestBTC = () => RestUtils.performRestPriceReq((prices) => { this.setState({btcdatapoints : prices}) }, 
     this.props.endpoint, [ ['asset', this.props.asset], ['start', this.state.start.format(moment.defaultFormatUtc)], ['end',this.state.end.format(moment.defaultFormatUtc)]]);
   
 
-  requestMA30 = () => performRestPriceReq((prices) => { this.setState({ma30datapoints : prices})}, 
+  requestMA30 = () => RestUtils.performRestPriceReq((prices) => { this.setState({ma30datapoints : prices})}, 
     movingEndpoint, [ ['asset', this.props.asset], ['start', this.state.start.format(moment.defaultFormatUtc)], ['end',this.state.end.format(moment.defaultFormatUtc)], ['days', 30] ]);
 
   handleSubmit = (event) => {
-    performRestReq((tradeBotResponse) => {
-      this.setState({responseFields : buildResponseComponent(tradeBotResponse)});
-      buildExecutionResult(tradeBotResponse, this.state.initial, this.props.asset, this.state.start, this.state.end, (result) =>  this.setState({executionResultFields: rowsFromObjet(result)}));
+    RestUtils.performRestReq((tradeBotResponse) => {
+      this.setState({responseFields : Helper.buildResponseComponent(tradeBotResponse)});
+      buildExecutionResult(tradeBotResponse, this.state.initial, this.props.asset, this.state.start, this.state.end, (result) =>  this.setState({executionResultFields: Helper.rowsFromObjet(result)}));
       
     
     }, '/trade_bot', [['asset', this.props.asset], ['start', this.state.start.format(moment.defaultFormatUtc)], ['end',this.state.end.format(moment.defaultFormatUtc)], ['initial', this.state.initial]]) ;
@@ -181,8 +104,8 @@ class GraphResult extends React.Component {
   }
 
   componentDidMount() {
-
-    setInterval(() => performRestPriceReq((quotes) => {
+    console.log(typeof RestUtils); 
+    setInterval(() => RestUtils.performRestPriceReq((quotes) => {
         let currencyFields = [];
         for(let q of quotes) {
           currencyFields.push(
@@ -220,19 +143,29 @@ class GraphResult extends React.Component {
             <GraphResultBase datas={[ { name: this.props.asset, color: 'rgba(220,220,220,1)', datapoints: this.state.btcdatapoints},
               { name: 'MA30', color: 'rgba(220,0,0,1)', datapoints: this.state.ma30datapoints } ]}/>
             <FormContainer handleSubmit={this.handleSubmit} submit="Run trade-bot">  
-              <table>
-              <tbody>      
-              <tr><td>Start</td><td><DatePicker title='start' selected={this.state.start} onChange={(date) => this.setState({start: date})}/></td></tr>
-              <tr><td>End</td><td><DatePicker title='end' selected={this.state.end} onChange={(date) => this.setState({end: date})}/></td></tr>
-              <tr><td>Initial amount (USD)</td><td><FormTextField value={this.state.initial} name="initial" handleTextChange={(event) => this.setState({initial: event.target.value})} /></td></tr>
-              <tr><td><FormButton text='Update' handleClick={ (event) => this.componentDidMount() }/></td></tr>
-              </tbody>
-              </table>
+              <FormTable>
+                <FormRow label='Start'>
+                  <DatePicker title='start' selected={this.state.start} onChange={(date) => this.setState({start: date})}/>
+                </FormRow>
+                <FormRow label='End'>
+                  <DatePicker title='end' selected={this.state.end} onChange={(date) => this.setState({end: date})}/>
+                </FormRow>
+                <FormRow label='Initial amount (USD)'>
+                  <FormTextField value={this.state.initial} name="initial" handleTextChange={(event) => this.setState({initial: event.target.value})} />
+                </FormRow>
+                <FormRow>
+                  <FormButton text='Update' handleClick={ (event) => this.componentDidMount() }/>
+                </FormRow>
+              </FormTable>    
             </FormContainer>
           </Panel>
           {
             this.state.executionResultFields.length > 0 &&
-            <ExecutionResult executionResultFields={this.state.executionResultFields}/>
+            <Panel title='TradeBot execution results'>
+            <PanelTable>
+              {props.executionResultFields}
+            </PanelTable>
+          </Panel>
           }
 
           { this.state.responseFields.length > 0 &&

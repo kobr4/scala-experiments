@@ -60,6 +60,22 @@ export function FormContainer(props) {
   );
 }
 
+export function FormTable(props) {
+  return (
+    <table>
+      <tbody>
+      {props.children}
+      </tbody>
+    </table>
+  );
+}
+
+export function FormRow(props) {
+  return (
+    <tr>{ props.label && <td>{props.label}</td>}<td>{props.children}</td></tr>
+  );
+}
+
 export function Panel(props) {
   return (
     <div className='panel panel-default'>
