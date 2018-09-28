@@ -104,7 +104,7 @@ class GraphResult extends React.Component {
   }
 
   componentDidMount() {
-    console.log(typeof RestUtils); 
+
     setInterval(() => RestUtils.performRestPriceReq((quotes) => {
         let currencyFields = [];
         for(let q of quotes) {
