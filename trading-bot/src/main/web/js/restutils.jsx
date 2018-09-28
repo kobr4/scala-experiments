@@ -37,7 +37,7 @@ class RestUtils {
   
   static performRestPriceReqWithPromise(path, params = []) {
     return new Promise( (resolve, reject) =>  {
-      performRestPriceReq( (jsonResponse) => resolve(jsonResponse), path, params);
+        RestUtils.performRestPriceReq( (jsonResponse) => resolve(jsonResponse), path, params);
     })
   }
     

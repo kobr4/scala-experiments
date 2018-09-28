@@ -163,7 +163,7 @@ class GraphResult extends React.Component {
             this.state.executionResultFields.length > 0 &&
             <Panel title='TradeBot execution results'>
             <PanelTable>
-              {props.executionResultFields}
+              {this.state.executionResultFields}
             </PanelTable>
           </Panel>
           }
