@@ -53,6 +53,14 @@ trait TradingBotRoutes extends PlayJsonSupport {
             }
           }
         }
+      } ~ path("price_at") {
+        get {
+          parameters('asset.as(stringToAsset), 'date.as(stringToZonedDateTime)) { (asset, date) =>
+            onSuccess(PriceService.getPriceAt(asset, date)) { price =>
+              complete(price)
+            }
+          }
+        }
       } ~
         path("moving") {
           get {

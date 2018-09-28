@@ -75,17 +75,22 @@ export function Panel(props) {
 
 export function PanelTable(props) {
   var headers = [];
-  for (let h of props.headers) {
+  
+  if (props.headers)
+    for (let h of props.headers) {
     headers.push(<th>{h}</th>);
   }
+
   return (
     <div className='table-responsive'>
     <table className='table table-striped table-bordered table-hover'>
+    { headers.length > 0 &&
       <thead>
         <tr>
           {headers}
         </tr>
       </thead>
+    }
       <tbody>
         {props.children}
       </tbody>

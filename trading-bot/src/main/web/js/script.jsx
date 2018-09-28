@@ -11,36 +11,45 @@ import moment from 'moment';
 import 'react-datepicker/dist/react-datepicker.css';
 
 const priceEndpoint = '/price_api/price_history';
+const priceAtEndpoint = '/price_api/price_at';
 const movingEndpoint = '/price_api/moving';
+
+
+function buildResponseComponent(jsonResponse) {
+  var fields = [];
+  if (typeof jsonResponse.result === 'string' || typeof jsonResponse.result === 'number') {
+     var field = <ApiResponseField name='result' value={jsonResponse.result} key='result' />
+     fields.push(field);
+  } if (Array.isArray(jsonResponse)) {
+   jsonResponse.forEach(function(data){
+     var field = <ApiResponseField name={data.date} value= {JSON.stringify(data.order)}/>
+     fields.push(field);
+   })
+
+  } else {
+      Object.keys(jsonResponse.result).forEach(function (key) {
+        var value = JSON.stringify(jsonResponse.result[key], null, 2);
+         var field = <ApiResponseField name={key} value={value} key={key} />
+         fields.push(field);
+      });
+  }
+  return fields;
+}
+
+function rowsFromObjet(jsObj) {
+  var fields = [];  
+  Object.keys(jsObj).forEach(function (key) {
+    fields.push(<tr><td>{key}</td><td>{jsObj[key]}</td></tr>);
+  })
+  return fields;
+}
 
 function performRestReq(updateCallback, path, params = []) {
   var xhttp = new XMLHttpRequest();
   xhttp.onreadystatechange = function() {
        if (this.readyState == 4 && this.status == 200) {
            var jsonResponse = JSON.parse(this.responseText)
-           var fields = [];
-           if (typeof jsonResponse.result === 'string' || typeof jsonResponse.result === 'number') {
-              var field = <ApiResponseField name='result' value={jsonResponse.result} key='result' />
-              fields.push(field);
-           } if (Array.isArray(jsonResponse)) {
-
-            var order = (jsonResponse.slice(-1)[0]).order;
-            var toto = <ApiResponseSpanField value={'Final balance: '+order.price*order.quantity+' USD | Order count: '+ jsonResponse.length} />
-            fields.push(toto);
-
-            jsonResponse.forEach(function(data){
-              var field = <ApiResponseField name={data.date} value= {JSON.stringify(data.order)}/>
-              fields.push(field);
-            })
-
-           } else {
-               Object.keys(jsonResponse.result).forEach(function (key) {
-                 var value = JSON.stringify(jsonResponse.result[key], null, 2);
-                  var field = <ApiResponseField name={key} value={value} key={key} />
-                  fields.push(field);
-               });
-           }
-           updateCallback(fields);
+           updateCallback(jsonResponse);
        }
   };
   var protocol = location.protocol;
@@ -69,26 +78,10 @@ function performRestPriceReq(updateCallback, path, params = []) {
   xhttp.send();
 }
 
-
-class ApiResponse extends React.Component {
-
-  constructor(props) {
-    super(props);
-    this.state = { responseFields : [] }
-  }
-
-  updateState(fields) {
-    this.setState( { responseFields : fields });
-  }
-
-  componentDidMount() {
-    performRestReq((fields) => this.updateState(fields), this.props.method);
-    this.interval = setInterval(() => performRestReq( (fields) => this.updateState(fields) , this.props.method), 5000);
-  }
-
-  render() {
-    return <ResponseTable responseFields={this.state.responseFields}/>;
-  }
+function performRestPriceReqWithPromise(path, params = []) {
+  return new Promise( (resolve, reject) =>  {
+    performRestPriceReq( (jsonResponse) => resolve(jsonResponse), path, params);
+  })
 }
 
 function HelloWorld(props) {
@@ -112,6 +105,44 @@ function GraphResultBase(props) {
 }
 
 
+function computeExecutionResult(tradeBotResponse, initial, firstDayPrice, lastDayPrice) {
+
+  var lastPortfolioValue = (tradeBotResponse.slice(-1)[0].order.price *  tradeBotResponse.slice(-1)[0].order.quantity).toFixed(2);
+  
+  var performance = (lastPortfolioValue * 100 / initial - 100).toFixed(2);
+
+  var buyAndHoldValue =  ((initial / firstDayPrice) * lastDayPrice).toFixed(2);
+
+  var buyAndHoldPerformance = (buyAndHoldValue * 100 / initial - 100).toFixed(2);
+
+  return {lastPortfolioValue: lastPortfolioValue, performance: performance+' %', buyAndHoldValue: buyAndHoldValue, buyAndHoldPerformance: buyAndHoldPerformance+' %'} 
+}
+
+
+function buildExecutionResult(tradeBotResponse, initial, asset, start, end, updateCallback) {
+  var promises = [ 
+      performRestPriceReqWithPromise(priceAtEndpoint, [ ['asset', asset], ['date', start.format(moment.defaultFormatUtc)] ]), 
+      performRestPriceReqWithPromise(priceAtEndpoint, [ ['asset', asset], ['date', end.format(moment.defaultFormatUtc)] ])
+    ];
+  
+  Promise.all(promises).then( (prices) => {
+    let result = computeExecutionResult(tradeBotResponse, initial, prices[0], prices[1]);
+    updateCallback(result);
+  });
+}
+
+
+function ExecutionResult(props) {
+  return (
+    <Panel title='TradeBot execution results'>
+    <PanelTable>
+      {props.executionResultFields}
+    </PanelTable>
+  </Panel>
+  );
+}
+
+
 class GraphResult extends React.Component {
 
   requestBTC = () => performRestPriceReq((prices) => { this.setState({btcdatapoints : prices}) }, 
@@ -121,14 +152,30 @@ class GraphResult extends React.Component {
   requestMA30 = () => performRestPriceReq((prices) => { this.setState({ma30datapoints : prices})}, 
     movingEndpoint, [ ['asset', this.props.asset], ['start', this.state.start.format(moment.defaultFormatUtc)], ['end',this.state.end.format(moment.defaultFormatUtc)], ['days', 30] ]);
 
+  handleSubmit = (event) => {
+    performRestReq((tradeBotResponse) => {
+      this.setState({responseFields : buildResponseComponent(tradeBotResponse)});
+      buildExecutionResult(tradeBotResponse, this.state.initial, this.props.asset, this.state.start, this.state.end, (result) =>  this.setState({executionResultFields: rowsFromObjet(result)}));
+      
+    
+    }, '/trade_bot', [['asset', this.props.asset], ['start', this.state.start.format(moment.defaultFormatUtc)], ['end',this.state.end.format(moment.defaultFormatUtc)], ['initial', this.state.initial]]) ;
+    event.preventDefault();
+  }
 
+    
   constructor(props) {
     super(props);
     
-    this.state = { ma30datapoints : [], btcdatapoints : [], responseFields : [], initial : '10000', 
-      start : moment("2017-01-01")
-      //moment("20170101", "YYYYMMDD")
-      , end : moment(), currencyFields : [] }
+    this.state = { 
+      ma30datapoints : [], 
+      btcdatapoints : [], 
+      responseFields : [], 
+      initial : '10000', 
+      start : moment("2017-01-01"), 
+      end : moment(), 
+      currencyFields : [],
+      executionResultFields : []
+    }
 
     this.handleSubmit = this.handleSubmit.bind(this);
   }
@@ -154,10 +201,7 @@ class GraphResult extends React.Component {
 
   }
 
-  handleSubmit(event) {
-    performRestReq((fields) => this.updateState(fields), '/trade_bot', [['asset', this.props.asset], ['start', this.state.start.format(moment.defaultFormatUtc)], ['end',this.state.end.format(moment.defaultFormatUtc)], ['initial', this.state.initial]]) ;
-    event.preventDefault();
-  }
+
 
   updateState(fields) {
     this.setState( { responseFields : fields });
@@ -186,6 +230,11 @@ class GraphResult extends React.Component {
               </table>
             </FormContainer>
           </Panel>
+          {
+            this.state.executionResultFields.length > 0 &&
+            <ExecutionResult executionResultFields={this.state.executionResultFields}/>
+          }
+
           { this.state.responseFields.length > 0 &&
             <Panel title='Trade-bot output'>
               <ResponseTable first='Date' second='Order' responseFields={this.state.responseFields}/>

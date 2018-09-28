@@ -26,6 +26,15 @@ object PriceService {
       case Asset.Eth => fetchPrice(ethPricesUrl, startDate, endDate)
     }
 
+  def getPriceAt(asset: Asset, date: ZonedDateTime)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[BigDecimal] =
+    (asset match {
+      case Asset.Btc => PairPrice.fromUrlAsync(btcPricesUrl)
+      case Asset.Eth => PairPrice.fromUrlAsync(ethPricesUrl)
+    }).map { pairPrices =>
+      pairPrices.filter(pairPrices => pairPrices.date.getYear == date.getYear && pairPrices.date.getDayOfYear == date.getDayOfYear).prices.headOption.getOrElse(
+        pairPrices.filter(pairPrices => pairPrices.date.getYear == date.getYear && pairPrices.date.getDayOfYear == date.getDayOfYear - 1).prices.head).price
+    }
+
   def getMovingAverageHistory(asset: Asset, startDate: ZonedDateTime, endDate: ZonedDateTime, days: Int)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[List[BigDecimal]] =
     asset match {
       case Asset.Btc => PairPrice.fromUrlAsync(btcPricesUrl).map(_.movingAverage(days).filter(p => p.date.isAfter(startDate) && p.date.isBefore(endDate)).groupByMonth.map(merge => merge._2.map(_.price).sum / merge._2.length))
