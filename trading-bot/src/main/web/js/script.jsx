@@ -40,7 +40,7 @@ function GraphResultBase(props) {
 }
 
 
-function computeExecutionResult(tradeBotResponse, initial, firstDayPrice, lastDayPrice) {
+function computeExecutionResult(tradeBotResponse, initial, firstDayPrice, lastDayPrice, asset, start, end) {
 
   var lastPortfolioValue = (tradeBotResponse.slice(-1)[0].order.price *  tradeBotResponse.slice(-1)[0].order.quantity).toFixed(2);
   
@@ -50,7 +50,16 @@ function computeExecutionResult(tradeBotResponse, initial, firstDayPrice, lastDa
 
   var buyAndHoldPerformance = (buyAndHoldValue * 100 / initial - 100).toFixed(2);
 
-  return {lastPortfolioValue: lastPortfolioValue, performance: (performance > 0 ? '+':'')+performance+' %', buyAndHoldValue: buyAndHoldValue, buyAndHoldPerformance: (buyAndHoldPerformance > 0 ? '+':'')+buyAndHoldPerformance+' %'} 
+  return {
+    asset : asset,
+    start : start.format("MMM Do YY"),
+    end : end.format("MMM Do YY"),
+    initial : initial+' USD',
+    lastPortfolioValue: lastPortfolioValue+' USD', 
+    performance: (performance > 0 ? '+':'')+performance+' %', 
+    buyAndHoldValue: buyAndHoldValue+' USD', 
+    buyAndHoldPerformance: (buyAndHoldPerformance > 0 ? '+':'')+buyAndHoldPerformance+' %'
+  } 
 }
 
 
@@ -61,10 +70,23 @@ function buildExecutionResult(tradeBotResponse, initial, asset, start, end, upda
     ];
   
   Promise.all(promises).then( (prices) => {
-    let result = computeExecutionResult(tradeBotResponse, initial, prices[0], prices[1]);
+    let result = computeExecutionResult(tradeBotResponse, initial, prices[0], prices[1], asset, start, end);
     updateCallback(result);
   });
 }
+
+function ExecutionResultPanel(props) {
+  return (
+    <tbody>
+      <tr><td>Traded asset</td><td>{props.result.asset}</td></tr>
+      <tr><td>Traded period</td><td>{props.result.start} to {props.result.end}</td></tr>
+      <tr><td>Initial amount</td><td>{props.result.initial}</td></tr>
+      <tr><td>Current portfolio valuation</td><td>{props.result.lastPortfolioValue} [ {props.result.performance} ]</td></tr>
+      <tr><td>Buy and hold valuation</td><td>{props.result.buyAndHoldValue} [ {props.result.buyAndHoldPerformance} ]</td></tr>
+    </tbody>
+  );  
+}
+
 
 class GraphResult extends React.Component {
 
@@ -78,7 +100,9 @@ class GraphResult extends React.Component {
   handleSubmit = (event) => {
     RestUtils.performRestReq((tradeBotResponse) => {
       this.setState({responseFields : Helper.buildResponseComponent(tradeBotResponse)});
-      buildExecutionResult(tradeBotResponse, this.state.initial, this.props.asset, this.state.start, this.state.end, (result) =>  this.setState({executionResultFields: Helper.rowsFromObjet(result)}));
+      buildExecutionResult(tradeBotResponse, this.state.initial, this.props.asset, this.state.start, this.state.end, 
+        (result) =>  this.setState({executionResultFields: <ExecutionResultPanel result={result}/>})
+      );
       
     
     }, '/trade_bot', [['asset', this.props.asset], ['start', this.state.start.format(moment.defaultFormatUtc)], ['end',this.state.end.format(moment.defaultFormatUtc)], ['initial', this.state.initial]]) ;
@@ -97,7 +121,7 @@ class GraphResult extends React.Component {
       start : moment("2017-01-01"), 
       end : moment(), 
       currencyFields : [],
-      executionResultFields : []
+      executionResultFields : null
     }
 
     this.handleSubmit = this.handleSubmit.bind(this);
@@ -135,7 +159,9 @@ class GraphResult extends React.Component {
           <span>
           <Panel title='Real-time prices'>
             <PanelTable headers={['Currency','Price', 'Change']}>
+            <tbody>
               {this.state.currencyFields}
+            </tbody>
             </PanelTable>
           </Panel>
 
@@ -160,8 +186,8 @@ class GraphResult extends React.Component {
             </FormContainer>
           </Panel>
           {
-            this.state.executionResultFields.length > 0 &&
-            <Panel title='TradeBot execution results'>
+            this.state.executionResultFields &&
+            <Panel title='Trade-bot execution results'>
             <PanelTable>
               {this.state.executionResultFields}
             </PanelTable>

@@ -107,9 +107,7 @@ export function PanelTable(props) {
         </tr>
       </thead>
     }
-      <tbody>
-        {props.children}
-      </tbody>
+    {props.children}
     </table>
     </div>
   );
