@@ -17,7 +17,7 @@ object PriceService {
   private val btcPricesUrl = "https://coinmetrics.io/data/btc.csv"
 
   //TODO : For some reason synchronized does not work here, have to investigate why ... :(
-  private def getPairPricesWithCache(url: String)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[PairPrices] = synchronized {
+  private def getPairPricesWithCache(url: String)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[PairPrices] = {
     import scalacache._
     import scalacache.modes.scalaFuture._
     import scala.concurrent.duration._
