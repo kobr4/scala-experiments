@@ -4,24 +4,22 @@ import java.time.ZonedDateTime
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
-import com.google.common.cache.CacheBuilder
-import scalacache.Entry
+import scalacache.Cache
 import scalacache.guava.GuavaCache
 
 import scala.concurrent.{ ExecutionContext, Future }
 
 object PriceService {
 
-  val underlyingGuavaCache = CacheBuilder.newBuilder().maximumSize(10000L).build[String, Entry[PairPrices]]
-  implicit val guavaCache = GuavaCache(underlyingGuavaCache)
+  implicit val guavaCache: Cache[PairPrices] = GuavaCache[PairPrices]
 
   private val ethPricesUrl = "https://coinmetrics.io/data/eth.csv"
   private val btcPricesUrl = "https://coinmetrics.io/data/btc.csv"
 
-  private def getPairPricesWithCache(url: String)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[PairPrices] = {
+  //TODO : For some reason synchronized does not work here, have to investigate why ... :(
+  private def getPairPricesWithCache(url: String)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[PairPrices] = synchronized {
     import scalacache._
     import scalacache.modes.scalaFuture._
-
     import scala.concurrent.duration._
     cachingF(url)(ttl = Some(2 hours)) {
       PairPrice.fromUrlAsync(url)
@@ -47,6 +45,7 @@ object PriceService {
       case Asset.Btc => getPairPricesWithCache(btcPricesUrl)
       case Asset.Eth => getPairPricesWithCache(ethPricesUrl)
     }).map { pairPrices =>
+      //TODO this code will break when running the first day of the year and data not yet available :(
       pairPrices.filter(pairPrices => pairPrices.date.getYear == date.getYear && pairPrices.date.getDayOfYear == date.getDayOfYear).prices.headOption.getOrElse(
         pairPrices.filter(pairPrices => pairPrices.date.getYear == date.getYear && pairPrices.date.getDayOfYear == date.getDayOfYear - 1).prices.head).price
     }
