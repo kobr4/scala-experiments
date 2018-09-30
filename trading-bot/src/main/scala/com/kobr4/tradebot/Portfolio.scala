@@ -28,7 +28,7 @@ case class Portfolio(assets: mutable.HashMap[Asset, Quantity], orderList: mutabl
 }
 
 object Portfolio {
-  def create = Portfolio(
-    mutable.HashMap(Asset.Eth -> Quantity(0), Asset.Usd -> Quantity(0), Asset.Btc -> Quantity(0)),
+  def create(asset: Asset) = Portfolio(
+    mutable.HashMap(asset -> Quantity(0), Asset.Usd -> Quantity(0)),
     mutable.ListBuffer.empty[Order])
 }

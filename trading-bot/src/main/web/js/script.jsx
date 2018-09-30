@@ -133,13 +133,14 @@ class GraphResult extends React.Component {
     setInterval(() => RestUtils.performRestPriceReq((quotes) => {
         let currencyFields = [];
         for(let q of quotes) {
-          currencyFields.push(
-            <tr>
-              <td>{q.pair.right}</td>
-              <td>{q.last+' '+q.pair.left}</td>
-              <td>{q.percentChange}</td>
-            </tr>
-          );
+          if (q.pair.right === this.props.asset)
+            currencyFields.push(
+              <tr>
+                <td>{q.pair.right}</td>
+                <td>{q.last+' '+q.pair.left}</td>
+                <td>{q.percentChange}</td>
+              </tr>
+            );
         }
         this.setState({currencyFields : currencyFields});
     }, '/ticker'),5000);
@@ -158,6 +159,7 @@ class GraphResult extends React.Component {
   render() {
     return (
           <span>
+          
           <Panel title='Real-time prices'>
             <PanelTable headers={['Currency','Price', 'Change']}>
             <tbody>
@@ -214,6 +216,7 @@ ReactDOM.render(
       <Switch>
         <Route path='/btc_price' render={() => ( <GraphResult endpoint={priceEndpoint} title='BTC backtest' asset='BTC'/>)} />
         <Route path='/eth_price' render={() => ( <GraphResult endpoint={priceEndpoint} title='ETH backtest' asset='ETH'/>)} />
+        <Route path='/goog_price' render={() => ( <GraphResult endpoint={priceEndpoint} title='GOOG backtest' asset='GOOG'/>)} />
         <Route path='/' render={() => ( <HelloWorld />)} />
       </Switch>
     </BrowserRouter>,

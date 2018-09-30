@@ -62,7 +62,7 @@ object Strategy {
 object TradeBotService {
 
   def run(asset: Asset, initialUsdAmount: BigDecimal, priceData: PairPrices, feesPercentage: BigDecimal): List[(ZonedDateTime, Order)] = {
-    val portfolio = Portfolio.create
+    val portfolio = Portfolio.create(asset)
     portfolio.assets(Usd) = Quantity(initialUsdAmount)
     priceData.prices.flatMap(p => Strategy.runStrategy(asset, p.date, priceData, portfolio).map(t => (t._1, portfolio.update(t._2, feesPercentage))))
   }

@@ -3,12 +3,7 @@ package com.kobr4.tradebot
 import java.time._
 import java.time.format.DateTimeFormatter
 
-import Asset.Usd
-import com.fasterxml.jackson.annotation.JsonValue
-import play.api.libs.json.{ Format, JsString, Json, Writes }
-
-import scala.collection.mutable
-import scala.util.parsing.json.JSONObject
+import play.api.libs.json.{ JsString, Writes }
 
 sealed trait Asset
 
@@ -20,12 +15,14 @@ object Asset {
 
   case object Usd extends Asset { override def toString: String = "USDT" }
 
+  case class Custom(code: String) extends Asset { override def toString: String = code }
+
   def fromString(s: String): Option[Asset] = s match {
     case "ETH" => Some(Asset.Eth)
     case "BTC" => Some(Asset.Btc)
     case "USD" => Some(Asset.Usd)
     case "USDT" => Some(Asset.Usd)
-    case _ => None
+    case code => Some(Custom(code))
   }
 
   implicit val assetWrites: Writes[Asset] = { a: Asset => JsString(a.toString) }

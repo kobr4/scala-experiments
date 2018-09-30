@@ -75,20 +75,22 @@ object PairPrice {
     }
   }
 
+  def fromString(csvString: String, priceColumn: String): PairPrices = {
+    val priceLines = csvString.lines.toList
+    val priceLineId = priceLines.head.split(',').zipWithIndex.find(_._1 == priceColumn).map(_._2).getOrElse(throw new RuntimeException("Invalid file"))
+    val prices =
+      for (line <- priceLines.tail) yield {
+        val splitted = line.split(',')
+        val date = LocalDate.parse(splitted(0), formatter)
+        val time = LocalTime.MIDNIGHT
+        EthUsd(
+          ZonedDateTime.of(date, time, ZoneId.of("UTC")),
+          if (splitted(priceLineId) != "") BigDecimal(splitted(priceLineId)) else BigDecimal(0))
+      }
+    PairPrices(prices)
+  }
+
   def fromUrlAsync(url: String)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[PairPrices] = {
-    httpGetRequest(url).map(body => {
-      val priceLines = body.lines.toList
-      val priceLineId = priceLines.head.split(',').zipWithIndex.find(_._1 == "price(USD)").map(_._2).getOrElse(throw new RuntimeException("Invalid file"))
-      val prices =
-        for (line <- priceLines.tail) yield {
-          val splitted = line.split(',')
-          val date = LocalDate.parse(splitted(0), formatter)
-          val time = LocalTime.MIDNIGHT
-          EthUsd(
-            ZonedDateTime.of(date, time, ZoneId.of("UTC")),
-            if (splitted(priceLineId) != "") BigDecimal(splitted(priceLineId)) else BigDecimal(0))
-        }
-      PairPrices(prices)
-    })
+    httpGetRequest(url).map(fromString(_, "price(USD)"))
   }
 }
