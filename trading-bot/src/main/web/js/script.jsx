@@ -117,6 +117,10 @@ class TradingGlobal extends React.Component {
   render() {
     return (
       <Panel title='Introduction'>
+      <p>
+        Simple and honest trading algorithm with a provable performance record.<br/>
+        Positions are evaluated on daily basis.
+      </p>
       Last take on BTC : { this.state.BTC && this.formatOrder(this.state.BTC.order,this.state.BTC.date) }<br/>
       Last take on ETH : { this.state.ETH && this.formatOrder(this.state.ETH.order,this.state.ETH.date) }<br/>
       Last take on XMR : { this.state.XMR && this.formatOrder(this.state.XMR.order,this.state.XMR.date) }<br/>
