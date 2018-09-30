@@ -105,7 +105,7 @@ class GraphResult extends React.Component {
       );
       
     
-    }, '/trade_bot', [['asset', this.props.asset], ['start', this.state.start.format(moment.defaultFormatUtc)], ['end',this.state.end.format(moment.defaultFormatUtc)], ['initial', this.state.initial]]) ;
+    }, '/trade_bot', [['asset', this.props.asset], ['start', this.state.start.format(moment.defaultFormatUtc)], ['end',this.state.end.format(moment.defaultFormatUtc)], ['initial', this.state.initial], ['fees', this.state.fees]]) ;
     event.preventDefault();
   }
 
@@ -120,6 +120,7 @@ class GraphResult extends React.Component {
       initial : '10000', 
       start : moment("2017-01-01"), 
       end : moment(), 
+      fees: '0.1',
       currencyFields : [],
       executionResultFields : null
     }
@@ -179,6 +180,9 @@ class GraphResult extends React.Component {
                 <FormRow label='Initial amount (USD)'>
                   <FormTextField value={this.state.initial} name="initial" handleTextChange={(event) => this.setState({initial: event.target.value})} />
                 </FormRow>
+                <FormRow label='Transaction fees'>
+                  <FormTextField value={this.state.fees} name="fees" handleTextChange={(event) => this.setState({fees: event.target.value})} />
+                </FormRow>                
                 <FormRow>
                   <FormButton text='Update' handleClick={ (event) => this.componentDidMount() }/>
                 </FormRow>
