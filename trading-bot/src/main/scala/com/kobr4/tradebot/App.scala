@@ -13,6 +13,8 @@ object Asset {
 
   case object Btc extends Asset { override def toString: String = "BTC" }
 
+  case object Xmr extends Asset { override def toString: String = "XMR" }
+
   case object Usd extends Asset { override def toString: String = "USDT" }
 
   case class Custom(code: String) extends Asset { override def toString: String = code }
@@ -20,6 +22,7 @@ object Asset {
   def fromString(s: String): Option[Asset] = s match {
     case "ETH" => Some(Asset.Eth)
     case "BTC" => Some(Asset.Btc)
+    case "XMR" => Some(Asset.Xmr)
     case "USD" => Some(Asset.Usd)
     case "USDT" => Some(Asset.Usd)
     case code => Some(Custom(code))

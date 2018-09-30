@@ -15,6 +15,7 @@ object PriceService {
 
   private val ethPricesUrl = "https://coinmetrics.io/data/eth.csv"
   private val btcPricesUrl = "https://coinmetrics.io/data/btc.csv"
+  private val xmrPricesUrl = "https://coinmetrics.io/data/xmr.csv"
 
   private def getCoinmetricsPricesWithCache(url: String)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[PairPrices] = {
     import scalacache._
@@ -39,6 +40,7 @@ object PriceService {
   private def getPricesWithCache(asset: Asset)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[PairPrices] = asset match {
     case Asset.Btc => getCoinmetricsPricesWithCache(btcPricesUrl)
     case Asset.Eth => getCoinmetricsPricesWithCache(ethPricesUrl)
+    case Asset.Xmr => getCoinmetricsPricesWithCache(xmrPricesUrl)
     case other => getYahooPricesWithCache(other.toString)
   }
 

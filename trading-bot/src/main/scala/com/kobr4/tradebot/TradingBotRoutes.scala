@@ -44,6 +44,8 @@ trait TradingBotRoutes extends PlayJsonSupport {
       getFromResource("public/api.html")
     } ~ path("eth_price") {
       getFromResource("public/api.html")
+    } ~ path("xmr_price") {
+      getFromResource("public/api.html")
     } ~ path("goog_price") {
       getFromResource("public/api.html")
     } ~ pathPrefix("price_api") {
