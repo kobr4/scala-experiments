@@ -87,6 +87,43 @@ function ExecutionResultPanel(props) {
   );  
 }
 
+class TradingGlobal extends React.Component {
+
+  handleTrade = (asset) => {
+    RestUtils.performRestReq((tradeBotResponse) => {
+      let storeObj = new Object();
+      storeObj[asset]=tradeBotResponse.slice(-1)[0];
+      this.setState(storeObj);
+    }, '/trade_bot', [['asset', asset], ['start', moment("2017-01-01").format(moment.defaultFormatUtc)], ['end',moment().format(moment.defaultFormatUtc)], ['initial', 10000], ['fees', 0.1]]) ;
+  }
+
+
+  constructor(props) {
+    super(props);
+
+    this.state = {}
+  }
+
+  componentDidMount() {
+    this.handleTrade('BTC');
+    this.handleTrade('ETH');
+    this.handleTrade('XMR');
+  }
+
+  formatOrder = (order, date) => {
+    return order.type+' at '+order.price+' on '+moment(date).format('LL');
+  }
+
+  render() {
+    return (
+      <Panel title='Introduction'>
+      Last take on BTC : { this.state.BTC && this.formatOrder(this.state.BTC.order,this.state.BTC.date) }<br/>
+      Last take on ETH : { this.state.ETH && this.formatOrder(this.state.ETH.order,this.state.ETH.date) }<br/>
+      Last take on XMR : { this.state.XMR && this.formatOrder(this.state.XMR.order,this.state.XMR.date) }<br/>
+      </Panel>
+      )}
+}
+
 
 class GraphResult extends React.Component {
 
@@ -218,7 +255,7 @@ ReactDOM.render(
         <Route path='/eth_price' render={() => ( <GraphResult endpoint={priceEndpoint} title='ETH backtest' asset='ETH'/>)} />
         <Route path='/xmr_price' render={() => ( <GraphResult endpoint={priceEndpoint} title='XMR backtest' asset='XMR'/>)} />
         <Route path='/goog_price' render={() => ( <GraphResult endpoint={priceEndpoint} title='GOOG backtest' asset='GOOG'/>)} />
-        <Route path='/' render={() => ( <HelloWorld />)} />
+        <Route path='/' render={() => ( <TradingGlobal />)} />
       </Switch>
     </BrowserRouter>,
   document.getElementById('toto')

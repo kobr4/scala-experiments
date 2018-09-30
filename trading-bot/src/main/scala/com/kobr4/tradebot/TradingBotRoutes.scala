@@ -32,8 +32,8 @@ trait TradingBotRoutes extends PlayJsonSupport {
   private val stringToAsset = Unmarshaller.strict[String, Asset](s => Asset.fromString(s).getOrElse(Asset.Btc))
 
   implicit val dateOrderWrites: Writes[(ZonedDateTime, Order)] = (
-    (JsPath \ "date").write[ZonedDateTime] and
-    (JsPath \ "order").write[Order]) { a: (ZonedDateTime, Order) => (a._1, a._2) }
+    (JsPath \ "date").write[String] and
+    (JsPath \ "order").write[Order]) { a: (ZonedDateTime, Order) => (a._1.toOffsetDateTime.toString, a._2) }
 
   lazy val tradingBotRoutes: Route = {
     pathPrefix("public") {
@@ -89,6 +89,8 @@ trait TradingBotRoutes extends PlayJsonSupport {
           complete(quoteList)
         }
       }
+    } ~ pathSingleSlash {
+      getFromResource("public/api.html")
     } ~ get {
       complete("Hello World")
     }
