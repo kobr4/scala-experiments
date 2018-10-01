@@ -35,6 +35,16 @@ trait TradingBotRoutes extends PlayJsonSupport {
     (JsPath \ "date").write[String] and
     (JsPath \ "order").write[Order]) { a: (ZonedDateTime, Order) => (a._1.toOffsetDateTime.toString, a._2) }
 
+  implicit val assetQuantityWrites: Writes[(Asset, Quantity)] = (
+    (JsPath \ "asset").write[Asset] and
+      (JsPath \ "quantity").write[BigDecimal]) { a: (Asset, Quantity) => (a._1, a._2.quantity)}
+
+  implicit val poloOrderWrites: Writes[PoloOrder]  = (
+    (JsPath \ "orderNumber").write[Long] and
+      (JsPath \ "rate").write[BigDecimal] and
+      (JsPath \ "amount").write[BigDecimal]) (unlift(PoloOrder.unapply))
+
+
   lazy val tradingBotRoutes: Route = {
     pathPrefix("public") {
       getFromResourceDirectory("public")
@@ -80,6 +90,26 @@ trait TradingBotRoutes extends PlayJsonSupport {
         parameters('asset.as(stringToAsset), 'start.as(stringToZonedDateTime), 'end.as(stringToZonedDateTime), 'initial.as(stringToBigDecimal), 'fees.as(stringToBigDecimal)) { (asset, start, end, initial, fees) =>
           onSuccess(PriceService.getPriceData(asset, start, end).map(pdata => TradeBotService.run(asset, initial, pdata, fees))) { orderList =>
             complete(orderList)
+          }
+        }
+      }
+    } ~ pathPrefix("trading_api") {
+      path("balances") {
+        get {
+          parameters('exchange) { exchange =>
+            val poloApi = new PoloApi()
+            onSuccess(poloApi.returnBalances.map(_.toList)) { assetQuantityList =>
+              complete(assetQuantityList)
+            }
+          }
+        }
+      } ~ path("open_orders") {
+        get {
+          parameters('exchange) { exchange =>
+            val poloApi = new PoloApi()
+            onSuccess(poloApi.returnOpenOrders()) { openOrdersList =>
+              complete(openOrdersList)
+            }
           }
         }
       }

@@ -15,6 +15,8 @@ import scala.concurrent.{ ExecutionContext, Future }
 
 case class PoloOrder(orderNumber: Long, rate: BigDecimal, amount: BigDecimal)
 
+
+
 case class CurrencyPair(left: Asset, right: Asset) {
   override def toString: String = {
     s"${left.toString}_${right.toString}"
@@ -33,7 +35,10 @@ object Quote {
   implicit val quoteWrites = Json.writes[Quote]
 }
 
-class PoloApi(val poloUrl: String = PoloApi.rootUrl)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext) extends PoloAPIInterface {
+class PoloApi(val apiKey: String = DefaultConfiguration.PoloApi.Key,
+              val apiSecret: String = DefaultConfiguration.PoloApi.Secret,
+              val poloUrl: String = PoloApi.rootUrl)
+             (implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext) extends PoloAPIInterface {
 
   def nonce = System.currentTimeMillis()
 
@@ -59,7 +64,7 @@ class PoloApi(val poloUrl: String = PoloApi.rootUrl)(implicit arf: ActorSystem, 
     (JsPath \ "quoteVolume").read[BigDecimal])(Quote.apply _)
 
   override def returnBalances: Future[Map[Asset, Quantity]] =
-    PoloApi.httpRequestPost(tradingUrl, PoloApi.ReturnBalances.build(nonce)).map { message =>
+    PoloApi.httpRequestPost(tradingUrl, PoloApi.ReturnBalances.build(nonce), apiKey, apiSecret).map { message =>
       Json.parse(message).as[JsObject].fields.flatMap {
         case (s, v) => Asset.fromString(s.toUpperCase).map { asset =>
           (asset, Quantity(BigDecimal(v.as[String])))
@@ -68,7 +73,7 @@ class PoloApi(val poloUrl: String = PoloApi.rootUrl)(implicit arf: ActorSystem, 
     }
 
   override def returnDepositAddresses: Future[Map[Asset, String]] =
-    PoloApi.httpRequestPost(tradingUrl, ReturnDepositAddresses.build(nonce)).map { message =>
+    PoloApi.httpRequestPost(tradingUrl, ReturnDepositAddresses.build(nonce), apiKey, apiSecret).map { message =>
       Json.parse(message).as[JsObject].fields.flatMap {
         case (s, v) => Asset.fromString(s.toUpperCase).map { asset =>
           (asset, v.as[String])
@@ -77,12 +82,12 @@ class PoloApi(val poloUrl: String = PoloApi.rootUrl)(implicit arf: ActorSystem, 
     }
 
   override def returnOpenOrders(): Future[List[PoloOrder]] =
-    PoloApi.httpRequestPost(tradingUrl, ReturnOpenOrders.build(nonce)).map { message =>
+    PoloApi.httpRequestPost(tradingUrl, ReturnOpenOrders.build(nonce), apiKey, apiSecret).map { message =>
       Json.parse(message).as[JsArray].value.map { order => order.as[PoloOrder] }.toList
     }
 
   override def cancelOrder(orderNumber: Long): Future[Boolean] = {
-    PoloApi.httpRequestPost(tradingUrl, CancelOrder.build(nonce)).map { message =>
+    PoloApi.httpRequestPost(tradingUrl, CancelOrder.build(nonce), apiKey, apiSecret).map { message =>
       Json.parse(message).as[JsObject].value.get("success").exists(_.as[Int] match {
         case 1 => true
         case _ => false
@@ -91,10 +96,10 @@ class PoloApi(val poloUrl: String = PoloApi.rootUrl)(implicit arf: ActorSystem, 
   }
 
   override def buy(currencyPair: String, rate: BigDecimal, amount: BigDecimal): Future[String] =
-    PoloApi.httpRequestPost(tradingUrl, BuySell.build(nonce, currencyPair, rate, amount, true))
+    PoloApi.httpRequestPost(tradingUrl, BuySell.build(nonce, currencyPair, rate, amount, true), apiKey, apiSecret)
 
   override def sell(currencyPair: String, rate: BigDecimal, amount: BigDecimal): Future[String] =
-    PoloApi.httpRequestPost(tradingUrl, BuySell.build(nonce, currencyPair, rate, amount, false))
+    PoloApi.httpRequestPost(tradingUrl, BuySell.build(nonce, currencyPair, rate, amount, false), apiKey, apiSecret)
 
   override def returnTicker()(implicit ec: ExecutionContext): Future[List[Quote]] = PoloApi.httpRequest(publicUrl, Public.returnTicker).map { message =>
     Json.parse(message).as[JsObject].fields.flatMap {
@@ -189,12 +194,12 @@ object PoloApi extends StrictLogging {
     }
   }
 
-  private def httpRequestPost(url: String, body: FormData)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[String] = {
+  private def httpRequestPost(url: String, body: FormData, apiKey: String, apiSecret: String)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[String] = {
     logger.info(s"Sending post request to $url")
     logger.info(s"Body: ${body.fields.toString}")
     Http().singleRequest(HttpRequest(
       method = HttpMethods.POST,
-      headers = AuthHeader.build(DefaultConfiguration.PoloApi.Key, generateHMAC512(DefaultConfiguration.PoloApi.Secret, body.fields.toString)),
+      headers = AuthHeader.build(apiKey, generateHMAC512(apiSecret, body.fields.toString)),
       entity = body.toEntity(HttpCharsets.`UTF-8`),
       uri = url)).flatMap { response =>
       if (response.status == StatusCodes.OK)

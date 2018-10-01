@@ -57,9 +57,6 @@ object PriceService {
     getPricesWithCache(asset).map { pairPrices =>
 
       pairPrices.prices.map(p => (Math.abs(p.date.toEpochSecond - date.toEpochSecond), p.price)).minBy(_._1)._2
-      //TODO this code will break when running the first day of the year and data not yet available :(
-      //pairPrices.filter(pairPrices => pairPrices.date.getYear == date.getYear && pairPrices.date.getDayOfYear == date.getDayOfYear).prices.headOption.getOrElse(
-      //  pairPrices.filter(pairPrices => pairPrices.date.getYear == date.getYear && pairPrices.date.getDayOfYear == date.getDayOfYear - 1).prices.head).price
     }
 
   def getMovingAverageHistory(asset: Asset, startDate: ZonedDateTime, endDate: ZonedDateTime, days: Int)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[List[BigDecimal]] =
