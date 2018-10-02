@@ -3,7 +3,7 @@
 import React from 'react'
 import ReactDOM from 'react-dom'
 import { BrowserRouter, Route, Switch } from 'react-router-dom'
-import { ResponseTable, FormRow, FormTable, FormTextField, FormButton, FormContainer, Panel, PanelTable} from './components/generics'
+import { ResponseTable, FormRow, FormTable, FormTextField, FormButton, FormContainer, FormOption, Panel, PanelTable} from './components/generics'
 
 import Helper from './components/helper'
 import RestUtils from './restutils'
@@ -16,7 +16,7 @@ import 'react-datepicker/dist/react-datepicker.css';
 const priceEndpoint = '/price_api/price_history';
 const priceAtEndpoint = '/price_api/price_at';
 const movingEndpoint = '/price_api/moving';
-
+const balanceEndpoint = '/trading_api/balances';
 
 
 function HelloWorld(props) {
@@ -94,7 +94,7 @@ class TradingGlobal extends React.Component {
       let storeObj = new Object();
       storeObj[asset]=tradeBotResponse.slice(-1)[0];
       this.setState(storeObj);
-    }, '/trade_bot', [['asset', asset], ['start', moment("2017-01-01").format(moment.defaultFormatUtc)], ['end',moment().format(moment.defaultFormatUtc)], ['initial', 10000], ['fees', 0.1]]) ;
+    }, '/trade_bot', [['asset', asset], ['start', moment("2017-01-01").format(moment.defaultFormatUtc)], ['end',moment().format(moment.defaultFormatUtc)], ['initial', 10000], ['fees', 0.1], ['strategy', 'safe']]) ;
   }
 
 
@@ -128,6 +128,50 @@ class TradingGlobal extends React.Component {
       )}
 }
 
+class TradingForm extends React.Component {
+
+  requestBalance = () => RestUtils.performRestPostReq(
+    (balanceList)=> { this.setState({balanceFields: Helper.rowsFromObjet(balanceList)})},
+    balanceEndpoint,
+    [['apikey', this.state.apikey],['apisecret',this.state.apisecret]]
+  )
+
+  constructor(props) {
+    super(props);
+
+    this.state = {apikey :'', apisecret : '', balanceFields : null} 
+  }
+
+  render() {
+    return (
+      <span>
+      <Panel title='Trading operations'>
+        <FormContainer handleSubmit={this.handleSubmit} submit="Run trade-bot">  
+          <FormTable>
+            <FormRow label='API Key'>
+              <FormTextField value={this.state.apikey} name="apikey" handleTextChange={(event) => this.setState({apikey: event.target.value})} />
+            </FormRow>
+            <FormRow label='API Secret'>
+              <FormTextField value={this.state.apisecret} name="apisecret" handleTextChange={(event) => this.setState({apisecret: event.target.value})} />
+            </FormRow>                
+            <FormRow>
+              <FormButton text='Balances' handleClick={ (event) => this.requestBalance() }/>
+            </FormRow>
+          </FormTable>    
+        </FormContainer>      
+      </Panel>
+      { this.state.balanceFields && 
+        <Panel title='Trade-bot execution results'>
+        <PanelTable>
+        {this.state.balanceFields} 
+        </PanelTable>
+        </Panel>
+      }
+      </span>
+    )
+  }
+}
+
 
 class GraphResult extends React.Component {
 
@@ -146,7 +190,7 @@ class GraphResult extends React.Component {
       );
       
     
-    }, '/trade_bot', [['asset', this.props.asset], ['start', this.state.start.format(moment.defaultFormatUtc)], ['end',this.state.end.format(moment.defaultFormatUtc)], ['initial', this.state.initial], ['fees', this.state.fees]]) ;
+    }, '/trade_bot', [['asset', this.props.asset], ['start', this.state.start.format(moment.defaultFormatUtc)], ['end',this.state.end.format(moment.defaultFormatUtc)], ['initial', this.state.initial], ['fees', this.state.fees], ['strategy', this.state.strategy]]) ;
     event.preventDefault();
   }
 
@@ -162,6 +206,7 @@ class GraphResult extends React.Component {
       start : moment("2017-01-01"), 
       end : moment(), 
       fees: '0.1',
+      strategy: 'safe',
       currencyFields : [],
       executionResultFields : null
     }
@@ -225,7 +270,10 @@ class GraphResult extends React.Component {
                 </FormRow>
                 <FormRow label='Transaction fees'>
                   <FormTextField value={this.state.fees} name="fees" handleTextChange={(event) => this.setState({fees: event.target.value})} />
-                </FormRow>                
+                </FormRow>
+                <FormRow label='Strategy'>
+                  <FormOption name='strategy' values={[ ['safe','safe and defensive'], ['custom','custom undocumented'] ]} onChange={(event) => this.setState({strategy: event.target.value})}/>    
+                </FormRow>
                 <FormRow>
                   <FormButton text='Update' handleClick={ (event) => this.componentDidMount() }/>
                 </FormRow>
@@ -259,6 +307,7 @@ ReactDOM.render(
         <Route path='/eth_price' render={() => ( <GraphResult endpoint={priceEndpoint} title='ETH backtest' asset='ETH'/>)} />
         <Route path='/xmr_price' render={() => ( <GraphResult endpoint={priceEndpoint} title='XMR backtest' asset='XMR'/>)} />
         <Route path='/goog_price' render={() => ( <GraphResult endpoint={priceEndpoint} title='GOOG backtest' asset='GOOG'/>)} />
+        <Route path='/trading' render={() => ( <TradingForm/>)} />
         <Route path='/' render={() => ( <TradingGlobal />)} />
       </Switch>
     </BrowserRouter>,

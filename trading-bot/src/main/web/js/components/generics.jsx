@@ -51,6 +51,17 @@ export function FormButton(props) {
   return <button onClick={(event) => {event.preventDefault();props.handleClick(event)}}>{props.text}</button>
 }
 
+export function FormOption(props) {
+  return (
+    <select name={props.name} onChange={props.onChange}>
+    {
+      props.values.map(value => <option value={value[0]}>{value[1]}</option>)
+    }
+    </select>
+  )
+}
+
+
 export function FormContainer(props) {
   return (
      <form onSubmit={props.handleSubmit}>
