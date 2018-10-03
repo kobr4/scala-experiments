@@ -7,7 +7,7 @@ import akka.stream.ActorMaterializer
 import com.kobr4.tradebot.Asset.Usd
 import com.kobr4.tradebot._
 import com.kobr4.tradebot.api.PoloApi
-import com.kobr4.tradebot.engine.{ SafeStrategy, Strategy }
+import com.kobr4.tradebot.engine.Strategy
 import com.kobr4.tradebot.model.{ Order, PairPrices, Portfolio, Quantity }
 
 import scala.concurrent.ExecutionContext
@@ -17,7 +17,7 @@ object TradeBotService {
   def run(asset: Asset, initialUsdAmount: BigDecimal, priceData: PairPrices, feesPercentage: BigDecimal, strategy: Strategy): List[(ZonedDateTime, Order)] = {
     val portfolio = Portfolio.create(asset)
     portfolio.assets(Usd) = Quantity(initialUsdAmount)
-    priceData.prices.flatMap(p => SafeStrategy.runStrategy(asset, p.date, priceData, portfolio).map(t => (t._1, portfolio.update(t._2, feesPercentage))))
+    priceData.prices.flatMap(p => strategy.runStrategy(asset, p.date, priceData, portfolio).map(t => (t._1, portfolio.update(t._2, feesPercentage))))
   }
 
   def doTrade(asset: Asset, priceData: PairPrices, strategy: Strategy)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext) = {

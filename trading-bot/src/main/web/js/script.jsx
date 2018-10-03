@@ -17,6 +17,7 @@ const priceEndpoint = '/price_api/price_history';
 const priceAtEndpoint = '/price_api/price_at';
 const movingEndpoint = '/price_api/moving';
 const balanceEndpoint = '/trading_api/balances';
+const openOrdersEndpoint = '/trading_api/open_orders';
 
 
 function HelloWorld(props) {
@@ -136,6 +137,12 @@ class TradingForm extends React.Component {
     [['apikey', this.state.apikey],['apisecret',this.state.apisecret]]
   )
 
+  requestOpenOrders = () => RestUtils.performRestPostReq(
+    (balanceList)=> { this.setState({balanceFields: Helper.rowsFromObjet(balanceList)})},
+    openOrdersEndpoint,
+    [['apikey', this.state.apikey],['apisecret',this.state.apisecret]]
+  )  
+
   constructor(props) {
     super(props);
 
@@ -155,13 +162,16 @@ class TradingForm extends React.Component {
               <FormTextField value={this.state.apisecret} name="apisecret" handleTextChange={(event) => this.setState({apisecret: event.target.value})} />
             </FormRow>                
             <FormRow>
-              <FormButton text='Balances' handleClick={ (event) => this.requestBalance() }/>
+              <FormButton text='Show balances' handleClick={ (event) => this.requestBalance() }/>
             </FormRow>
+            <FormRow>
+              <FormButton text='Show open orders' handleClick={ (event) => this.requestOpenOrders() }/>
+            </FormRow>            
           </FormTable>    
         </FormContainer>      
       </Panel>
       { this.state.balanceFields && 
-        <Panel title='Trade-bot execution results'>
+        <Panel title='Request output'>
         <PanelTable>
         {this.state.balanceFields} 
         </PanelTable>
