@@ -22,6 +22,7 @@ object Asset {
   def fromString(s: String): Option[Asset] = s match {
     case "ETH" => Some(Asset.Eth)
     case "BTC" => Some(Asset.Btc)
+    case "XBT" => Some(Asset.Btc)
     case "XMR" => Some(Asset.Xmr)
     case "USD" => Some(Asset.Usd)
     case "USDT" => Some(Asset.Usd)

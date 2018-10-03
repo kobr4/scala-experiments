@@ -10,6 +10,13 @@ class Configuration(config: Config) {
     val Secret = config.getString("polo.api.secret")
   }
 
+  object KrakenApi {
+    val Key = config.getString("kraken.api.key")
+
+    val Secret = config.getString("kraken.api.secret")
+  }
+
+
 }
 
 object DefaultConfiguration extends Configuration(ConfigFactory.load())
