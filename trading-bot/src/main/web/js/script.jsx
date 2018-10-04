@@ -198,13 +198,25 @@ class GraphResult extends React.Component {
       buildExecutionResult(tradeBotResponse, this.state.initial, this.props.asset, this.state.start, this.state.end, 
         (result) =>  this.setState({executionResultFields: <ExecutionResultPanel result={result}/>})
       );
-      
-    
     }, '/trade_bot', [['asset', this.props.asset], ['start', this.state.start.format(moment.defaultFormatUtc)], ['end',this.state.end.format(moment.defaultFormatUtc)], ['initial', this.state.initial], ['fees', this.state.fees], ['strategy', this.state.strategy]]) ;
     event.preventDefault();
   }
 
-    
+  performTickerRequest = (exchange) => RestUtils.performRestPriceReq((quotes) => {
+    let currencyFields = [];
+    for(let q of quotes) {
+      if (q.pair.right === this.props.asset)
+        currencyFields.push(
+          <tr>
+            <td>{q.pair.right}</td>
+            <td>{q.last+' '+q.pair.left}</td>
+            <td>{q.percentChange}</td>
+          </tr>
+        );
+    }
+    this.setState({currencyFields : currencyFields});
+  }, '/ticker',[['exchange',exchange]]);
+  
   constructor(props) {
     super(props);
     
@@ -226,20 +238,8 @@ class GraphResult extends React.Component {
 
   componentDidMount() {
 
-    setInterval(() => RestUtils.performRestPriceReq((quotes) => {
-        let currencyFields = [];
-        for(let q of quotes) {
-          if (q.pair.right === this.props.asset)
-            currencyFields.push(
-              <tr>
-                <td>{q.pair.right}</td>
-                <td>{q.last+' '+q.pair.left}</td>
-                <td>{q.percentChange}</td>
-              </tr>
-            );
-        }
-        this.setState({currencyFields : currencyFields});
-    }, '/ticker'),5000);
+    this.performTickerRequest('poloniex');
+    setInterval(() => this.performTickerRequest('poloniex'),5000);
       
     this.requestBTC();
     this.requestMA30();

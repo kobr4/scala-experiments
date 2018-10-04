@@ -16,7 +16,6 @@ class Configuration(config: Config) {
     val Secret = config.getString("kraken.api.secret")
   }
 
-
 }
 
 object DefaultConfiguration extends Configuration(ConfigFactory.load())

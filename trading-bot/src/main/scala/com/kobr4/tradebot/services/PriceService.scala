@@ -5,7 +5,7 @@ import java.time.ZonedDateTime
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import com.kobr4.tradebot._
-import com.kobr4.tradebot.api.{ PoloApi, Quote, YahooFinanceApi }
+import com.kobr4.tradebot.api._
 import com.kobr4.tradebot.model.{ PairPrice, PairPrices }
 import scalacache.Cache
 import scalacache.guava.GuavaCache
@@ -70,8 +70,15 @@ object PriceService {
   def getPriceData(asset: Asset, startDate: ZonedDateTime, endDate: ZonedDateTime)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[PairPrices] =
     getPricesWithCache(asset).map(filter(_, startDate, endDate))
 
-  def priceTicker()(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[List[Quote]] = {
-    val api = new PoloApi()
-    api.returnTicker()
+  def priceTicker(exchange: SupportedExchange)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[List[Quote]] = {
+    exchange match {
+      case Poloniex =>
+        val api = new PoloApi()
+        api.returnTicker()
+      case Kraken =>
+        val api = new KrakenApi()
+        api.returnTicker()
+    }
+
   }
 }

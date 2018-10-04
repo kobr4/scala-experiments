@@ -9,7 +9,7 @@ import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.server.directives.RouteDirectives.complete
 import akka.http.scaladsl.unmarshalling.Unmarshaller
 import akka.stream.ActorMaterializer
-import com.kobr4.tradebot.api.{ PoloApi, PoloOrder }
+import com.kobr4.tradebot.api.{ PoloApi, PoloOrder, SupportedExchange }
 import com.kobr4.tradebot.model.{ Order, Quantity }
 import com.kobr4.tradebot.services.{ PriceService, TradeBotService }
 import com.kobr4.tradebot.Asset
@@ -48,6 +48,8 @@ trait TradingBotRoutes extends PlayJsonSupport {
   private val stringToAsset = Unmarshaller.strict[String, Asset](s => Asset.fromString(s).getOrElse(Asset.Btc))
 
   private val stringToStrategy = Unmarshaller.strict[String, Strategy](s => Strategy.fromString(s).getOrElse(throw UnsupportedStrategyException))
+
+  private val stringToSupportedExchange = Unmarshaller.strict[String, SupportedExchange](s => SupportedExchange.fromString(s))
 
   implicit val dateOrderWrites: Writes[(ZonedDateTime, Order)] = (
     (JsPath \ "date").write[String] and
@@ -135,8 +137,10 @@ trait TradingBotRoutes extends PlayJsonSupport {
       }
     } ~ path("ticker") {
       get {
-        onSuccess(PriceService.priceTicker()) { quoteList =>
-          complete(quoteList)
+        parameters('exchange.as(stringToSupportedExchange)) { exchange =>
+          onSuccess(PriceService.priceTicker(exchange)) { quoteList =>
+            complete(quoteList)
+          }
         }
       }
     } ~ pathSingleSlash {
