@@ -6,6 +6,7 @@ import akka.http.scaladsl.Http
 import akka.http.scaladsl.server.Route
 import akka.stream.ActorMaterializer
 import com.kobr4.tradebot.routes.TradingBotRoutes
+import com.kobr4.tradebot.services.SchedulingService
 
 import scala.concurrent.duration.Duration
 import scala.concurrent.{ Await, ExecutionContext }
@@ -26,6 +27,9 @@ object QuickstartServer extends App with TradingBotRoutes {
   lazy val routes: Route = tradingBotRoutes
   //#main-class
 
+  lazy val schedulingService = new SchedulingService()
+
+  schedulingService.schedule("toto", "*/30 * * * * ?", () => println("Hello"))
   //#http-server
   Http().bindAndHandle(routes, "0.0.0.0", 8080)
 

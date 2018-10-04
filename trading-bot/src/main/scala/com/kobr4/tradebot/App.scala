@@ -3,7 +3,8 @@ package com.kobr4.tradebot
 import java.time._
 import java.time.format.DateTimeFormatter
 
-import play.api.libs.json.{ JsString, Writes }
+import play.api.libs.json
+import play.api.libs.json._
 
 sealed trait Asset
 
@@ -30,6 +31,9 @@ object Asset {
   }
 
   implicit val assetWrites: Writes[Asset] = { a: Asset => JsString(a.toString) }
+
+
+  implicit val assetReads: Reads[Asset]  = JsPath.read[String].map(fromString(_).getOrElse(throw new RuntimeException("Invalid asset")))
 }
 
 object AppNoRun {
