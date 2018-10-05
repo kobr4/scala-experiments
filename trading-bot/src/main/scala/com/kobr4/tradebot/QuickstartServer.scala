@@ -29,7 +29,7 @@ object QuickstartServer extends App with TradingBotRoutes {
 
   lazy val schedulingService = new SchedulingService()
 
-  schedulingService.schedule("toto", "*/30 * * * * ?", () => println("Hello"))
+  //schedulingService.schedule("toto", "*/30 * * * * ?", () => println("Hello"))
   //#http-server
   Http().bindAndHandle(routes, "0.0.0.0", 8080)
 

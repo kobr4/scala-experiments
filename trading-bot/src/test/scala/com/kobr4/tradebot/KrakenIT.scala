@@ -40,4 +40,22 @@ class KrakenIT extends FlatSpec with ScalaFutures with Matchers {
     println(balanceMap)
   }
 
+  it should "return deposit methods" in {
+
+    val krakenApi = new KrakenApi()
+
+    val balanceMap = krakenApi.returnDepositMethods("XETH").futureValue(Timeout(10 seconds))
+
+    println(balanceMap)
+  }
+/*
+  it should "return deposit addresses" in {
+
+    val krakenApi = new KrakenApi()
+
+    val balanceMap = krakenApi.returnDepositAddresses.futureValue(Timeout(10 seconds))
+
+    println(balanceMap)
+  }
+*/
 }

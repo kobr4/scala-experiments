@@ -36,7 +36,7 @@ object SupportedExchange {
 }
 
 class KrakenApi(krakenUrl: String = KrakenApi.rootUrl, apiKey: String = DefaultConfiguration.KrakenApi.Key,
-                apiSecret: String = DefaultConfiguration.KrakenApi.Secret)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext) {
+                apiSecret: String = DefaultConfiguration.KrakenApi.Secret)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext) extends PoloAPIInterface {
 
   private val publicUrl = s"$krakenUrl/0/public"
 
@@ -68,7 +68,6 @@ class KrakenApi(krakenUrl: String = KrakenApi.rootUrl, apiKey: String = DefaultC
 
           Json.parse(message).as[JsObject].value("result").as[JsObject].fields.flatMap {
             case (s, v) =>
-              println(s)
               val pairString = s.toUpperCase
               val (a, b) = pairString.length match {
                 case 6 =>
@@ -87,22 +86,53 @@ class KrakenApi(krakenUrl: String = KrakenApi.rootUrl, apiKey: String = DefaultC
       }
     }
 
-  def returnBalances: Future[Map[Asset, Quantity]] = {
+  def returnDepositMethods(asset: String): Future[List[String]] = {
+    val reqNonce = nonce()
+    KrakenApi.httpRequestPost(s"$privateUrl/${KrakenApi.DepositMethods.DepositMethods}", reqNonce, KrakenApi.DepositMethods.build(reqNonce, asset), apiKey, apiSecret).map { message =>
+      println(message)
+      /*
+      Json.parse(message).as[JsObject].value("result").as[JsObject].fields.flatMap {
+
+      }
+      */
+      List()
+    }
+  }
+
+  override def returnBalances: Future[Map[Asset, Quantity]] = {
     val reqNonce = nonce()
     KrakenApi.httpRequestPost(s"$privateUrl/${KrakenApi.ReturnBalances.ReturnBalances}", reqNonce, KrakenApi.ReturnBalances.build(reqNonce), apiKey, apiSecret).map { message =>
-      println(message)
-      Json.parse(message).as[JsObject].fields.flatMap {
+      Json.parse(message).as[JsObject].value("result").as[JsObject].fields.flatMap {
         case (s, v) => Asset.fromString(s.toUpperCase).map { asset =>
           (asset, Quantity(BigDecimal(v.as[String])))
         }
       }.toMap
     }
   }
+
+  override def returnDepositAddresses: Future[Map[Asset, String]] = {
+    val reqNonce = nonce()
+    KrakenApi.httpRequestPost(s"$privateUrl/${KrakenApi.ReturnDepositAddresses.ReturnDepositAddresses}", reqNonce,
+      KrakenApi.ReturnDepositAddresses.build(reqNonce), apiKey, apiSecret).map { message =>
+      println(message)
+      Map[Asset, String]()
+    }
+  }
+
+  override def returnOpenOrders(): Future[List[PoloOrder]] = ???
+
+  override def cancelOrder(orderNumber: Long): Future[Boolean] = ???
+
+  override def buy(currencyPair: String, rate: BigDecimal, amount: BigDecimal): Future[String] = ???
+
+  override def sell(currencyPair: String, rate: BigDecimal, amount: BigDecimal): Future[String] = ???
 }
 
 object KrakenApi extends StrictLogging {
 
   val rootUrl = "https://api.kraken.com"
+
+  val Asset = "asset"
 
   object Public {
 
@@ -118,6 +148,14 @@ object KrakenApi extends StrictLogging {
     def build(nonce: Long): FormData = akka.http.scaladsl.model.FormData(Map(PoloApi.Nonce -> nonce.toString))
   }
 
+  object DepositMethods {
+
+    val DepositMethods = "DepositMethods"
+
+    def build(nonce: Long, asset: String): FormData = akka.http.scaladsl.model.FormData(Map(PoloApi.Nonce -> nonce.toString, KrakenApi.Asset -> asset))
+  }
+
+
   object AuthHeader {
 
     val key = "API-Key"
@@ -127,6 +165,20 @@ object KrakenApi extends StrictLogging {
     def build(key: String, sign: String): List[HttpHeader] = {
       List(RawHeader(AuthHeader.key, key), RawHeader(AuthHeader.sign, sign))
     }
+  }
+
+  object ReturnOpenOrders {
+
+    val ReturnOpenOrders = "OpenOrders"
+
+    def build(nonce: Long): FormData = akka.http.scaladsl.model.FormData(Map(PoloApi.Nonce -> nonce.toString))
+  }
+
+  object ReturnDepositAddresses {
+
+    val ReturnDepositAddresses = "DepositAddresses"
+
+    def build(nonce: Long): FormData = akka.http.scaladsl.model.FormData(Map(PoloApi.Nonce -> nonce.toString))
   }
 
   private def httpRequest(url: String, command: String)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[String] = {

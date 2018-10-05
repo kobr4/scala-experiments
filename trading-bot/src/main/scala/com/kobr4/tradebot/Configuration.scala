@@ -1,6 +1,17 @@
 package com.kobr4.tradebot
 
-import com.typesafe.config.{ Config, ConfigFactory }
+import com.typesafe.config.{Config, ConfigFactory}
+
+case class ScheduledTask(name: String, classToCall: String, cronExpression: String, enabled: Boolean)
+
+object ScheduledTask {
+  def fromConfig(config: Config) = ScheduledTask(
+    config.getString("name"),
+    config.getString("class"),
+    config.getString("cron-expression"),
+    config.getBoolean("enabled")
+  )
+}
 
 class Configuration(config: Config) {
 
@@ -16,6 +27,10 @@ class Configuration(config: Config) {
     val Secret = config.getString("kraken.api.secret")
   }
 
+  object Scheduled {
+    import scala.collection.JavaConverters._
+    val tasks: List[ScheduledTask] = config.getConfigList("scheduled-tasks").asScala.toList.map(ScheduledTask.fromConfig)
+  }
 }
 
 object DefaultConfiguration extends Configuration(ConfigFactory.load())
