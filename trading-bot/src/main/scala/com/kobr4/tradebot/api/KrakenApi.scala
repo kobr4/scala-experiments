@@ -1,19 +1,22 @@
 package com.kobr4.tradebot.api
 
+import java.util.Base64
+
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers.RawHeader
 import akka.http.scaladsl.unmarshalling.Unmarshal
 import akka.stream.ActorMaterializer
-import com.kobr4.tradebot.Asset
 import com.kobr4.tradebot.api.KrakenApi.Public
-import com.kobr4.tradebot.api.PoloApi.{ AuthHeader, generateHMAC512, logger }
 import com.kobr4.tradebot.model.Quantity
+import com.kobr4.tradebot.{Asset, DefaultConfiguration}
 import com.typesafe.scalalogging.StrictLogging
+import javax.crypto.Mac
+import javax.crypto.spec.SecretKeySpec
 import play.api.libs.json._
 
-import scala.concurrent.{ ExecutionContext, Future }
+import scala.concurrent.{ExecutionContext, Future}
 
 sealed trait SupportedExchange
 
@@ -32,17 +35,15 @@ object SupportedExchange {
   }
 }
 
-class KrakenApi(krakenUrl: String = KrakenApi.rootUrl)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext) {
+class KrakenApi(krakenUrl: String = KrakenApi.rootUrl, apiKey: String = DefaultConfiguration.KrakenApi.Key,
+                apiSecret: String = DefaultConfiguration.KrakenApi.Secret)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext) {
 
-  private val publicUrl = s"$krakenUrl/public"
+  private val publicUrl = s"$krakenUrl/0/public"
 
-  private val privateUrl = s"$krakenUrl/private"
+  private val privateUrl = s"/0/private"
 
-  private val apiKey = ""
-
-  private val apiSecret = ""
-
-  private def nonce = System.currentTimeMillis()
+  private def nonce() = System.currentTimeMillis()
+  //private def nonce() = 1538729057879L
 
   import play.api.libs.functional.syntax._
 
@@ -86,19 +87,22 @@ class KrakenApi(krakenUrl: String = KrakenApi.rootUrl)(implicit arf: ActorSystem
       }
     }
 
-  def returnBalances: Future[Map[Asset, Quantity]] =
-    KrakenApi.httpRequestPost(privateUrl, KrakenApi.ReturnBalances.build(nonce), apiKey, apiSecret).map { message =>
+  def returnBalances: Future[Map[Asset, Quantity]] = {
+    val reqNonce = nonce()
+    KrakenApi.httpRequestPost(s"$privateUrl/${KrakenApi.ReturnBalances.ReturnBalances}", reqNonce, KrakenApi.ReturnBalances.build(reqNonce), apiKey, apiSecret).map { message =>
+      println(message)
       Json.parse(message).as[JsObject].fields.flatMap {
         case (s, v) => Asset.fromString(s.toUpperCase).map { asset =>
           (asset, Quantity(BigDecimal(v.as[String])))
         }
       }.toMap
     }
+  }
 }
 
 object KrakenApi extends StrictLogging {
 
-  val rootUrl = "https://api.kraken.com/0/"
+  val rootUrl = "https://api.kraken.com"
 
   object Public {
 
@@ -131,12 +135,14 @@ object KrakenApi extends StrictLogging {
     }
   }
 
-  private def httpRequestPost(url: String, body: FormData, apiKey: String, apiSecret: String)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[String] = {
+  private def httpRequestPost(path: String, nonce: Long, body: FormData, apiKey: String, apiSecret: String)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[String] = {
+    val url = s"$rootUrl$path"
     logger.info(s"Sending post request to $url")
     logger.info(s"Body: ${body.fields.toString}")
+    logger.info(s"Path $path")
     Http().singleRequest(HttpRequest(
       method = HttpMethods.POST,
-      headers = AuthHeader.build(apiKey, generateHMAC512(apiSecret, body.fields.toString)),
+      headers = AuthHeader.build(apiKey, generateHMAC512(apiSecret, path.getBytes++generateSha256(nonce.toString+body.fields.toString))),
       entity = body.toEntity(HttpCharsets.`UTF-8`),
       uri = url)).flatMap { response =>
       if (response.status == StatusCodes.OK)
@@ -144,6 +150,24 @@ object KrakenApi extends StrictLogging {
       else
         throw new RuntimeException("Return code was " + response.status)
     }
+  }
+
+  private[tradebot] def generateSha256(originalString: String): Array[Byte] = {
+    import java.security.MessageDigest
+    val digest = MessageDigest.getInstance("SHA-256")
+    import java.nio.charset.StandardCharsets
+    val hash = digest.digest(originalString.getBytes(StandardCharsets.UTF_8))
+    hash
+  }
+
+  private[tradebot] def generateHMAC512(sharedSecret: String, preHashData: Array[Byte]): String = {
+    val secret = new SecretKeySpec(Base64.getDecoder.decode(sharedSecret), "HmacSHA512")
+    val mac = Mac.getInstance("HmacSHA512")
+    mac.init(secret)
+    val hashString: Array[Byte] = mac.doFinal(preHashData)
+    val hmacsign = Base64.getEncoder.encodeToString(hashString)
+      logger.debug(s"HMAC sha512 signature: $hmacsign")
+    hmacsign
   }
 
 }

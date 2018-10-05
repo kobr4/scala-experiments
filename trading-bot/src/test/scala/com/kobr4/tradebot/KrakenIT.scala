@@ -31,4 +31,13 @@ class KrakenIT extends FlatSpec with ScalaFutures with Matchers {
     println(quoteList)
   }
 
+  it should "return balance" in {
+
+    val krakenApi = new KrakenApi()
+
+    val balanceMap = krakenApi.returnBalances.futureValue(Timeout(10 seconds))
+
+    println(balanceMap)
+  }
+
 }
