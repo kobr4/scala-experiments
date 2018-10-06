@@ -1,16 +1,15 @@
 package com.kobr4.tradebot
 
-import com.typesafe.config.{Config, ConfigFactory}
+import com.typesafe.config.{ Config, ConfigFactory }
 
-case class ScheduledTask(name: String, classToCall: String, cronExpression: String, enabled: Boolean)
+case class ScheduledTaskConfiguration(name: String, classToCall: String, cronExpression: String, enabled: Boolean)
 
-object ScheduledTask {
-  def fromConfig(config: Config) = ScheduledTask(
+object ScheduledTaskConfiguration {
+  def fromConfig(config: Config) = ScheduledTaskConfiguration(
     config.getString("name"),
     config.getString("class"),
     config.getString("cron-expression"),
-    config.getBoolean("enabled")
-  )
+    config.getBoolean("enabled"))
 }
 
 class Configuration(config: Config) {
@@ -29,7 +28,7 @@ class Configuration(config: Config) {
 
   object Scheduled {
     import scala.collection.JavaConverters._
-    val tasks: List[ScheduledTask] = config.getConfigList("scheduled-tasks").asScala.toList.map(ScheduledTask.fromConfig)
+    val tasks: List[ScheduledTaskConfiguration] = config.getConfigList("scheduled-tasks").asScala.toList.map(ScheduledTaskConfiguration.fromConfig)
   }
 }
 

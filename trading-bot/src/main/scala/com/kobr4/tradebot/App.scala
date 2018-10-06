@@ -32,8 +32,7 @@ object Asset {
 
   implicit val assetWrites: Writes[Asset] = { a: Asset => JsString(a.toString) }
 
-
-  implicit val assetReads: Reads[Asset]  = JsPath.read[String].map(fromString(_).getOrElse(throw new RuntimeException("Invalid asset")))
+  implicit val assetReads: Reads[Asset] = JsPath.read[String].map(fromString(_).getOrElse(throw new RuntimeException("Invalid asset")))
 }
 
 object AppNoRun {

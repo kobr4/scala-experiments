@@ -27,7 +27,7 @@ class SchedulingService(implicit arf: ActorSystem, am: ActorMaterializer, ec: Ex
     scheduler.schedule(name, actorRef, "run", None)
   }
 
-  def listJobs() : List[String] = {
+  def listJobs(): List[String] = {
     scheduler.schedules.keys.toList
   }
 

@@ -48,7 +48,7 @@ class KrakenIT extends FlatSpec with ScalaFutures with Matchers {
 
     println(balanceMap)
   }
-/*
+  /*
   it should "return deposit addresses" in {
 
     val krakenApi = new KrakenApi()

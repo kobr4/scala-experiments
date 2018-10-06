@@ -5,7 +5,7 @@ import java.time.ZonedDateTime
 import com.kobr4.tradebot.Asset
 import com.kobr4.tradebot.Asset.fromString
 import com.kobr4.tradebot.model._
-import play.api.libs.json.{JsPath, Reads}
+import play.api.libs.json.{ JsPath, Reads }
 
 trait Strategy {
 
@@ -20,8 +20,7 @@ object Strategy {
     case _ => None
   }
 
-
-  implicit val strategyReads: Reads[Strategy]  = JsPath.read[String].map(fromString(_).getOrElse(throw new RuntimeException("Invalid strategy")))
+  implicit val strategyReads: Reads[Strategy] = JsPath.read[String].map(fromString(_).getOrElse(throw new RuntimeException("Invalid strategy")))
 }
 
 object AggressiveStrategy extends Strategy {

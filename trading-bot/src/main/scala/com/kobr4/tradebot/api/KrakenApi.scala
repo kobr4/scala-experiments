@@ -10,13 +10,13 @@ import akka.http.scaladsl.unmarshalling.Unmarshal
 import akka.stream.ActorMaterializer
 import com.kobr4.tradebot.api.KrakenApi.Public
 import com.kobr4.tradebot.model.Quantity
-import com.kobr4.tradebot.{Asset, DefaultConfiguration}
+import com.kobr4.tradebot.{ Asset, DefaultConfiguration }
 import com.typesafe.scalalogging.StrictLogging
 import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
 import play.api.libs.json._
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{ ExecutionContext, Future }
 
 sealed trait SupportedExchange
 
@@ -36,7 +36,7 @@ object SupportedExchange {
 }
 
 class KrakenApi(krakenUrl: String = KrakenApi.rootUrl, apiKey: String = DefaultConfiguration.KrakenApi.Key,
-                apiSecret: String = DefaultConfiguration.KrakenApi.Secret)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext) extends PoloAPIInterface {
+  apiSecret: String = DefaultConfiguration.KrakenApi.Secret)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext) extends PoloAPIInterface {
 
   private val publicUrl = s"$krakenUrl/0/public"
 
@@ -114,9 +114,9 @@ class KrakenApi(krakenUrl: String = KrakenApi.rootUrl, apiKey: String = DefaultC
     val reqNonce = nonce()
     KrakenApi.httpRequestPost(s"$privateUrl/${KrakenApi.ReturnDepositAddresses.ReturnDepositAddresses}", reqNonce,
       KrakenApi.ReturnDepositAddresses.build(reqNonce), apiKey, apiSecret).map { message =>
-      println(message)
-      Map[Asset, String]()
-    }
+        println(message)
+        Map[Asset, String]()
+      }
   }
 
   override def returnOpenOrders(): Future[List[PoloOrder]] = ???
@@ -154,7 +154,6 @@ object KrakenApi extends StrictLogging {
 
     def build(nonce: Long, asset: String): FormData = akka.http.scaladsl.model.FormData(Map(PoloApi.Nonce -> nonce.toString, KrakenApi.Asset -> asset))
   }
-
 
   object AuthHeader {
 
@@ -194,7 +193,7 @@ object KrakenApi extends StrictLogging {
     logger.info(s"Path $path")
     Http().singleRequest(HttpRequest(
       method = HttpMethods.POST,
-      headers = AuthHeader.build(apiKey, generateHMAC512(apiSecret, path.getBytes++generateSha256(nonce.toString+body.fields.toString))),
+      headers = AuthHeader.build(apiKey, generateHMAC512(apiSecret, path.getBytes ++ generateSha256(nonce.toString + body.fields.toString))),
       entity = body.toEntity(HttpCharsets.`UTF-8`),
       uri = url)).flatMap { response =>
       if (response.status == StatusCodes.OK)
@@ -218,7 +217,7 @@ object KrakenApi extends StrictLogging {
     mac.init(secret)
     val hashString: Array[Byte] = mac.doFinal(preHashData)
     val hmacsign = Base64.getEncoder.encodeToString(hashString)
-      logger.debug(s"HMAC sha512 signature: $hmacsign")
+    logger.debug(s"HMAC sha512 signature: $hmacsign")
     hmacsign
   }
 
