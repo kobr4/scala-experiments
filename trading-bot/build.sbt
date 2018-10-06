@@ -45,3 +45,5 @@ imageNames in docker := {
     repository = "trading-bot",
     tag = Some("latest")))
 }
+
+Compile/mainClass := Some("com.kobr4.tradebot.QuickstartServer")

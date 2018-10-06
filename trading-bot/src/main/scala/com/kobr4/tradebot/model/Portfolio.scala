@@ -1,7 +1,6 @@
 package com.kobr4.tradebot.model
 
-import com.kobr4.tradebot.Asset
-import com.kobr4.tradebot.Asset.Usd
+import com.kobr4.tradebot.model.Asset.Usd
 
 import scala.collection.mutable
 

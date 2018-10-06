@@ -2,8 +2,6 @@ package com.kobr4.tradebot.engine
 
 import java.time.ZonedDateTime
 
-import com.kobr4.tradebot.Asset
-import com.kobr4.tradebot.Asset.fromString
 import com.kobr4.tradebot.model._
 import play.api.libs.json.{ JsPath, Reads }
 

@@ -4,9 +4,8 @@ import java.time.ZonedDateTime
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
-import com.kobr4.tradebot._
 import com.kobr4.tradebot.api._
-import com.kobr4.tradebot.model.{ PairPrice, PairPrices }
+import com.kobr4.tradebot.model.{ Asset, PairPrice, PairPrices }
 import scalacache.Cache
 import scalacache.guava.GuavaCache
 
@@ -15,10 +14,6 @@ import scala.concurrent.{ ExecutionContext, Future }
 object PriceService {
 
   implicit val guavaCache: Cache[PairPrices] = GuavaCache[PairPrices]
-
-  private val ethPricesUrl = "https://coinmetrics.io/data/eth.csv"
-  private val btcPricesUrl = "https://coinmetrics.io/data/btc.csv"
-  private val xmrPricesUrl = "https://coinmetrics.io/data/xmr.csv"
 
   private def getCoinmetricsPricesWithCache(url: String)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[PairPrices] = {
     import scalacache._
@@ -43,9 +38,12 @@ object PriceService {
   }
 
   private def getPricesWithCache(asset: Asset)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[PairPrices] = asset match {
-    case Asset.Btc => getCoinmetricsPricesWithCache(btcPricesUrl)
-    case Asset.Eth => getCoinmetricsPricesWithCache(ethPricesUrl)
-    case Asset.Xmr => getCoinmetricsPricesWithCache(xmrPricesUrl)
+    case Asset.Btc => getCoinmetricsPricesWithCache(CoinMetricsPriceUrl.btc)
+    case Asset.Eth => getCoinmetricsPricesWithCache(CoinMetricsPriceUrl.eth)
+    case Asset.Xmr => getCoinmetricsPricesWithCache(CoinMetricsPriceUrl.xmr)
+    case Asset.Doge => getCoinmetricsPricesWithCache(CoinMetricsPriceUrl.doge)
+    case Asset.Xem => getCoinmetricsPricesWithCache(CoinMetricsPriceUrl.xem)
+    case Asset.Xrp => getCoinmetricsPricesWithCache(CoinMetricsPriceUrl.xrp)
     case other => getYahooPricesWithCache(other.toString)
   }
 
@@ -66,6 +64,9 @@ object PriceService {
 
   def getMovingAverageHistory(asset: Asset, startDate: ZonedDateTime, endDate: ZonedDateTime, days: Int)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[List[BigDecimal]] =
     getPricesWithCache(asset).map(_.movingAverage(days).filter(p => p.date.isAfter(startDate) && p.date.isBefore(endDate)).groupByMonth.map(merge => merge._2.map(_.price).sum / merge._2.length))
+
+  def getWheightedMovingAverageHistory(asset: Asset, startDate: ZonedDateTime, endDate: ZonedDateTime, days: Int)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[List[BigDecimal]] =
+    getPricesWithCache(asset).map(_.weightedMovingAverage(days).filter(p => p.date.isAfter(startDate) && p.date.isBefore(endDate)).groupByMonth.map(merge => merge._2.map(_.price).sum / merge._2.length))
 
   def getPriceData(asset: Asset, startDate: ZonedDateTime, endDate: ZonedDateTime = ZonedDateTime.now())(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[PairPrices] =
     getPricesWithCache(asset).map(filter(_, startDate, endDate))

@@ -1,8 +1,7 @@
 package com.kobr4.tradebot.services
 
 import com.kobr4.tradebot.api.{ CurrencyPair, PoloAPIInterface }
-import com.kobr4.tradebot.model.{ Portfolio, Quantity }
-import com.kobr4.tradebot.Asset
+import com.kobr4.tradebot.model.{ Asset, Portfolio, Quantity }
 
 import scala.concurrent.{ ExecutionContext, Future }
 

@@ -9,14 +9,14 @@ import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.server.directives.RouteDirectives.complete
 import akka.http.scaladsl.unmarshalling.Unmarshaller
 import akka.stream.ActorMaterializer
+import com.kobr4.tradebot.QuickstartServer
 import com.kobr4.tradebot.api.{ PoloApi, PoloOrder, SupportedExchange }
-import com.kobr4.tradebot.model.{ Order, Quantity }
-import com.kobr4.tradebot.services.{ PriceService, TradeBotService }
-import com.kobr4.tradebot.{ Asset, QuickstartServer }
 import com.kobr4.tradebot.engine.Strategy
+import com.kobr4.tradebot.model.{ Asset, Order, Quantity }
+import com.kobr4.tradebot.services.{ PriceService, TradeBotService }
 import play.api.libs.functional.syntax._
 import play.api.libs.json.{ JsPath, Json, Reads, Writes }
-import java.time.ZonedDateTime
+
 import scala.concurrent.ExecutionContext
 
 case class ExchangeCreds(exchange: String, apiKey: String, apiSecret: String)
@@ -115,6 +115,15 @@ trait TradingBotRoutes extends PlayJsonSupport {
         get {
           parameters('asset.as(stringToAsset), 'start.as(stringToZonedDateTime), 'end.as(stringToZonedDateTime), 'days.as[Int]) { (asset, start, end, days) =>
             onSuccess(PriceService.getMovingAverageHistory(asset, start, end, days)) { priceList =>
+              complete(priceList)
+            }
+          }
+        }
+      } ~
+      path("weighted_moving") {
+        get {
+          parameters('asset.as(stringToAsset), 'start.as(stringToZonedDateTime), 'end.as(stringToZonedDateTime), 'days.as[Int]) { (asset, start, end, days) =>
+            onSuccess(PriceService.getWheightedMovingAverageHistory(asset, start, end, days)) { priceList =>
               complete(priceList)
             }
           }

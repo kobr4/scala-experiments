@@ -1,48 +1,23 @@
 package com.kobr4.tradebot
 
-import java.time._
-import java.time.format.DateTimeFormatter
+import java.time.ZonedDateTime
 
-import play.api.libs.json
-import play.api.libs.json._
+import akka.actor.ActorSystem
+import akka.stream.ActorMaterializer
+import com.kobr4.tradebot.engine.{ SafeStrategy, Strategy }
+import com.kobr4.tradebot.model.{ Asset, Buy, Sell }
+import com.kobr4.tradebot.services.{ PriceService, TradeBotService }
 
-sealed trait Asset
+import scala.concurrent.ExecutionContext
 
-object Asset {
+object App {
 
-  case object Eth extends Asset { override def toString: String = "ETH" }
+  def main(args: Array[String]): Unit = {
 
-  case object Btc extends Asset { override def toString: String = "BTC" }
+    implicit val system: ActorSystem = ActorSystem("helloAkkaHttpServer")
+    implicit val am: ActorMaterializer = ActorMaterializer()
+    implicit val ec: ExecutionContext = system.dispatcher
 
-  case object Xmr extends Asset { override def toString: String = "XMR" }
-
-  case object Usd extends Asset { override def toString: String = "USDT" }
-
-  case class Custom(code: String) extends Asset { override def toString: String = code }
-
-  def fromString(s: String): Option[Asset] = s match {
-    case "ETH" => Some(Asset.Eth)
-    case "BTC" => Some(Asset.Btc)
-    case "XBT" => Some(Asset.Btc)
-    case "XMR" => Some(Asset.Xmr)
-    case "USD" => Some(Asset.Usd)
-    case "USDT" => Some(Asset.Usd)
-    case code => Some(Custom(code))
-  }
-
-  implicit val assetWrites: Writes[Asset] = { a: Asset => JsString(a.toString) }
-
-  implicit val assetReads: Reads[Asset] = JsPath.read[String].map(fromString(_).getOrElse(throw new RuntimeException("Invalid asset")))
-}
-
-object AppNoRun {
-  val ethPricesUrl = "https://coinmetrics.io/data/eth.csv"
-  val btcPrices = "https://coinmetrics.io/data/btc.csv"
-
-  val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd").withZone(ZoneId.of("UTC"))
-  def mainNoRun(args: Array[String]): Unit = {
-
-    val date = ZonedDateTime.parse("2018-02-01T01:00:00.000Z")
     /*
     val priceData = PairPrice.fromUrl(ethPricesUrl)
     priceData.prices.filter(_.date.isAfter(date)).foreach { p =>
@@ -52,5 +27,17 @@ object AppNoRun {
     val holdBalance = 10000 / priceData.currentPrice(date) * priceData.prices.last.price
     println(s"balance: ${Strategy.portfolio.balance(priceData)} hold: $holdBalance")
 */
+    val date = ZonedDateTime.parse("2017-01-01T01:00:00.000Z")
+
+    PriceService.getPriceData(Asset.Btc, date).map { pd =>
+      val orderList = TradeBotService.run(Asset.Btc, BigDecimal(10000), pd, BigDecimal(0.1), SafeStrategy)
+      val lastOrder = orderList.last._2
+      val (asset, price, quantity) = lastOrder match {
+        case Buy(asset, price, quantity) => (asset, price, quantity)
+        case Sell(asset, price, quantity) => (asset, price, quantity)
+      }
+
+      println(s"balance:" + (price * quantity))
+    }
   }
 }

@@ -190,7 +190,7 @@ class GraphResult extends React.Component {
   
 
   requestMA30 = () => RestUtils.performRestPriceReq((prices) => { this.setState({ma30datapoints : prices})}, 
-    movingEndpoint, [ ['asset', this.props.asset], ['start', this.state.start.format(moment.defaultFormatUtc)], ['end',this.state.end.format(moment.defaultFormatUtc)], ['days', 30] ]);
+    movingEndpoint, [ ['asset', this.props.asset], ['start', this.state.start.format(moment.defaultFormatUtc)], ['end',this.state.end.format(moment.defaultFormatUtc)], ['days', 20] ]);
 
   handleSubmit = (event) => {
     RestUtils.performRestReq((tradeBotResponse) => {

@@ -3,7 +3,7 @@ package com.kobr4.tradebot
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import com.kobr4.tradebot.api.{ CurrencyPair, PoloAPIInterface, PoloOrder, Quote }
-import com.kobr4.tradebot.model.Quantity
+import com.kobr4.tradebot.model.{ Asset, Quantity }
 import com.kobr4.tradebot.services.TradingOps
 import org.mockito.Mockito._
 import org.scalatest.concurrent.PatienceConfiguration.Timeout

@@ -1,7 +1,6 @@
 package com.kobr4.tradebot.api
 
-import com.kobr4.tradebot.Asset
-import com.kobr4.tradebot.model.Quantity
+import com.kobr4.tradebot.model.{ Asset, Quantity }
 
 import scala.concurrent.{ ExecutionContext, Future }
 

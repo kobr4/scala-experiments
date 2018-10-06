@@ -4,11 +4,10 @@ import java.time.ZonedDateTime
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
-import com.kobr4.tradebot.Asset.Usd
-import com.kobr4.tradebot._
 import com.kobr4.tradebot.api.PoloApi
 import com.kobr4.tradebot.engine.Strategy
-import com.kobr4.tradebot.model.{ Order, PairPrices, Portfolio, Quantity }
+import com.kobr4.tradebot.model.Asset.Usd
+import com.kobr4.tradebot.model._
 
 import scala.concurrent.ExecutionContext
 

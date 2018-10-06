@@ -2,7 +2,6 @@ package com.kobr4.tradebot.model
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
-import com.kobr4.tradebot.Asset
 import com.kobr4.tradebot.api.PoloApi
 import play.api.libs.json.{ JsObject, Json, Writes }
 

@@ -2,8 +2,7 @@ package com.kobr4.tradebot.engine
 
 import java.time.ZonedDateTime
 
-import com.kobr4.tradebot.Asset
-import com.kobr4.tradebot.model.{ Buy, Order, PairPrices, Portfolio }
+import com.kobr4.tradebot.model._
 
 object Rule {
 
@@ -13,6 +12,10 @@ object Rule {
     def whenBelowMovingAverge(current: ZonedDateTime, currentPrice: BigDecimal, priceData: PairPrices): T
 
     def whenAboveMovingAverge(current: ZonedDateTime, currentPrice: BigDecimal, priceData: PairPrices): T
+
+    def whenBelowWeightedMovingAverge(current: ZonedDateTime, currentPrice: BigDecimal, priceData: PairPrices): T
+
+    def whenAboveWeightedMovingAverge(current: ZonedDateTime, currentPrice: BigDecimal, priceData: PairPrices): T
 
     def when(v: Boolean): T
 
@@ -27,7 +30,11 @@ object Rule {
 
       override def whenBelowMovingAverge(current: ZonedDateTime, currentPrice: BigDecimal, priceData: PairPrices): Option[T] = priceData.movingAverage(current, 20).filter(_ > currentPrice).flatMap(_ => input)
 
+      override def whenBelowWeightedMovingAverge(current: ZonedDateTime, currentPrice: BigDecimal, priceData: PairPrices): Option[T] = priceData.weightedMovingAverage(current, 20).filter(_ > currentPrice).flatMap(_ => input)
+
       override def whenAboveMovingAverge(current: ZonedDateTime, currentPrice: BigDecimal, priceData: PairPrices): Option[T] = priceData.movingAverage(current, 20).filter(_ < currentPrice).flatMap(_ => input)
+
+      override def whenAboveWeightedMovingAverge(current: ZonedDateTime, currentPrice: BigDecimal, priceData: PairPrices): Option[T] = priceData.weightedMovingAverage(current, 20).filter(_ < currentPrice).flatMap(_ => input)
 
       override def when(v: Boolean): Option[T] = input.filter(_ => v)
 

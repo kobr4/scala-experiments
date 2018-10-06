@@ -9,8 +9,8 @@ import akka.http.scaladsl.model.headers.RawHeader
 import akka.http.scaladsl.unmarshalling.Unmarshal
 import akka.stream.ActorMaterializer
 import com.kobr4.tradebot.api.KrakenApi.Public
-import com.kobr4.tradebot.model.Quantity
-import com.kobr4.tradebot.{ Asset, DefaultConfiguration }
+import com.kobr4.tradebot.model.{ Asset, Quantity }
+import com.kobr4.tradebot.DefaultConfiguration
 import com.typesafe.scalalogging.StrictLogging
 import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec

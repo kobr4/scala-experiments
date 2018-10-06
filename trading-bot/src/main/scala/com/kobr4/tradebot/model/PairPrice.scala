@@ -1,13 +1,13 @@
 package com.kobr4.tradebot.model
 
-import java.time.{ LocalDate, LocalTime, ZoneId, ZonedDateTime }
+import java.time.format.DateTimeFormatter
+import java.time._
 
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.HttpRequest
 import akka.http.scaladsl.unmarshalling.Unmarshal
 import akka.stream.ActorMaterializer
-import com.kobr4.tradebot.AppNoRun.formatter
 
 import scala.concurrent.{ ExecutionContext, Future }
 
@@ -29,6 +29,19 @@ case class PairPrices(prices: List[PairPrice]) {
     }
   }
 
+  def weightedMovingAverage(base: ZonedDateTime, days: Int): Option[BigDecimal] = {
+    val minDate = base.minusDays(days)
+    val priceSubset = prices.filter(price => price.date.isAfter(minDate) && price.date.isBefore(base))
+    priceSubset.length match {
+      case 0 => None
+      case len =>
+        val divFactor = priceSubset.map(pairPrice => days - Period.between(minDate.toLocalDate, pairPrice.date.toLocalDate).getDays).sum
+        Some(
+          priceSubset.map(pairPrice =>
+            (days - Period.between(minDate.toLocalDate, pairPrice.date.toLocalDate).getDays) * pairPrice.price).sum / divFactor)
+    }
+  }
+
   def currentPrice(current: ZonedDateTime): BigDecimal = {
     prices.reduce((p1, p2) =>
       if (Math.abs(p1.date.toEpochSecond - current.toEpochSecond) < Math.abs(p2.date.toEpochSecond - current.toEpochSecond))
@@ -46,12 +59,18 @@ case class PairPrices(prices: List[PairPrice]) {
     PairPrices(prices.map { price => EthUsd(price.date, movingAverage(price.date, days).getOrElse(BigDecimal(0))) })
   }
 
+  def weightedMovingAverage(days: Int): PairPrices = {
+    PairPrices(prices.map { price => EthUsd(price.date, weightedMovingAverage(price.date, days).getOrElse(BigDecimal(0))) })
+  }
+
   def filter(startDate: ZonedDateTime, endDate: ZonedDateTime): PairPrices =
     filter(p => p.date.isAfter(startDate) && p.date.isBefore(endDate))
 
 }
 
 object PairPrice {
+  private val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd").withZone(ZoneId.of("UTC"))
+
   def fromUrl(s: String): PairPrices = {
     val bufferedSource = io.Source.fromURL(s)
 
