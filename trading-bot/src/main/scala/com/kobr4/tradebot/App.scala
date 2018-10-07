@@ -46,5 +46,9 @@ object App {
       }
     }
 
+    eventualRun.onComplete {
+      case Failure(f) => println(f)
+      case _ =>
+    }
   }
 }
