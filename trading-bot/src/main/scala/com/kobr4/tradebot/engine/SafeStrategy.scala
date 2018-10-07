@@ -7,7 +7,7 @@ import play.api.libs.json.{ JsPath, Reads }
 
 trait Strategy {
 
-  def runStrategy(asset: Asset, current: ZonedDateTime, priceData: PairPrices, portfolio: Portfolio): Option[(ZonedDateTime, Order)]
+  def runStrategy(asset: Asset, current: ZonedDateTime, priceData: PairPrices, portfolio: Portfolio, weight: BigDecimal = BigDecimal(1)): Option[(ZonedDateTime, Order)]
 }
 
 object Strategy {
@@ -53,7 +53,7 @@ object AggressiveStrategy extends Strategy {
       })
   }
 
-  def runStrategy(asset: Asset, current: ZonedDateTime, priceData: PairPrices, portfolio: Portfolio): Option[(ZonedDateTime, Order)] = {
+  def runStrategy(asset: Asset, current: ZonedDateTime, priceData: PairPrices, portfolio: Portfolio, weight: BigDecimal = BigDecimal(1)): Option[(ZonedDateTime, Order)] = {
     buyStrategy(asset, portfolio, current, priceData).map { order =>
       (current, order)
     }.orElse(
@@ -68,12 +68,14 @@ object SafeStrategy extends Strategy {
   import com.kobr4.tradebot.engine.Rule.Condition._
 
   /* buy if abpve 30 days moving average */
-  def buyStrategy(asset: Asset, portfolio: Portfolio, current: ZonedDateTime, priceData: PairPrices): Option[Buy] = {
+  def buyStrategy(asset: Asset, portfolio: Portfolio, current: ZonedDateTime, priceData: PairPrices, weight: BigDecimal = BigDecimal(1)): Option[Buy] = {
 
     val assetPrice = priceData.currentPrice(current)
     implicit val port = portfolio
 
-    val maybeBuy = Option(Buy(asset, assetPrice, portfolio.assets(Asset.Usd).quantity / assetPrice))
+    val quantity = ((portfolio.balance(current) * weight) - portfolio.balance(asset, current)).max(0).min(portfolio.assets(Asset.Usd).quantity) / assetPrice
+
+    val maybeBuy = if (quantity > 0.1) Option(Buy(asset, assetPrice, quantity)) else None
 
     // Sexy DSL ! <3
     maybeBuy
@@ -96,8 +98,8 @@ object SafeStrategy extends Strategy {
       })
   }
 
-  def runStrategy(asset: Asset, current: ZonedDateTime, priceData: PairPrices, portfolio: Portfolio): Option[(ZonedDateTime, Order)] = {
-    buyStrategy(asset, portfolio, current, priceData).map { order =>
+  def runStrategy(asset: Asset, current: ZonedDateTime, priceData: PairPrices, portfolio: Portfolio, weight: BigDecimal = BigDecimal(1)): Option[(ZonedDateTime, Order)] = {
+    buyStrategy(asset, portfolio, current, priceData, weight).map { order =>
       (current, order)
     }.orElse(
       sellStrategy(asset, portfolio, current, priceData).map { order =>

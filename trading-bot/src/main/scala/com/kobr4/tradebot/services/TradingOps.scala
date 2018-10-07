@@ -38,7 +38,7 @@ class TradingOps(val api: PoloAPIInterface)(implicit ec: ExecutionContext) {
 
   def loadPortfolio(): Future[Portfolio] = {
     api.returnBalances.map { assetMap =>
-      val port = Portfolio.create(Asset.Btc)
+      val port = Portfolio.create(Map())
       assetMap.toList.map(kv => port.assets.put(kv._1, kv._2))
       port
     }

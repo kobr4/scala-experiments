@@ -1,10 +1,12 @@
 package com.kobr4.tradebot.model
 
+import java.time.ZonedDateTime
+
 import com.kobr4.tradebot.model.Asset.Usd
 
 import scala.collection.mutable
 
-case class Portfolio(assets: mutable.HashMap[Asset, Quantity], orderList: mutable.ListBuffer[Order]) {
+case class Portfolio(assets: mutable.Map[Asset, Quantity], orderList: mutable.ListBuffer[Order], prices: Map[Asset, PairPrices]) {
 
   def update(order: Order, fee: BigDecimal): Order = {
     order match {
@@ -19,16 +21,22 @@ case class Portfolio(assets: mutable.HashMap[Asset, Quantity], orderList: mutabl
     order
   }
 
-  def balance(priceData: PairPrices): BigDecimal = {
+  def balance(currentDate: ZonedDateTime): BigDecimal = {
     assets.keySet.map {
-      case k @ Asset.Eth => assets(k).quantity * priceData.prices.last.price
-      case k => assets(k).quantity
+      case k @ Asset.Usd => assets(k).quantity
+      case k => assets(k).quantity * prices(k).currentPrice(currentDate)
+
     }.sum
+  }
+
+  def balance(currentAsset: Asset, currentDate: ZonedDateTime): BigDecimal = {
+    assets(currentAsset).quantity * prices(currentAsset).currentPrice(currentDate)
   }
 }
 
 object Portfolio {
-  def create(asset: Asset) = Portfolio(
-    mutable.HashMap(asset -> Quantity(0), Asset.Usd -> Quantity(0)),
-    mutable.ListBuffer.empty[Order])
+  def create(priceMap: Map[Asset, PairPrices]) = Portfolio(
+    mutable.Map(priceMap.keys.toList.map(asset => asset -> Quantity(0)):::List(Asset.Usd -> Quantity(0)) : _*),
+    mutable.ListBuffer.empty[Order],
+    priceMap)
 }
