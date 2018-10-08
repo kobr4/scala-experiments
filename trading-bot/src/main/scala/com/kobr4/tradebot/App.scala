@@ -6,11 +6,11 @@ import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import com.kobr4.tradebot.engine.SafeStrategy
 import com.kobr4.tradebot.model._
-import com.kobr4.tradebot.services.{PriceService, TradeBotService}
+import com.kobr4.tradebot.services.{ PriceService, TradeBotService }
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{ ExecutionContext, Future }
 
-case class RunReport(asset: Asset,finalBalance: BigDecimal, buyAndHold: BigDecimal) {
+case class RunReport(asset: Asset, finalBalance: BigDecimal, buyAndHold: BigDecimal) {
   def print(): Unit = {
     println(this)
   }
@@ -37,7 +37,7 @@ object App {
         case Sell(asset, price, quantity) => (asset, price, quantity)
       }
 
-      RunReport(asset, price * quantity, initialAmount/pd.currentPrice(date)*pd.currentPrice(ZonedDateTime.now()))
+      RunReport(asset, price * quantity, initialAmount / pd.currentPrice(date) * pd.currentPrice(ZonedDateTime.now()))
     }
   }
 
@@ -62,7 +62,6 @@ object App {
 
     val assetList = List(Asset.Btc, Asset.Eth, Asset.Xmr, Asset.Xlm, Asset.Doge)
     Future.sequence(assetList.map(asset => runAndReport(asset))).map { reportList => reportList.foreach(_.print()) }
-
 
     val assetWeight: Map[Asset, BigDecimal] = Map(Asset.Btc -> BigDecimal(0.3), Asset.Eth -> BigDecimal(0.3), Asset.Xmr -> BigDecimal(0.2), Asset.Dgb -> BigDecimal(0.1), Asset.Doge -> BigDecimal(0.1))
     runMultipleAndReport(assetWeight).foreach(_.print())

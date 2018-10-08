@@ -96,7 +96,7 @@ object SafeStrategy extends Strategy {
     maybeSellAll
       .when(portfolio.assets(asset).quantity > 0)
       .whenBelowMovingAverge(current, currentPrice, priceData)
-/*
+    /*
       .whenLastBuyingPrice(asset, (buyPrice) => {
         buyPrice + buyPrice * 20 / 100 < currentPrice || buyPrice - buyPrice * 10 / 100 > currentPrice
       })

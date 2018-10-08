@@ -2,7 +2,8 @@ package com.kobr4.tradebot.model
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
-import com.kobr4.tradebot.api.PoloApi
+import com.kobr4.tradebot.api.{ CurrencyPair, PoloApi }
+import com.kobr4.tradebot.services.TradingOps
 import play.api.libs.json.{ JsObject, Json, Writes }
 
 import scala.concurrent.ExecutionContext
@@ -25,10 +26,13 @@ object Order {
   }
 
   def process(order: Order)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Unit = {
-    val api = new PoloApi()
+
+    val tradingOps = new TradingOps(new PoloApi())
     order match {
-      case b: Buy => api.buy(getCurrencyPair(b.asset), b.price, b.quantity)
-      case s: Sell => api.sell(getCurrencyPair(s.asset), s.price, s.quantity)
+      case b: Buy =>
+        tradingOps.buyAtMarketValue(b.price, CurrencyPair(b.asset, Asset.Usd), b.asset, Quantity(b.quantity))
+      case s: Sell =>
+        tradingOps.sellAtMarketValue(s.price, CurrencyPair(s.asset, Asset.Usd), s.asset, Quantity(s.quantity))
     }
   }
 
