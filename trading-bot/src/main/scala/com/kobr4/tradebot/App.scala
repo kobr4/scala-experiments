@@ -6,12 +6,53 @@ import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import com.kobr4.tradebot.engine.SafeStrategy
 import com.kobr4.tradebot.model._
-import com.kobr4.tradebot.services.{ PriceService, TradeBotService }
+import com.kobr4.tradebot.services.{PriceService, TradeBotService}
 
-import scala.concurrent.ExecutionContext
-import scala.util.Failure
+import scala.concurrent.{ExecutionContext, Future}
+
+case class RunReport(asset: Asset,finalBalance: BigDecimal, buyAndHold: BigDecimal) {
+  def print(): Unit = {
+    println(this)
+  }
+}
+
+case class RunMultipleReport(finalBalance: BigDecimal) {
+  def print(): Unit = {
+    println(this)
+  }
+}
 
 object App {
+
+  val date = ZonedDateTime.parse("2017-01-01T01:00:00.000Z")
+  val initialAmount = BigDecimal(10000)
+  val fees = BigDecimal(0.1)
+
+  def runAndReport(asset: Asset)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[RunReport] = {
+    PriceService.getPriceData(asset).map { pd =>
+      val orderList = TradeBotService.run(asset, date, initialAmount, pd, fees, SafeStrategy)
+      val lastOrder = orderList.last._2
+      val (assetOut, price, quantity) = lastOrder match {
+        case Buy(asset, price, quantity) => (asset, price, quantity)
+        case Sell(asset, price, quantity) => (asset, price, quantity)
+      }
+
+      RunReport(asset, price * quantity, initialAmount/pd.currentPrice(date)*pd.currentPrice(ZonedDateTime.now()))
+    }
+  }
+
+  def runMultipleAndReport(assetWeight: Map[Asset, BigDecimal])(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext) = {
+    val eventualRun = TradeBotService.runMap(assetWeight, date, initialAmount, fees, SafeStrategy)
+    eventualRun.flatMap { pdList =>
+      Portfolio.pricesMap(assetWeight.keys.toList).map(pricesMap => {
+        val portfolio = Portfolio.create(pricesMap.toMap)
+        portfolio.assets(Asset.Usd) = Quantity(initialAmount)
+        pdList.foreach { tuple => portfolio.update(tuple._2, BigDecimal(0.1)) }
+
+        RunMultipleReport(portfolio.balance(ZonedDateTime.now()))
+      })
+    }
+  }
 
   def main(args: Array[String]): Unit = {
 
@@ -19,49 +60,20 @@ object App {
     implicit val am: ActorMaterializer = ActorMaterializer()
     implicit val ec: ExecutionContext = system.dispatcher
 
-    val date = ZonedDateTime.parse("2017-01-01T01:00:00.000Z")
+    val assetList = List(Asset.Btc, Asset.Eth, Asset.Xmr, Asset.Xlm, Asset.Doge)
+    Future.sequence(assetList.map(asset => runAndReport(asset))).map { reportList => reportList.foreach(_.print()) }
 
-    val initialAmount = BigDecimal(10000)
-    val fees = BigDecimal(0.1)
-    val asset = Asset.Custom("CS.PA")
-
-    PriceService.getPriceData(asset).map { pd =>
-      val orderList = TradeBotService.run(Asset.Btc, date, initialAmount, pd, fees, SafeStrategy)
-      val lastOrder = orderList.last._2
-      val (asset, price, quantity) = lastOrder match {
-        case Buy(asset, price, quantity) => (asset, price, quantity)
-        case Sell(asset, price, quantity) => (asset, price, quantity)
-      }
-
-      println(s"Balance:" + (price * quantity)+" USD")
-      println(s"Buy & Hold: "+initialAmount/pd.currentPrice(date)*pd.currentPrice(ZonedDateTime.now())+" USD")
-    }
 
     val assetWeight: Map[Asset, BigDecimal] = Map(Asset.Btc -> BigDecimal(0.3), Asset.Eth -> BigDecimal(0.3), Asset.Xmr -> BigDecimal(0.2), Asset.Dgb -> BigDecimal(0.1), Asset.Doge -> BigDecimal(0.1))
-    val eventualRun = TradeBotService.runMap(assetWeight, date, initialAmount, fees, SafeStrategy)
+    runMultipleAndReport(assetWeight).foreach(_.print())
 
-    eventualRun.map { pdList =>
-
-      println(pdList.length)
-      pdList.foreach { order =>
-        print(order._1)
-        println(order._2)
-      }
-
-      Portfolio.pricesMap(assetWeight.keys.toList).map(pricesMap => {
-        val portfolio = Portfolio.create(pricesMap.toMap)
-        portfolio.assets(Asset.Usd) = Quantity(initialAmount)
-        pdList.foreach { tuple => portfolio.update(tuple._2, BigDecimal(0.1)) }
-
-        println("Final balance: " + portfolio.balance(ZonedDateTime.now()))
-      })
-    }
-
+    /*
     eventualRun.onComplete {
       case Failure(f) =>
         println(f)
         f.printStackTrace()
       case _ =>
     }
+    */
   }
 }
