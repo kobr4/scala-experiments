@@ -30,11 +30,11 @@ object Rule {
 
       override def whenBelowMovingAverge(current: ZonedDateTime, currentPrice: BigDecimal, priceData: PairPrices): Option[T] = priceData.movingAverage(current, 20).filter(_ > currentPrice).flatMap(_ => input)
 
-      override def whenBelowWeightedMovingAverge(current: ZonedDateTime, currentPrice: BigDecimal, priceData: PairPrices): Option[T] = priceData.weightedMovingAverage(current, 20).filter(_ > currentPrice).flatMap(_ => input)
+      override def whenBelowWeightedMovingAverge(current: ZonedDateTime, currentPrice: BigDecimal, priceData: PairPrices): Option[T] = priceData.weightedMovingAverage(current, 30).filter(_ > currentPrice).flatMap(_ => input)
 
       override def whenAboveMovingAverge(current: ZonedDateTime, currentPrice: BigDecimal, priceData: PairPrices): Option[T] = priceData.movingAverage(current, 20).filter(_ < currentPrice).flatMap(_ => input)
 
-      override def whenAboveWeightedMovingAverge(current: ZonedDateTime, currentPrice: BigDecimal, priceData: PairPrices): Option[T] = priceData.weightedMovingAverage(current, 20).filter(_ < currentPrice).flatMap(_ => input)
+      override def whenAboveWeightedMovingAverge(current: ZonedDateTime, currentPrice: BigDecimal, priceData: PairPrices): Option[T] = priceData.weightedMovingAverage(current, 30).filter(_ < currentPrice).flatMap(_ => input)
 
       override def when(v: Boolean): Option[T] = input.filter(_ => v)
 

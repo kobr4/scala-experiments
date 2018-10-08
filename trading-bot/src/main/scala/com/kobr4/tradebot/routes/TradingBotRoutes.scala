@@ -123,7 +123,7 @@ trait TradingBotRoutes extends PlayJsonSupport {
       path("weighted_moving") {
         get {
           parameters('asset.as(stringToAsset), 'start.as(stringToZonedDateTime), 'end.as(stringToZonedDateTime), 'days.as[Int]) { (asset, start, end, days) =>
-            onSuccess(PriceService.getWheightedMovingAverageHistory(asset, start, end, days)) { priceList =>
+            onSuccess(PriceService.getWeightedMovingAverageHistory(asset, start, end, days)) { priceList =>
               complete(priceList)
             }
           }
@@ -133,7 +133,7 @@ trait TradingBotRoutes extends PlayJsonSupport {
     get {
       parameters('asset.as(stringToAsset), 'start.as(stringToZonedDateTime), 'end.as(stringToZonedDateTime),
         'initial.as(stringToBigDecimal), 'fees.as(stringToBigDecimal), 'strategy.as(stringToStrategy)) { (asset, start, end, initial, fees, strategy) =>
-          onSuccess(PriceService.getPriceData(asset, start, end).map(pdata => TradeBotService.run(asset, initial, pdata, fees, strategy))) { orderList =>
+          onSuccess(PriceService.getPriceData(asset, start, end).map(pdata => TradeBotService.run(asset, start, initial, pdata, fees, strategy))) { orderList =>
             complete(orderList)
           }
         }

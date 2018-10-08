@@ -18,7 +18,11 @@ object Asset {
 
   case object Xem extends Asset { override def toString: String = "XEM" }
 
+  case object Xlm extends Asset { override def toString: String = "XLM" }
+
   case object Usd extends Asset { override def toString: String = "USDT" }
+
+  case object Dgb extends Asset { override def toString: String = "DGB" }
 
   case class Custom(code: String) extends Asset { override def toString: String = code }
 
@@ -30,6 +34,8 @@ object Asset {
     case "XRP" => Some(Asset.Xrp)
     case "XEM" => Some(Asset.Xem)
     case "DOGE" => Some(Asset.Doge)
+    case "DGB" => Some(Asset.Dgb)
+    case "XLM" => Some(Asset.Xlm)
     case "USD" => Some(Asset.Usd)
     case "USDT" => Some(Asset.Usd)
     case code => Some(Custom(code))

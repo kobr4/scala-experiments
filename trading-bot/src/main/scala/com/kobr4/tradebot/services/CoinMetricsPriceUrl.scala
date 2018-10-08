@@ -8,4 +8,6 @@ object CoinMetricsPriceUrl {
   val xem = "https://coinmetrics.io/data/xem.csv"
   val bch = "https://coinmetrics.io/data/bch.csv"
   val xrp = "https://coinmetrics.io/data/xrp.csv"
+  val xlm = "https://coinmetrics.io/data/xlm.csv"
+  val dgb = "https://coinmetrics.io/data/dgb.csv"
 }

@@ -2,9 +2,13 @@ package com.kobr4.tradebot.model
 
 import java.time.ZonedDateTime
 
+import akka.actor.ActorSystem
+import akka.stream.ActorMaterializer
 import com.kobr4.tradebot.model.Asset.Usd
+import com.kobr4.tradebot.services.PriceService
 
 import scala.collection.mutable
+import scala.concurrent.{ ExecutionContext, Future }
 
 case class InvalidPortfolioState(order: Order) extends RuntimeException(s"Invalid state ${order}")
 
@@ -15,14 +19,13 @@ case class Portfolio(assets: mutable.Map[Asset, Quantity], orderList: mutable.Li
       case Buy(asset, price, quantity) =>
         assets(asset) = Quantity(assets(asset).quantity + quantity - quantity * fee / BigDecimal(100))
         assets(Usd) = Quantity(assets(Usd).quantity - quantity * price)
-        if (assets(asset).quantity < 0 || assets(Usd).quantity < 0 )
+        if (assets(asset).quantity < 0 || assets(Usd).quantity < 0)
           throw InvalidPortfolioState(order)
       case Sell(asset, price, quantity) =>
         assets(asset) = Quantity(assets(asset).quantity - quantity)
         assets(Usd) = Quantity(assets(Usd).quantity + (quantity - quantity * fee / BigDecimal(100)) * price)
-        if (assets(asset).quantity < 0 || assets(Usd).quantity < 0 ) throw InvalidPortfolioState(order)
+        if (assets(asset).quantity < 0 || assets(Usd).quantity < 0) throw InvalidPortfolioState(order)
     }
-
 
     orderList.append(order)
     order
@@ -43,7 +46,10 @@ case class Portfolio(assets: mutable.Map[Asset, Quantity], orderList: mutable.Li
 
 object Portfolio {
   def create(priceMap: Map[Asset, PairPrices]) = Portfolio(
-    mutable.Map(priceMap.keys.toList.map(asset => asset -> Quantity(0)):::List(Asset.Usd -> Quantity(0)) : _*),
+    mutable.Map(priceMap.keys.toList.map(asset => asset -> Quantity(0)) ::: List(Asset.Usd -> Quantity(0)): _*),
     mutable.ListBuffer.empty[Order],
     priceMap)
+
+  def pricesMap(assetList: List[Asset])(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[List[(Asset, PairPrices)]] =
+    Future.sequence(assetList.map(asset => PriceService.getPriceData(asset).map(asset -> _)))
 }
