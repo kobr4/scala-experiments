@@ -34,7 +34,7 @@ class TradingOpsTest extends FlatSpec with Matchers with ScalaFutures with Mocki
 
     tradingOps.buyAtMarketValue(BigDecimal("7890.55745487"), pair, Asset.Btc, Quantity(1)).futureValue(Timeout(10 seconds))
 
-    verify(apiMock).buy("USDT_BTC", BigDecimal("7890.55745487"), BigDecimal("7890.55745487"))
+    verify(apiMock).buy("USDT_BTC", BigDecimal("7890.55745487"), BigDecimal("1"))
   }
 
   "TradingOps" should "place a sell order at market value" in {
@@ -47,7 +47,7 @@ class TradingOpsTest extends FlatSpec with Matchers with ScalaFutures with Mocki
 
     tradingOps.sellAtMarketValue(BigDecimal("7890.55745487"), pair, Asset.Btc, Quantity(1)).futureValue(Timeout(10 seconds))
 
-    verify(apiMock).sell("USDT_BTC", 7890.55745487, 7890.55745487)
+    verify(apiMock).sell("USDT_BTC", 7890.55745487, 1)
   }
 
   "TradingOps" should "cancel an order" in {
