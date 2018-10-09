@@ -12,7 +12,7 @@ import com.typesafe.scalalogging.StrictLogging
 
 import scala.concurrent.duration.Duration
 import scala.concurrent.{ Await, ExecutionContext }
-import scala.util.Failure
+import scala.util.{ Failure, Success }
 
 //#main-class
 object QuickstartServer extends App with StrictLogging with TradingBotRoutes {
@@ -33,6 +33,7 @@ object QuickstartServer extends App with StrictLogging with TradingBotRoutes {
   lazy val schedulingService = new SchedulingService()
   SchedulerJob.loadConfiguration(DefaultConfiguration, schedulingService).foreach {
     case Failure(f) => logger.error("Failure to instantiable scheduling job: {}", f.getMessage)
+    case Success(v) =>
   }
 
   //schedulingService.schedule("toto", "*/30 * * * * ?", () => println("Hello"))

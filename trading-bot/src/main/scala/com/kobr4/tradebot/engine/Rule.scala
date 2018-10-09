@@ -26,7 +26,7 @@ object Rule {
 
     implicit class ConditionOrder[T <: Order](input: Option[T]) extends Condition[Option[T]] {
 
-      override def whenCashAvailable(implicit portfolio: Portfolio): Option[T] = input.filter(_ => portfolio.assets(Asset.Usd).quantity > 100)
+      override def whenCashAvailable(implicit portfolio: Portfolio): Option[T] = input.filter(_ => portfolio.assets(Asset.Usd).quantity > 20)
 
       override def whenBelowMovingAverge(current: ZonedDateTime, currentPrice: BigDecimal, priceData: PairPrices): Option[T] = priceData.movingAverage(current, 20).filter(_ > currentPrice).flatMap(_ => input)
 

@@ -26,7 +26,7 @@ class TradingOps(val api: PoloAPIInterface)(implicit ec: ExecutionContext) {
           api.buy(currencyPair.toString, q.last, getAmount(currencyPair, asset, q.last, quantity.quantity))
         else
           Future("BUY could not processed")
-      }.getOrElse(Future.failed(new RuntimeException("Currency pair not found")))
+      }.getOrElse(Future.failed(new RuntimeException(s"Currency pair not found : $currencyPair")))
     }
   }
 
@@ -38,7 +38,7 @@ class TradingOps(val api: PoloAPIInterface)(implicit ec: ExecutionContext) {
           api.sell(currencyPair.toString, q.last, getAmount(currencyPair, asset, q.last, quantity.quantity))
         else
           Future("SELL could not processed")
-      }.getOrElse(Future.failed(new RuntimeException("Currency pair not found")))
+      }.getOrElse(Future.failed(new RuntimeException(s"Currency pair not found : $currencyPair")))
     }
   }
 

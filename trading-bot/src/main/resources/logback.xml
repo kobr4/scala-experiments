@@ -13,4 +13,5 @@
     </root>
 
     <logger name="scalacache.guava.GuavaCache" level="error"/>
+    <logger name="org.quartz.core.QuartzSchedulerThread" level="error"/>
 </configuration>

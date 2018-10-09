@@ -2,11 +2,13 @@ package com.kobr4.tradebot.model
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
-import com.kobr4.tradebot.api.{ CurrencyPair, PoloApi }
+import com.kobr4.tradebot.api.{CurrencyPair, PoloApi}
 import com.kobr4.tradebot.services.TradingOps
-import play.api.libs.json.{ JsObject, Json, Writes }
+import com.typesafe.scalalogging.StrictLogging
+import play.api.libs.json.{JsObject, Json, Writes}
 
 import scala.concurrent.ExecutionContext
+import scala.util.{Failure, Success}
 
 sealed trait Order
 
@@ -16,7 +18,7 @@ case class Sell(asset: Asset, price: BigDecimal, quantity: BigDecimal) extends O
 
 case class Quantity(quantity: BigDecimal)
 
-object Order {
+object Order extends StrictLogging {
 
   private def getCurrencyPair(asset: Asset): String = {
     asset match {
@@ -25,14 +27,23 @@ object Order {
     }
   }
 
-  def process(order: Order, tradingOps: TradingOps)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Unit = {
+  def process(order: Order, tradingOps: TradingOps)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Order = {
 
-    order match {
+    val eventualResult = order match {
       case b: Buy =>
-        tradingOps.buyAtMarketValue(b.price, CurrencyPair(b.asset, Asset.Usd), b.asset, Quantity(b.quantity))
+        tradingOps.buyAtMarketValue(b.price, CurrencyPair(Asset.Usd, b.asset), b.asset, Quantity(b.quantity))
       case s: Sell =>
-        tradingOps.sellAtMarketValue(s.price, CurrencyPair(s.asset, Asset.Usd), s.asset, Quantity(s.quantity))
+        tradingOps.sellAtMarketValue(s.price, CurrencyPair(Asset.Usd, s.asset), s.asset, Quantity(s.quantity))
     }
+
+    eventualResult.onComplete {
+      case Success(v) =>
+        logger.info("Order {} successfully processed with response: {}",order, v)
+      case Failure(f) =>
+        logger.error("Order {} was not processed with error: {}",order, f.getMessage)
+    }
+
+    order
   }
 
   implicit val buyWrites = new Writes[Buy] {

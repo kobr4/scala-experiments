@@ -31,10 +31,10 @@ object TradeBotService {
     }
   }
 
-  def runAndTrade(asset: Asset, priceData: PairPrices, strategy: Strategy, poloApi: PoloAPIInterface, tradingsOps: TradingOps)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext) = {
+  def runAndTrade(asset: Asset, priceData: PairPrices, strategy: Strategy, poloApi: PoloAPIInterface, tradingsOps: TradingOps)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[Option[Order]] = {
 
     Portfolio.fromApi(poloApi, Map(asset -> priceData)).map { portfolio =>
-      strategy.runStrategy(asset, ZonedDateTime.now(), priceData, portfolio).foreach(t => Order.process(t._2, tradingsOps))
+      strategy.runStrategy(asset, ZonedDateTime.now(), priceData, portfolio).map(t => Order.process(t._2, tradingsOps))
     }
   }
 

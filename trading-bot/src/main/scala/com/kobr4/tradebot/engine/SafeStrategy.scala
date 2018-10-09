@@ -9,6 +9,8 @@ import scala.math.BigDecimal.RoundingMode
 
 trait Strategy {
 
+  val minOrderValue = BigDecimal(20)
+
   def runStrategy(asset: Asset, current: ZonedDateTime, priceData: PairPrices, portfolio: Portfolio, weight: BigDecimal = BigDecimal(1)): Option[(ZonedDateTime, Order)]
 }
 
@@ -78,7 +80,7 @@ object SafeStrategy extends Strategy {
 
     val quantity = (((portfolio.balance(current) * weight) - portfolio.balance(asset, current)).max(0).min(portfolio.assets(Asset.Usd).quantity) / assetPrice).setScale(4, RoundingMode.DOWN)
 
-    val maybeBuy = if (quantity * assetPrice > 100) Option(Buy(asset, assetPrice, quantity)) else None
+    val maybeBuy = if (quantity * assetPrice > minOrderValue) Option(Buy(asset, assetPrice, quantity)) else None
 
     // Sexy DSL ! <3
     maybeBuy
