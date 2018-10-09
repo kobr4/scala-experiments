@@ -9,7 +9,7 @@ import com.kobr4.tradebot.model.Asset.Usd
 import com.kobr4.tradebot.services.PriceService
 
 import scala.collection.mutable
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{ ExecutionContext, Future }
 
 case class InvalidPortfolioState(order: Order) extends RuntimeException(s"Invalid state ${order}")
 
@@ -30,6 +30,13 @@ case class Portfolio(assets: mutable.Map[Asset, Quantity], orderList: mutable.Li
 
     orderList.append(order)
     order
+  }
+
+  def updateBuyOnly(order: Order, fee: BigDecimal): Order = {
+    order match {
+      case b: Buy => update(b, fee)
+      case _ => order
+    }
   }
 
   def balance(currentDate: ZonedDateTime): BigDecimal = {

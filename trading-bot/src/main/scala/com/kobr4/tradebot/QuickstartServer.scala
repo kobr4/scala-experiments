@@ -1,18 +1,21 @@
 package com.kobr4.tradebot
 
 //#quick-start-server
-import akka.actor.{ ActorRef, ActorSystem }
+import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.server.Route
 import akka.stream.ActorMaterializer
 import com.kobr4.tradebot.routes.TradingBotRoutes
+import com.kobr4.tradebot.scheduler.SchedulerJob
 import com.kobr4.tradebot.services.SchedulingService
+import com.typesafe.scalalogging.StrictLogging
 
 import scala.concurrent.duration.Duration
 import scala.concurrent.{ Await, ExecutionContext }
+import scala.util.Failure
 
 //#main-class
-object QuickstartServer extends App with TradingBotRoutes {
+object QuickstartServer extends App with StrictLogging with TradingBotRoutes {
 
   // set up ActorSystem and other dependencies here
   //#main-class
@@ -28,6 +31,9 @@ object QuickstartServer extends App with TradingBotRoutes {
   //#main-class
 
   lazy val schedulingService = new SchedulingService()
+  SchedulerJob.loadConfiguration(DefaultConfiguration, schedulingService).foreach {
+    case Failure(f) => logger.error("Failure to instantiable scheduling job: {}", f.getMessage)
+  }
 
   //schedulingService.schedule("toto", "*/30 * * * * ?", () => println("Hello"))
   //#http-server

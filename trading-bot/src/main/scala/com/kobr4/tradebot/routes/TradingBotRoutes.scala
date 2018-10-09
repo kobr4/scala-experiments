@@ -10,12 +10,12 @@ import akka.http.scaladsl.server.directives.RouteDirectives.complete
 import akka.http.scaladsl.unmarshalling.Unmarshaller
 import akka.stream.ActorMaterializer
 import com.kobr4.tradebot.QuickstartServer
-import com.kobr4.tradebot.api.{PoloApi, PoloOrder, SupportedExchange}
+import com.kobr4.tradebot.api.{ PoloApi, PoloOrder, SupportedExchange }
 import com.kobr4.tradebot.engine.Strategy
-import com.kobr4.tradebot.model.{Asset, Order, Quantity}
-import com.kobr4.tradebot.services.{PriceService, TradeBotService, TradingOps}
+import com.kobr4.tradebot.model.{ Asset, Order, Quantity }
+import com.kobr4.tradebot.services.{ PriceService, TradeBotService, TradingOps }
 import play.api.libs.functional.syntax._
-import play.api.libs.json.{JsPath, Json, Reads, Writes}
+import play.api.libs.json.{ JsPath, Json, Reads, Writes }
 
 import scala.concurrent.ExecutionContext
 

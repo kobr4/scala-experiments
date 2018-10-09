@@ -4,14 +4,16 @@ import java.time.ZonedDateTime
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
-import com.kobr4.tradebot.api.{PoloAPIInterface, PoloApi}
+import com.kobr4.tradebot.api.{ PoloAPIInterface, PoloApi }
 import com.kobr4.tradebot.engine.Strategy
 import com.kobr4.tradebot.model.Asset.Usd
 import com.kobr4.tradebot.model._
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{ ExecutionContext, Future }
 
 object TradeBotService {
+
+  val estimatedMarketFee = BigDecimal(0.25)
 
   def run(asset: Asset, startDate: ZonedDateTime, initialUsdAmount: BigDecimal, priceData: PairPrices, feesPercentage: BigDecimal, strategy: Strategy, endDate: ZonedDateTime = ZonedDateTime.now()): List[(ZonedDateTime, Order)] = {
     val portfolio = Portfolio.create(Map(asset -> priceData))
@@ -36,12 +38,16 @@ object TradeBotService {
     }
   }
 
-  def runMapAndTrade(assetMap: Map[Asset, BigDecimal], strategy: Strategy, poloApi: PoloAPIInterface, tradingsOps: TradingOps)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[List[Unit]] = {
+  def runMapAndTrade(assetMap: Map[Asset, BigDecimal], strategy: Strategy, poloApi: PoloAPIInterface, tradingsOps: TradingOps)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[List[Order]] = {
     val eventualPData = Future.sequence(assetMap.keys.toList.map(asset => PriceService.getPriceData(asset).map(asset -> _)))
     eventualPData.map(_.toMap).flatMap { pDataMap =>
       Portfolio.fromApi(poloApi, pDataMap).map { portfolio =>
-        assetMap.keys.toList.map { asset =>
-          strategy.runStrategy(asset, ZonedDateTime.now(), pDataMap(asset), portfolio, assetMap(asset)).foreach(t => Order.process(t._2, tradingsOps))
+        assetMap.keys.toList.flatMap { asset =>
+          strategy.runStrategy(asset, ZonedDateTime.now(), pDataMap(asset), portfolio, assetMap(asset)).map(t => {
+            Order.process(t._2, tradingsOps)
+            //In order to make the available cash relevent, we update the portfolio with the sell order if any
+            portfolio.updateBuyOnly(t._2, estimatedMarketFee)
+          })
         }
       }
     }
