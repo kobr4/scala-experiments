@@ -9,7 +9,7 @@ import scala.math.BigDecimal.RoundingMode
 
 trait Strategy {
 
-  val minOrderValue = BigDecimal(20)
+  val minOrderValue = BigDecimal(5)
 
   def runStrategy(asset: Asset, current: ZonedDateTime, priceData: PairPrices, portfolio: Portfolio, weight: BigDecimal = BigDecimal(1)): Option[(ZonedDateTime, Order)]
 }
