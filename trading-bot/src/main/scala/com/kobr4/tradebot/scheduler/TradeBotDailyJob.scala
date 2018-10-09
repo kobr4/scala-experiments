@@ -13,7 +13,7 @@ import scala.concurrent.ExecutionContext
 class TradeBotDailyJob extends SchedulerJobInterface with StrictLogging {
 
   private val assetMap: Map[Asset, BigDecimal] = Map(Asset.Btc -> BigDecimal(0.3), Asset.Eth -> BigDecimal(0.3),
-    Asset.Xmr -> BigDecimal(0.2), Asset.Dgb -> BigDecimal(0.1), Asset.Doge -> BigDecimal(0.1))
+    Asset.Xmr -> BigDecimal(0.2), Asset.Xlm -> BigDecimal(0.1), Asset.Doge -> BigDecimal(0.1))
 
   override def run()(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Unit = {
 

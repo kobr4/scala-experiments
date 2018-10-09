@@ -18,7 +18,7 @@ object Asset {
 
   case object Xem extends Asset { override def toString: String = "XEM" }
 
-  case object Xlm extends Asset { override def toString: String = "XLM" }
+  case object Xlm extends Asset { override def toString: String = "STR" }
 
   case object Usd extends Asset { override def toString: String = "USDT" }
 

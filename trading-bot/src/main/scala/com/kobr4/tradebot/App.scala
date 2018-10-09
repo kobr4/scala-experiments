@@ -63,7 +63,7 @@ object App {
     val assetList = List(Asset.Btc, Asset.Eth, Asset.Xmr, Asset.Xlm, Asset.Doge)
     Future.sequence(assetList.map(asset => runAndReport(asset))).map { reportList => reportList.foreach(_.print()) }
 
-    val assetWeight: Map[Asset, BigDecimal] = Map(Asset.Btc -> BigDecimal(0.3), Asset.Eth -> BigDecimal(0.3), Asset.Xmr -> BigDecimal(0.2), Asset.Dgb -> BigDecimal(0.1), Asset.Doge -> BigDecimal(0.1))
+    val assetWeight: Map[Asset, BigDecimal] = Map(Asset.Btc -> BigDecimal(0.3), Asset.Eth -> BigDecimal(0.3), Asset.Xmr -> BigDecimal(0.2), Asset.Xlm -> BigDecimal(0.1), Asset.Doge -> BigDecimal(0.1))
     runMultipleAndReport(assetWeight).foreach(_.print())
 
     /*
