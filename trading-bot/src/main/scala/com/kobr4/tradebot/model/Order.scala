@@ -25,9 +25,8 @@ object Order {
     }
   }
 
-  def process(order: Order)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Unit = {
+  def process(order: Order, tradingOps: TradingOps)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Unit = {
 
-    val tradingOps = new TradingOps(new PoloApi())
     order match {
       case b: Buy =>
         tradingOps.buyAtMarketValue(b.price, CurrencyPair(b.asset, Asset.Usd), b.asset, Quantity(b.quantity))

@@ -4,12 +4,12 @@ import java.time.ZonedDateTime
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
-import com.kobr4.tradebot.api.PoloApi
+import com.kobr4.tradebot.api.{PoloAPIInterface, PoloApi}
 import com.kobr4.tradebot.engine.Strategy
 import com.kobr4.tradebot.model.Asset.Usd
 import com.kobr4.tradebot.model._
 
-import scala.concurrent.{ ExecutionContext, Future }
+import scala.concurrent.{ExecutionContext, Future}
 
 object TradeBotService {
 
@@ -29,15 +29,21 @@ object TradeBotService {
     }
   }
 
-  def doTrade(asset: Asset, priceData: PairPrices, strategy: Strategy)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext) = {
-    val poloApi = new PoloApi()
-    val portfolio = Portfolio.create(Map(asset -> priceData))
+  def runAndTrade(asset: Asset, priceData: PairPrices, strategy: Strategy, poloApi: PoloAPIInterface, tradingsOps: TradingOps)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext) = {
 
-    poloApi.returnBalances.map(balances => {
-      portfolio.assets(asset) = Quantity(balances(asset).quantity)
-      portfolio.assets(Asset.Usd) = Quantity(balances(Asset.Usd).quantity)
-    }).map { _ =>
-      strategy.runStrategy(asset, ZonedDateTime.now(), priceData, portfolio).foreach(t => Order.process(t._2))
+    Portfolio.fromApi(poloApi, Map(asset -> priceData)).map { portfolio =>
+      strategy.runStrategy(asset, ZonedDateTime.now(), priceData, portfolio).foreach(t => Order.process(t._2, tradingsOps))
+    }
+  }
+
+  def runMapAndTrade(assetMap: Map[Asset, BigDecimal], strategy: Strategy, poloApi: PoloAPIInterface, tradingsOps: TradingOps)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[List[Unit]] = {
+    val eventualPData = Future.sequence(assetMap.keys.toList.map(asset => PriceService.getPriceData(asset).map(asset -> _)))
+    eventualPData.map(_.toMap).flatMap { pDataMap =>
+      Portfolio.fromApi(poloApi, pDataMap).map { portfolio =>
+        assetMap.keys.toList.map { asset =>
+          strategy.runStrategy(asset, ZonedDateTime.now(), pDataMap(asset), portfolio, assetMap(asset)).foreach(t => Order.process(t._2, tradingsOps))
+        }
+      }
     }
   }
 

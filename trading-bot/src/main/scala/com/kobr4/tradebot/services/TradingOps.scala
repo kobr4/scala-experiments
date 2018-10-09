@@ -46,6 +46,7 @@ class TradingOps(val api: PoloAPIInterface)(implicit ec: ExecutionContext) {
     api.returnOpenOrders().map { orderList => orderList.map { order => api.cancelOrder(order.orderNumber) } }
   }
 
+  @deprecated
   def loadPortfolio(): Future[Portfolio] = {
     api.returnBalances.map { assetMap =>
       val port = Portfolio.create(Map())

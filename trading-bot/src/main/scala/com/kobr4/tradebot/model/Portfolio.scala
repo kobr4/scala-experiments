@@ -4,11 +4,12 @@ import java.time.ZonedDateTime
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
+import com.kobr4.tradebot.api.PoloAPIInterface
 import com.kobr4.tradebot.model.Asset.Usd
 import com.kobr4.tradebot.services.PriceService
 
 import scala.collection.mutable
-import scala.concurrent.{ ExecutionContext, Future }
+import scala.concurrent.{ExecutionContext, Future}
 
 case class InvalidPortfolioState(order: Order) extends RuntimeException(s"Invalid state ${order}")
 
@@ -34,7 +35,7 @@ case class Portfolio(assets: mutable.Map[Asset, Quantity], orderList: mutable.Li
   def balance(currentDate: ZonedDateTime): BigDecimal = {
     assets.keySet.map {
       case k @ Asset.Usd => assets(k).quantity
-      case k => assets(k).quantity * prices(k).currentPrice(currentDate)
+      case k => assets(k).quantity * prices.get(k).map(_.currentPrice(currentDate)).getOrElse(BigDecimal(0))
 
     }.sum
   }
@@ -49,6 +50,14 @@ object Portfolio {
     mutable.Map(priceMap.keys.toList.map(asset => asset -> Quantity(0)) ::: List(Asset.Usd -> Quantity(0)): _*),
     mutable.ListBuffer.empty[Order],
     priceMap)
+
+  def fromApi(api: PoloAPIInterface, priceData: Map[Asset, PairPrices])(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[Portfolio] = {
+    api.returnBalances.map { assetMap =>
+      val port = Portfolio.create(priceData)
+      assetMap.toList.map(kv => port.assets.put(kv._1, kv._2))
+      port
+    }
+  }
 
   def pricesMap(assetList: List[Asset])(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[List[(Asset, PairPrices)]] =
     Future.sequence(assetList.map(asset => PriceService.getPriceData(asset).map(asset -> _)))
