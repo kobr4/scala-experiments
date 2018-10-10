@@ -22,7 +22,7 @@ case class RunMultipleReport(finalBalance: BigDecimal) {
   }
 }
 
-object App {
+object LaunchReport {
 
   val date = ZonedDateTime.parse("2017-01-01T01:00:00.000Z")
   val initialAmount = BigDecimal(10000)

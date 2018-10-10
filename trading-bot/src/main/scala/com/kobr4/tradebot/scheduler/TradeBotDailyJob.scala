@@ -5,10 +5,11 @@ import akka.stream.ActorMaterializer
 import com.kobr4.tradebot.api.PoloApi
 import com.kobr4.tradebot.engine.SafeStrategy
 import com.kobr4.tradebot.model.Asset
-import com.kobr4.tradebot.services.{ TradeBotService, TradingOps }
+import com.kobr4.tradebot.services.{TradeBotService, TradingOps}
 import com.typesafe.scalalogging.StrictLogging
 
 import scala.concurrent.ExecutionContext
+import scala.util.{Failure, Success}
 
 class TradeBotDailyJob extends SchedulerJobInterface with StrictLogging {
 
@@ -23,8 +24,15 @@ class TradeBotDailyJob extends SchedulerJobInterface with StrictLogging {
 
     val tradingOps = new TradingOps(poloApi)
 
-    TradeBotService.runMapAndTrade(assetMap, SafeStrategy, poloApi, tradingOps).map { orderList =>
+    val eventualResult = TradeBotService.runMapAndTrade(assetMap, SafeStrategy, poloApi, tradingOps).map { orderList =>
       orderList.foreach(order => logger.info(order.toString))
+    }
+
+    eventualResult.onComplete {
+      case Success(v) =>
+        logger.info("Job ran successfully")
+      case Failure(f) =>
+        logger.error("Job failed with error: {}",f.getMessage)
     }
   }
 }

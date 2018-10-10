@@ -86,7 +86,7 @@ class PoloApi(
     }
 
   override def cancelOrder(orderNumber: Long): Future[Boolean] = {
-    PoloApi.httpRequestPost(tradingUrl, CancelOrder.build(nonce), apiKey, apiSecret).map { message =>
+    PoloApi.httpRequestPost(tradingUrl, CancelOrder.build(nonce, orderNumber), apiKey, apiSecret).map { message =>
       Json.parse(message).as[JsObject].value.get("success").exists(_.as[Int] match {
         case 1 => true
         case _ => false
@@ -184,7 +184,11 @@ object PoloApi extends StrictLogging {
 
     val CancelOrder = "cancelOrder"
 
-    def build(nonce: Long): FormData = akka.http.scaladsl.model.FormData(Map(PoloApi.Command -> CancelOrder, PoloApi.Nonce -> nonce.toString))
+    val OrderNumber = "orderNumber"
+
+    def build(nonce: Long, orderNumber: Long): FormData = akka.http.scaladsl.model.FormData(Map(PoloApi.Command -> CancelOrder,
+      PoloApi.CancelOrder.OrderNumber -> orderNumber.toString,
+      PoloApi.Nonce -> nonce.toString))
   }
 
   private def httpRequest(url: String, command: String)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[String] = {

@@ -5,6 +5,7 @@ import com.kobr4.tradebot.model.{Asset, Portfolio, Quantity}
 import com.typesafe.scalalogging.StrictLogging
 
 import scala.concurrent.{ExecutionContext, Future}
+import scala.math.BigDecimal.RoundingMode
 
 class TradingOps(val api: PoloAPIInterface)(implicit ec: ExecutionContext) extends StrictLogging {
 
@@ -17,7 +18,7 @@ class TradingOps(val api: PoloAPIInterface)(implicit ec: ExecutionContext) exten
       quantity / rate
     else
       quantity * rate
-  }
+  }.setScale(8, RoundingMode.DOWN)
 
   def buyAtMarketValue(targetPrice: BigDecimal, currencyPair: CurrencyPair, asset: Asset, quantity: Quantity): Future[String] = {
     api.returnTicker().flatMap { quoteList =>
