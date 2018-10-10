@@ -89,6 +89,8 @@ trait TradingBotRoutes extends PlayJsonSupport {
     getFromResource("public/api.html")
   } ~ path("xmr_price") {
     getFromResource("public/api.html")
+  } ~ path("inhouse_info") {
+    getFromResource("public/api.html")
   } ~ path("goog_price") {
     getFromResource("public/api.html")
   } ~ path("trading") {
@@ -180,6 +182,22 @@ trait TradingBotRoutes extends PlayJsonSupport {
             }
 
           }
+        }
+      }
+    }
+  } ~ pathPrefix("inhouse") {
+    path("balances") {
+      get {
+        val poloApi = new PoloApi()
+        onSuccess(poloApi.returnBalances.map(_.toList)) { assetQuantityList =>
+          complete(assetQuantityList)
+        }
+      }
+    } ~ path("open_orders") {
+      get {
+        val poloApi = new PoloApi()
+        onSuccess(poloApi.returnOpenOrders()) { openOrdersList =>
+          complete(openOrdersList)
         }
       }
     }

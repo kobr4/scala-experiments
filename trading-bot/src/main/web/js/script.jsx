@@ -309,6 +309,36 @@ class GraphResult extends React.Component {
    }
 }
 
+class InHouseInfo extends React.Component {
+
+  requestBalance = () => RestUtils.performRestPriceReq((balanceList)=> 
+    { this.setState({balanceFields: Helper.rowsFromObjet(balanceList)})},
+    '/inhouse/balances'
+  )
+
+  constructor(props) {
+    super(props);
+
+    this.state = { 
+      balancesFields : []
+    }
+
+  }
+
+  componentDidMount() {
+    this.requestBalance();
+  }
+
+  render() {
+    return (
+      <Panel title='Balances'>
+        <ResponseTable first='Currency' second='Quantity' responseFields={this.state.balancesFields}/>
+      </Panel>
+    );
+  }
+}
+
+
 
 ReactDOM.render(
     <BrowserRouter>
@@ -318,6 +348,7 @@ ReactDOM.render(
         <Route path='/xmr_price' render={() => ( <GraphResult endpoint={priceEndpoint} title='XMR backtest' asset='XMR'/>)} />
         <Route path='/goog_price' render={() => ( <GraphResult endpoint={priceEndpoint} title='GOOG backtest' asset='GOOG'/>)} />
         <Route path='/trading' render={() => ( <TradingForm/>)} />
+        <Route path='/inhouse_info' render={() => ( <InHouseInfo/>)} />
         <Route path='/' render={() => ( <TradingGlobal />)} />
       </Switch>
     </BrowserRouter>,

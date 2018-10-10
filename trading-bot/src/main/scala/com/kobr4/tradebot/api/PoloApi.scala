@@ -186,7 +186,8 @@ object PoloApi extends StrictLogging {
 
     val OrderNumber = "orderNumber"
 
-    def build(nonce: Long, orderNumber: Long): FormData = akka.http.scaladsl.model.FormData(Map(PoloApi.Command -> CancelOrder,
+    def build(nonce: Long, orderNumber: Long): FormData = akka.http.scaladsl.model.FormData(Map(
+      PoloApi.Command -> CancelOrder,
       PoloApi.CancelOrder.OrderNumber -> orderNumber.toString,
       PoloApi.Nonce -> nonce.toString))
   }

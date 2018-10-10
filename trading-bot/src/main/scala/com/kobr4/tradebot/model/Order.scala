@@ -2,13 +2,13 @@ package com.kobr4.tradebot.model
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
-import com.kobr4.tradebot.api.{CurrencyPair, PoloApi}
+import com.kobr4.tradebot.api.{ CurrencyPair, PoloApi }
 import com.kobr4.tradebot.services.TradingOps
 import com.typesafe.scalalogging.StrictLogging
-import play.api.libs.json.{JsObject, Json, Writes}
+import play.api.libs.json.{ JsObject, Json, Writes }
 
 import scala.concurrent.ExecutionContext
-import scala.util.{Failure, Success}
+import scala.util.{ Failure, Success }
 
 sealed trait Order
 
@@ -38,9 +38,9 @@ object Order extends StrictLogging {
 
     eventualResult.onComplete {
       case Success(v) =>
-        logger.info("Order {} successfully processed with response: {}",order, v)
+        logger.info("Order {} successfully processed with response: {}", order, v)
       case Failure(f) =>
-        logger.error("Order {} was not processed with error: {}",order, f.getMessage)
+        logger.error("Order {} was not processed with error: {}", order, f.getMessage)
     }
 
     order

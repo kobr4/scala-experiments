@@ -14,7 +14,6 @@ object LaunchJob {
     implicit val am: ActorMaterializer = ActorMaterializer()
     implicit val ec: ExecutionContext = system.dispatcher
 
-
     val job = new TradeBotDailyJob()
 
     job.run()

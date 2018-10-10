@@ -1,10 +1,10 @@
 package com.kobr4.tradebot.services
 
-import com.kobr4.tradebot.api.{CurrencyPair, PoloAPIInterface}
-import com.kobr4.tradebot.model.{Asset, Portfolio, Quantity}
+import com.kobr4.tradebot.api.{ CurrencyPair, PoloAPIInterface }
+import com.kobr4.tradebot.model.{ Asset, Portfolio, Quantity }
 import com.typesafe.scalalogging.StrictLogging
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{ ExecutionContext, Future }
 import scala.math.BigDecimal.RoundingMode
 
 class TradingOps(val api: PoloAPIInterface)(implicit ec: ExecutionContext) extends StrictLogging {
@@ -29,7 +29,7 @@ class TradingOps(val api: PoloAPIInterface)(implicit ec: ExecutionContext) exten
           logger.info("Will buy on pair : {} for {} amount: {}", currencyPair.toString, q.last, amount)
           api.buy(currencyPair.toString, q.last, amount)
         } else {
-          logger.info("Buy could not be processed because spread was too high {} vs {}",q.last, targetPrice)
+          logger.info("Buy could not be processed because spread was too high {} vs {}", q.last, targetPrice)
           Future("BUY could not processed")
         }
       }.getOrElse(Future.failed(new RuntimeException(s"Currency pair not found : $currencyPair")))
@@ -45,7 +45,7 @@ class TradingOps(val api: PoloAPIInterface)(implicit ec: ExecutionContext) exten
           logger.info("Will sell on pair : {} for {} amount: {}", currencyPair.toString, q.last, amount)
           api.sell(currencyPair.toString, q.last, amount)
         } else {
-          logger.info("Sell could not be processed because spread was too high {} vs {}",q.last, targetPrice)
+          logger.info("Sell could not be processed because spread was too high {} vs {}", q.last, targetPrice)
           Future("SELL could not processed")
         }
       }.getOrElse(Future.failed(new RuntimeException(s"Currency pair not found : $currencyPair")))
