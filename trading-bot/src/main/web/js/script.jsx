@@ -311,8 +311,19 @@ class GraphResult extends React.Component {
 
 class InHouseInfo extends React.Component {
 
+  rowsFromObjets(jsArr) {
+    var fields = [];  
+    jsArr.forEach(function(jsObj) {
+      if (jsObj.quantity > 0) {
+        fields.push(<tr><td>{jsObj.asset}</td><td>{jsObj.quantity}</td></tr>);
+      }
+    })
+    return fields;
+  }
+
+
   requestBalance = () => RestUtils.performRestPriceReq((balanceList)=> 
-    { this.setState({balanceFields: Helper.rowsFromObjet(balanceList)})},
+    { this.setState({balanceFields: this.rowsFromObjets(balanceList)})},
     '/inhouse/balances'
   )
 
