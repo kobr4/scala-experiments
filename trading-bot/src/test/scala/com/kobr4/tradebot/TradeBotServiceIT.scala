@@ -27,6 +27,7 @@ class TradeBotServiceIT extends FlatSpec with ScalaFutures with MockitoSugar {
     val apiMock = mock[PoloAPIInterface]
     val tradingOps = new TradingOps(apiMock)
     when(apiMock.returnTicker()).thenReturn(poloApi.returnTicker())
+    when(apiMock.buy(any(),any(),any())).thenReturn(Future.successful("TOTO"))
 
     val result = for {
       priceData <- PriceService.getPriceData(Asset.Eth)
@@ -47,7 +48,8 @@ class TradeBotServiceIT extends FlatSpec with ScalaFutures with MockitoSugar {
     when(apiMock.returnTicker()).thenReturn(poloApi.returnTicker())
     when(apiMock.buy(any(),any(),any())).thenReturn(Future.successful("TOTO"))
 
-    val result = TradeBotService.runMapAndTrade(Map(Asset.Btc -> BigDecimal(0.5), Asset.Eth -> BigDecimal(0.5)), SafeStrategy, poloApi, tradingOps)
+    val result = TradeBotService.runMapAndTrade(Map(Asset.Btc -> BigDecimal(0.3), Asset.Eth -> BigDecimal(0.3),
+      Asset.Xmr -> BigDecimal(0.2), Asset.Xlm -> BigDecimal(0.1), Asset.Doge -> BigDecimal(0.1)), SafeStrategy, poloApi, tradingOps)
 
     val orderList = result.futureValue(Timeout(10 seconds))
 

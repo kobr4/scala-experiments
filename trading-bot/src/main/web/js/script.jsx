@@ -14,6 +14,7 @@ import moment from 'moment';
 import 'react-datepicker/dist/react-datepicker.css';
 
 const priceEndpoint = '/price_api/price_history';
+const tickerEndpoint = '/price_api/ticker';
 const priceAtEndpoint = '/price_api/price_at';
 const movingEndpoint = '/price_api/moving';
 const balanceEndpoint = '/trading_api/balances';
@@ -215,7 +216,7 @@ class GraphResult extends React.Component {
         );
     }
     this.setState({currencyFields : currencyFields});
-  }, '/ticker',[['exchange',exchange]]);
+  }, tickerEndpoint,[['exchange',exchange]]);
   
   constructor(props) {
     super(props);

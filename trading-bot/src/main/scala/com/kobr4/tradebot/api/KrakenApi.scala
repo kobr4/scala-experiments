@@ -1,5 +1,6 @@
 package com.kobr4.tradebot.api
 
+import java.time.ZonedDateTime
 import java.util.Base64
 
 import akka.actor.ActorSystem
@@ -9,14 +10,14 @@ import akka.http.scaladsl.model.headers.RawHeader
 import akka.http.scaladsl.unmarshalling.Unmarshal
 import akka.stream.ActorMaterializer
 import com.kobr4.tradebot.api.KrakenApi.Public
-import com.kobr4.tradebot.model.{ Asset, Quantity }
+import com.kobr4.tradebot.model.{Asset, Order, Quantity}
 import com.kobr4.tradebot.DefaultConfiguration
 import com.typesafe.scalalogging.StrictLogging
 import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
 import play.api.libs.json._
 
-import scala.concurrent.{ ExecutionContext, Future }
+import scala.concurrent.{ExecutionContext, Future}
 
 sealed trait SupportedExchange
 
@@ -126,6 +127,8 @@ class KrakenApi(krakenUrl: String = KrakenApi.rootUrl, apiKey: String = DefaultC
   override def buy(currencyPair: String, rate: BigDecimal, amount: BigDecimal): Future[String] = ???
 
   override def sell(currencyPair: String, rate: BigDecimal, amount: BigDecimal): Future[String] = ???
+
+  override def returnTradeHistory(start: ZonedDateTime, end: ZonedDateTime): Future[List[Order]] = ???
 }
 
 object KrakenApi extends StrictLogging {

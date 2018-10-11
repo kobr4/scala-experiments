@@ -22,4 +22,11 @@ class PoloApiIT extends FlatSpec with ScalaFutures {
     println(assetMAp)
   }
 
+  "API" should "return trade history" in {
+    val api = new PoloApi
+    val tradeList = api.returnTradeHistory().futureValue(Timeout(10 seconds))
+
+    println(tradeList)
+  }
+
 }

@@ -50,6 +50,12 @@ case class Portfolio(assets: mutable.Map[Asset, Quantity], orderList: mutable.Li
   def balance(currentAsset: Asset, currentDate: ZonedDateTime): BigDecimal = {
     assets(currentAsset).quantity * prices(currentAsset).currentPrice(currentDate)
   }
+
+  def appendOrderList(orderListToAdd: List[Order]): Unit = {
+    orderListToAdd.foreach { order =>
+      orderList.append(order)
+    }
+  }
 }
 
 object Portfolio {
@@ -59,9 +65,13 @@ object Portfolio {
     priceMap)
 
   def fromApi(api: PoloAPIInterface, priceData: Map[Asset, PairPrices])(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[Portfolio] = {
-    api.returnBalances.map { assetMap =>
+    for {
+      balancesMap <- api.returnBalances
+      orderHistory <- api.returnTradeHistory()
+    } yield {
       val port = Portfolio.create(priceData)
-      assetMap.toList.map(kv => port.assets.put(kv._1, kv._2))
+      balancesMap.toList.map(kv => port.assets.put(kv._1, kv._2))
+      port.appendOrderList(orderHistory)
       port
     }
   }

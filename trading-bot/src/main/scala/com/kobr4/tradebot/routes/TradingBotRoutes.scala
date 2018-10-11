@@ -45,16 +45,16 @@ object ScheduledTradeBot {
 
 case object UnsupportedStrategyException extends RuntimeException
 
-trait TradingBotRoutes extends PlayJsonSupport {
+trait TradingBotRoutes extends PlayJsonSupport with PriceApiRoutes {
 
   // we leave these abstract, since they will be provided by the App
   implicit def system: ActorSystem
 
   implicit def am: ActorMaterializer
 
-  private lazy val log = Logging(system, classOf[TradingBotRoutes])
-
   implicit def ec: ExecutionContext
+
+  private lazy val log = Logging(system, classOf[TradingBotRoutes])
 
   private val stringToZonedDateTime = Unmarshaller.strict[String, ZonedDateTime](ZonedDateTime.parse)
 
@@ -83,54 +83,8 @@ trait TradingBotRoutes extends PlayJsonSupport {
     getFromResourceDirectory("public")
   } ~ pathPrefix("api") {
     getFromResource("public/api.html")
-  } ~ path("btc_price") {
-    getFromResource("public/api.html")
-  } ~ path("eth_price") {
-    getFromResource("public/api.html")
-  } ~ path("xmr_price") {
-    getFromResource("public/api.html")
-  } ~ path("inhouse_info") {
-    getFromResource("public/api.html")
-  } ~ path("goog_price") {
-    getFromResource("public/api.html")
-  } ~ path("trading") {
-    getFromResource("public/api.html")
   } ~ pathPrefix("price_api") {
-    path("price_history") {
-      get {
-        parameters('asset.as(stringToAsset), 'start.as(stringToZonedDateTime), 'end.as(stringToZonedDateTime)) { (asset, start, end) =>
-          onSuccess(PriceService.getPriceHistory(asset, start, end)) { priceList =>
-            complete(priceList)
-          }
-        }
-      }
-    } ~ path("price_at") {
-      get {
-        parameters('asset.as(stringToAsset), 'date.as(stringToZonedDateTime)) { (asset, date) =>
-          onSuccess(PriceService.getPriceAt(asset, date)) { price =>
-            complete(price)
-          }
-        }
-      }
-    } ~
-      path("moving") {
-        get {
-          parameters('asset.as(stringToAsset), 'start.as(stringToZonedDateTime), 'end.as(stringToZonedDateTime), 'days.as[Int]) { (asset, start, end, days) =>
-            onSuccess(PriceService.getMovingAverageHistory(asset, start, end, days)) { priceList =>
-              complete(priceList)
-            }
-          }
-        }
-      } ~
-      path("weighted_moving") {
-        get {
-          parameters('asset.as(stringToAsset), 'start.as(stringToZonedDateTime), 'end.as(stringToZonedDateTime), 'days.as[Int]) { (asset, start, end, days) =>
-            onSuccess(PriceService.getWeightedMovingAverageHistory(asset, start, end, days)) { priceList =>
-              complete(priceList)
-            }
-          }
-        }
-      }
+    priceApiRoutes
   } ~ path("trade_bot") {
     get {
       parameters('asset.as(stringToAsset), 'start.as(stringToZonedDateTime), 'end.as(stringToZonedDateTime),
@@ -201,17 +155,9 @@ trait TradingBotRoutes extends PlayJsonSupport {
         }
       }
     }
-  } ~ path("ticker") {
-    get {
-      parameters('exchange.as(stringToSupportedExchange)) { exchange =>
-        onSuccess(PriceService.priceTicker(exchange)) { quoteList =>
-          complete(quoteList)
-        }
-      }
-    }
   } ~ pathSingleSlash {
     getFromResource("public/api.html")
   } ~ get {
-    complete("Hello World")
+    getFromResource("public/api.html")
   }
 }

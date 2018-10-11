@@ -3,29 +3,10 @@ package com.kobr4.tradebot.engine
 import java.time.ZonedDateTime
 
 import com.kobr4.tradebot.model._
-import play.api.libs.json.{ JsPath, Reads }
 
 import scala.math.BigDecimal.RoundingMode
 
-trait Strategy {
-
-  val minOrderValue = BigDecimal(5)
-
-  def runStrategy(asset: Asset, current: ZonedDateTime, priceData: PairPrices, portfolio: Portfolio, weight: BigDecimal = BigDecimal(1)): Option[(ZonedDateTime, Order)]
-}
-
-object Strategy {
-
-  def fromString(strategy: String): Option[Strategy] = strategy match {
-    case "safe" => Some(SafeStrategy)
-    case "custom" => Some(AlternativeStrategy)
-    case _ => None
-  }
-
-  implicit val strategyReads: Reads[Strategy] = JsPath.read[String].map(fromString(_).getOrElse(throw new RuntimeException("Invalid strategy")))
-}
-
-object SafeStrategy extends Strategy {
+object AlternativeStrategy extends Strategy {
 
   import com.kobr4.tradebot.engine.Rule.Condition._
 
@@ -33,7 +14,6 @@ object SafeStrategy extends Strategy {
   def buyStrategy(asset: Asset, portfolio: Portfolio, current: ZonedDateTime, priceData: PairPrices, weight: BigDecimal = BigDecimal(1)): Option[Buy] = {
 
     val assetPrice = priceData.currentPrice(current)
-
     implicit val port = portfolio
 
     val quantity = (((portfolio.balance(current) * weight) - portfolio.balance(asset, current)).max(0).min(portfolio.assets(Asset.Usd).quantity) / assetPrice).setScale(4, RoundingMode.DOWN)
@@ -56,12 +36,9 @@ object SafeStrategy extends Strategy {
     maybeSellAll
       .when(portfolio.assets(asset).quantity > 0)
       .whenBelowMovingAverge(current, currentPrice, priceData)
-/*
       .whenLastBuyingPrice(asset, (buyPrice) => {
         buyPrice + buyPrice * 20 / 100 < currentPrice || buyPrice - buyPrice * 10 / 100 > currentPrice
       })
-*/
-
   }
 
   def runStrategy(asset: Asset, current: ZonedDateTime, priceData: PairPrices, portfolio: Portfolio, weight: BigDecimal = BigDecimal(1)): Option[(ZonedDateTime, Order)] = {
