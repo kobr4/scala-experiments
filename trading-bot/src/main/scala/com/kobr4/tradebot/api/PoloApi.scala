@@ -1,6 +1,6 @@
 package com.kobr4.tradebot.api
 
-import java.time.{ZoneId, ZonedDateTime}
+import java.time.{ ZoneId, ZonedDateTime }
 import java.time.format.FormatStyle
 
 import akka.actor.ActorSystem
@@ -16,19 +16,18 @@ import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
 import play.api.libs.json._
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{ ExecutionContext, Future }
 
 case class PoloOrder(orderNumber: Long, rate: BigDecimal, amount: BigDecimal)
 
 case class PoloTrade(globalTradeID: Long, tradeID: Long, date: ZonedDateTime, rate: BigDecimal, amount: BigDecimal,
-                     total: BigDecimal, fee: BigDecimal, orderNumber: Long, `type`: String, category: String) {
+  total: BigDecimal, fee: BigDecimal, orderNumber: Long, `type`: String, category: String) {
 
   def toOrder(asset: Asset): Order = this.`type` match {
-    case "buy" => Buy(asset, rate, amount)
-    case "sell" => Sell(asset, rate, amount)
+    case "buy" => Buy(asset, rate, amount, date)
+    case "sell" => Sell(asset, rate, amount, date)
   }
 }
-
 
 object PoloTrade {
 
@@ -40,16 +39,15 @@ object PoloTrade {
 
   implicit val poloTradeReads: Reads[PoloTrade] = (
     (JsPath \ "globalTradeID").read[Long] and
-      (JsPath \ "tradeID").read[String].map(_.toLong) and
-      (JsPath \ "date").read[String].map(sDate => ZonedDateTime.parse(sDate, dateTimeFormatter)) and
-      (JsPath \ "rate").read[BigDecimal] and
-      (JsPath \ "amount").read[BigDecimal] and
-      (JsPath \ "total").read[BigDecimal] and
-      (JsPath \ "fee").read[BigDecimal] and
-      (JsPath \ "orderNumber").read[String].map(s => s.toLong) and
-      (JsPath \ "type").read[String] and
-      (JsPath \ "category").read[String]
-    ) (PoloTrade.apply _)
+    (JsPath \ "tradeID").read[String].map(_.toLong) and
+    (JsPath \ "date").read[String].map(sDate => ZonedDateTime.parse(sDate, dateTimeFormatter)) and
+    (JsPath \ "rate").read[BigDecimal] and
+    (JsPath \ "amount").read[BigDecimal] and
+    (JsPath \ "total").read[BigDecimal] and
+    (JsPath \ "fee").read[BigDecimal] and
+    (JsPath \ "orderNumber").read[String].map(s => s.toLong) and
+    (JsPath \ "type").read[String] and
+    (JsPath \ "category").read[String])(PoloTrade.apply _)
 }
 
 case class CurrencyPair(left: Asset, right: Asset) {
@@ -63,16 +61,16 @@ object CurrencyPair {
 }
 
 case class Quote(pair: CurrencyPair, last: BigDecimal, lowestAsk: BigDecimal, highestBid: BigDecimal, percentChange: BigDecimal,
-                 baseVolume: BigDecimal, quoteVolume: BigDecimal)
+  baseVolume: BigDecimal, quoteVolume: BigDecimal)
 
 object Quote {
   implicit val quoteWrites = Json.writes[Quote]
 }
 
 class PoloApi(
-               val apiKey: String = DefaultConfiguration.PoloApi.Key,
-               val apiSecret: String = DefaultConfiguration.PoloApi.Secret,
-               val poloUrl: String = PoloApi.rootUrl)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext) extends PoloAPIInterface {
+  val apiKey: String = DefaultConfiguration.PoloApi.Key,
+  val apiSecret: String = DefaultConfiguration.PoloApi.Secret,
+  val poloUrl: String = PoloApi.rootUrl)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext) extends PoloAPIInterface {
 
   def nonce = System.currentTimeMillis()
 
@@ -86,17 +84,17 @@ class PoloApi(
 
   implicit val poloOrderReads: Reads[PoloOrder] = (
     (JsPath \ "orderNumber").read[String].map(s => s.toLong) and
-      (JsPath \ "rate").read[BigDecimal] and
-      (JsPath \ "amount").read[BigDecimal]) (PoloOrder.apply _)
+    (JsPath \ "rate").read[BigDecimal] and
+    (JsPath \ "amount").read[BigDecimal])(PoloOrder.apply _)
 
   def quoteReads(pair: CurrencyPair): Reads[Quote] = (
     Reads.pure(pair) and
-      (JsPath \ "last").read[BigDecimal] and
-      (JsPath \ "lowestAsk").read[BigDecimal] and
-      (JsPath \ "highestBid").read[BigDecimal] and
-      (JsPath \ "percentChange").read[BigDecimal] and
-      (JsPath \ "baseVolume").read[BigDecimal] and
-      (JsPath \ "quoteVolume").read[BigDecimal]) (Quote.apply _)
+    (JsPath \ "last").read[BigDecimal] and
+    (JsPath \ "lowestAsk").read[BigDecimal] and
+    (JsPath \ "highestBid").read[BigDecimal] and
+    (JsPath \ "percentChange").read[BigDecimal] and
+    (JsPath \ "baseVolume").read[BigDecimal] and
+    (JsPath \ "quoteVolume").read[BigDecimal])(Quote.apply _)
 
   override def returnBalances: Future[Map[Asset, Quantity]] =
     PoloApi.httpRequestPost(tradingUrl, PoloApi.ReturnBalances.build(nonce), apiKey, apiSecret).map { message =>
@@ -130,8 +128,9 @@ class PoloApi(
     }
   }
 
-  override def returnTradeHistory(start: ZonedDateTime = ZonedDateTime.parse("2018-01-01T01:00:00.000Z"),
-                                  end: ZonedDateTime = ZonedDateTime.now()): Future[List[Order]] = {
+  override def returnTradeHistory(
+    start: ZonedDateTime = ZonedDateTime.parse("2018-01-01T01:00:00.000Z"),
+    end: ZonedDateTime = ZonedDateTime.now()): Future[List[Order]] = {
     PoloApi.httpRequestPost(tradingUrl, ReturnTradeHistory.build(nonce, start.toEpochSecond, end.toEpochSecond), apiKey, apiSecret).map { message =>
       Json.parse(message).as[JsObject].fields.flatMap {
         case (s, v) =>

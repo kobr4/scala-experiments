@@ -4,8 +4,6 @@ import java.time.ZonedDateTime
 
 import com.kobr4.tradebot.model._
 
-import scala.math.BigDecimal.RoundingMode
-
 object AlternativeStrategy extends Strategy {
 
   import com.kobr4.tradebot.engine.Rule.Condition._
@@ -16,12 +14,9 @@ object AlternativeStrategy extends Strategy {
     val assetPrice = priceData.currentPrice(current)
     implicit val port = portfolio
 
-    val quantity = (((portfolio.balance(current) * weight) - portfolio.balance(asset, current)).max(0).min(portfolio.assets(Asset.Usd).quantity) / assetPrice).setScale(4, RoundingMode.DOWN)
+    val quantity = getQuantity(current, weight, asset, assetPrice)
 
-    val maybeBuy = if (quantity * assetPrice > minOrderValue) Option(Buy(asset, assetPrice, quantity)) else None
-
-    // Sexy DSL ! <3
-    maybeBuy
+    MaybeBuy(asset, quantity, assetPrice, current)
       .whenCashAvailable
       .whenAboveMovingAverge(current, assetPrice, priceData)
   }
@@ -31,22 +26,20 @@ object AlternativeStrategy extends Strategy {
     val currentPrice = priceData.currentPrice(current)
     implicit val port = portfolio
 
-    val maybeSellAll = Option(Sell(asset, currentPrice, portfolio.assets(asset).quantity))
+    val maybeSellAll = Option(Sell(asset, currentPrice, portfolio.assets(asset).quantity, current))
 
     maybeSellAll
       .when(portfolio.assets(asset).quantity > 0)
       .whenBelowMovingAverge(current, currentPrice, priceData)
+    /*
       .whenLastBuyingPrice(asset, (buyPrice) => {
         buyPrice + buyPrice * 20 / 100 < currentPrice || buyPrice - buyPrice * 10 / 100 > currentPrice
       })
+      */
   }
 
-  def runStrategy(asset: Asset, current: ZonedDateTime, priceData: PairPrices, portfolio: Portfolio, weight: BigDecimal = BigDecimal(1)): Option[(ZonedDateTime, Order)] = {
-    buyStrategy(asset, portfolio, current, priceData, weight).map { order =>
-      (current, order)
-    }.orElse(
-      sellStrategy(asset, portfolio, current, priceData).map { order =>
-        (current, order)
-      })
+  def runStrategy(asset: Asset, current: ZonedDateTime, priceData: PairPrices, portfolio: Portfolio, weight: BigDecimal = BigDecimal(1)): Option[Order] = {
+    buyStrategy(asset, portfolio, current, priceData).orElse(
+      sellStrategy(asset, portfolio, current, priceData))
   }
 }

@@ -25,7 +25,7 @@ case class RunMultipleReport(finalBalance: BigDecimal, strategy: Strategy) {
 
 object LaunchReport {
 
-  val date = ZonedDateTime.parse("2017-01-01T01:00:00.000Z")
+  val date = ZonedDateTime.parse("2018-01-01T01:00:00.000Z")
   val initialAmount = BigDecimal(10000)
   val fees = BigDecimal(0.1)
   val strategy = SafeStrategy
@@ -33,10 +33,10 @@ object LaunchReport {
   def runAndReport(asset: Asset)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[RunReport] = {
     PriceService.getPriceData(asset).map { pd =>
       val orderList = TradeBotService.run(asset, date, initialAmount, pd, fees, strategy)
-      val lastOrder = orderList.last._2
-      val (assetOut, price, quantity) = lastOrder match {
-        case Buy(asset, price, quantity) => (asset, price, quantity)
-        case Sell(asset, price, quantity) => (asset, price, quantity)
+      val lastOrder = orderList.last
+      val (assetOut, price, quantity, orderDate) = lastOrder match {
+        case Buy(asset, price, quantity, date) => (asset, price, quantity, date)
+        case Sell(asset, price, quantity, date) => (asset, price, quantity, date)
       }
 
       RunReport(asset, price * quantity, initialAmount / pd.currentPrice(date) * pd.currentPrice(ZonedDateTime.now()), strategy)
@@ -49,7 +49,7 @@ object LaunchReport {
       Portfolio.pricesMap(assetWeight.keys.toList).map(pricesMap => {
         val portfolio = Portfolio.create(pricesMap.toMap)
         portfolio.assets(Asset.Usd) = Quantity(initialAmount)
-        pdList.foreach { tuple => portfolio.update(tuple._2, BigDecimal(0.1)) }
+        pdList.foreach { tuple => portfolio.update(tuple, BigDecimal(0.1)) }
 
         RunMultipleReport(portfolio.balance(ZonedDateTime.now()), strategy)
       })

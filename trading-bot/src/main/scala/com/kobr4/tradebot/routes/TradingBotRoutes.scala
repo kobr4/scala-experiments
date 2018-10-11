@@ -66,10 +66,6 @@ trait TradingBotRoutes extends PlayJsonSupport with PriceApiRoutes {
 
   private val stringToSupportedExchange = Unmarshaller.strict[String, SupportedExchange](s => SupportedExchange.fromString(s))
 
-  implicit val dateOrderWrites: Writes[(ZonedDateTime, Order)] = (
-    (JsPath \ "date").write[String] and
-    (JsPath \ "order").write[Order]) { a: (ZonedDateTime, Order) => (a._1.toOffsetDateTime.toString, a._2) }
-
   implicit val assetQuantityWrites: Writes[(Asset, Quantity)] = (
     (JsPath \ "asset").write[Asset] and
     (JsPath \ "quantity").write[BigDecimal]) { a: (Asset, Quantity) => (a._1, a._2.quantity) }
@@ -152,6 +148,13 @@ trait TradingBotRoutes extends PlayJsonSupport with PriceApiRoutes {
         val poloApi = new PoloApi()
         onSuccess(poloApi.returnOpenOrders()) { openOrdersList =>
           complete(openOrdersList)
+        }
+      }
+    } ~ path("trade_history") {
+      get {
+        val poloApi = new PoloApi()
+        onSuccess(poloApi.returnTradeHistory()) { tradeHistoryList =>
+          complete(tradeHistoryList)
         }
       }
     }

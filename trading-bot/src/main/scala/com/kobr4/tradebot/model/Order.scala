@@ -1,5 +1,7 @@
 package com.kobr4.tradebot.model
 
+import java.time.ZonedDateTime
+
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import com.kobr4.tradebot.api.{ CurrencyPair, PoloApi }
@@ -12,9 +14,9 @@ import scala.util.{ Failure, Success }
 
 sealed trait Order
 
-case class Buy(asset: Asset, price: BigDecimal, quantity: BigDecimal) extends Order
+case class Buy(asset: Asset, price: BigDecimal, quantity: BigDecimal, date: ZonedDateTime) extends Order
 
-case class Sell(asset: Asset, price: BigDecimal, quantity: BigDecimal) extends Order
+case class Sell(asset: Asset, price: BigDecimal, quantity: BigDecimal, date: ZonedDateTime) extends Order
 
 case class Quantity(quantity: BigDecimal)
 
@@ -51,6 +53,7 @@ object Order extends StrictLogging {
       "quantity" -> buy.quantity,
       "price" -> buy.price,
       "asset" -> buy.asset.toString,
+      "date" -> buy.date.toOffsetDateTime.toString(),
       "type" -> "BUY")
   }
 
@@ -59,6 +62,7 @@ object Order extends StrictLogging {
       "quantity" -> sell.quantity,
       "price" -> sell.price,
       "asset" -> sell.asset.toString,
+      "date" -> sell.date.toOffsetDateTime.toString(),
       "type" -> "SELL")
   }
 

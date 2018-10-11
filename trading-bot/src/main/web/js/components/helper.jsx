@@ -22,7 +22,7 @@ class Helper {
        fields.push(field);
     } if (Array.isArray(jsonResponse)) {
      jsonResponse.forEach(function(data){
-       var field = <ApiResponseField name={data.date} value= {JSON.stringify(data.order)}/>
+       var field = <ApiResponseField name={data.date} value= {JSON.stringify(data)}/>
        fields.push(field);
      })
   

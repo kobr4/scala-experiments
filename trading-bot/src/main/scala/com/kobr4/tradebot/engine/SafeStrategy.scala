@@ -11,7 +11,14 @@ trait Strategy {
 
   val minOrderValue = BigDecimal(5)
 
-  def runStrategy(asset: Asset, current: ZonedDateTime, priceData: PairPrices, portfolio: Portfolio, weight: BigDecimal = BigDecimal(1)): Option[(ZonedDateTime, Order)]
+  def runStrategy(asset: Asset, current: ZonedDateTime, priceData: PairPrices, portfolio: Portfolio, weight: BigDecimal = BigDecimal(1)): Option[Order]
+
+  def getQuantity(current: ZonedDateTime, weight: BigDecimal, asset: Asset, assetPrice: BigDecimal)(implicit portfolio: Portfolio): BigDecimal = {
+    (((portfolio.balance(current) * weight) - portfolio.balance(asset, current)).max(0).min(portfolio.assets(Asset.Usd).quantity) / assetPrice).setScale(4, RoundingMode.DOWN)
+  }
+
+  def MaybeBuy(asset: Asset, quantity: BigDecimal, assetPrice: BigDecimal, current: ZonedDateTime): Option[Buy] =
+    if (quantity * assetPrice > minOrderValue) Option(Buy(asset, assetPrice, quantity, current)) else None
 }
 
 object Strategy {
@@ -36,12 +43,10 @@ object SafeStrategy extends Strategy {
 
     implicit val port = portfolio
 
-    val quantity = (((portfolio.balance(current) * weight) - portfolio.balance(asset, current)).max(0).min(portfolio.assets(Asset.Usd).quantity) / assetPrice).setScale(4, RoundingMode.DOWN)
-
-    val maybeBuy = if (quantity * assetPrice > minOrderValue) Option(Buy(asset, assetPrice, quantity)) else None
+    val quantity = getQuantity(current, weight, asset, assetPrice)
 
     // Sexy DSL ! <3
-    maybeBuy
+    MaybeBuy(asset, quantity, assetPrice, current)
       .whenCashAvailable
       .whenAboveMovingAverge(current, assetPrice, priceData)
   }
@@ -51,12 +56,12 @@ object SafeStrategy extends Strategy {
     val currentPrice = priceData.currentPrice(current)
     implicit val port = portfolio
 
-    val maybeSellAll = Option(Sell(asset, currentPrice, portfolio.assets(asset).quantity))
+    val maybeSellAll = Option(Sell(asset, currentPrice, portfolio.assets(asset).quantity, current))
 
     maybeSellAll
       .when(portfolio.assets(asset).quantity > 0)
       .whenBelowMovingAverge(current, currentPrice, priceData)
-/*
+    /*
       .whenLastBuyingPrice(asset, (buyPrice) => {
         buyPrice + buyPrice * 20 / 100 < currentPrice || buyPrice - buyPrice * 10 / 100 > currentPrice
       })
@@ -64,12 +69,8 @@ object SafeStrategy extends Strategy {
 
   }
 
-  def runStrategy(asset: Asset, current: ZonedDateTime, priceData: PairPrices, portfolio: Portfolio, weight: BigDecimal = BigDecimal(1)): Option[(ZonedDateTime, Order)] = {
-    buyStrategy(asset, portfolio, current, priceData, weight).map { order =>
-      (current, order)
-    }.orElse(
-      sellStrategy(asset, portfolio, current, priceData).map { order =>
-        (current, order)
-      })
+  def runStrategy(asset: Asset, current: ZonedDateTime, priceData: PairPrices, portfolio: Portfolio, weight: BigDecimal = BigDecimal(1)): Option[Order] = {
+    buyStrategy(asset, portfolio, current, priceData, weight).orElse(
+      sellStrategy(asset, portfolio, current, priceData))
   }
 }

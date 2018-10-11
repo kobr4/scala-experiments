@@ -44,7 +44,7 @@ function GraphResultBase(props) {
 
 function computeExecutionResult(tradeBotResponse, initial, firstDayPrice, lastDayPrice, asset, start, end) {
 
-  var lastPortfolioValue = (tradeBotResponse.slice(-1)[0].order.price *  tradeBotResponse.slice(-1)[0].order.quantity).toFixed(2);
+  var lastPortfolioValue = (tradeBotResponse.slice(-1)[0].price *  tradeBotResponse.slice(-1)[0].quantity).toFixed(2);
   
   var performance = (lastPortfolioValue * 100 / initial - 100).toFixed(2);
 
@@ -112,8 +112,8 @@ class TradingGlobal extends React.Component {
     this.handleTrade('XMR');
   }
 
-  formatOrder = (order, date) => {
-    return order.type+' at '+order.price+' on '+moment(date).format('LL');
+  formatOrder = (order) => {
+    return order.type+' at '+order.price+' on '+moment(order.date).format('LL');
   }
 
   render() {
@@ -123,9 +123,9 @@ class TradingGlobal extends React.Component {
         Simple and honest trading algorithm with a provable performance record.<br/>
         Positions are evaluated on daily basis.
       </p>
-      Last take on BTC : { this.state.BTC && this.formatOrder(this.state.BTC.order,this.state.BTC.date) }<br/>
-      Last take on ETH : { this.state.ETH && this.formatOrder(this.state.ETH.order,this.state.ETH.date) }<br/>
-      Last take on XMR : { this.state.XMR && this.formatOrder(this.state.XMR.order,this.state.XMR.date) }<br/>
+      Last take on BTC : { this.state.BTC && this.formatOrder(this.state.BTC) }<br/>
+      Last take on ETH : { this.state.ETH && this.formatOrder(this.state.ETH) }<br/>
+      Last take on XMR : { this.state.XMR && this.formatOrder(this.state.XMR) }<br/>
       </Panel>
       )}
 }
