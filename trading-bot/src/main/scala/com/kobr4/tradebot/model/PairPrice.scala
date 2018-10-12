@@ -8,8 +8,9 @@ import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.HttpRequest
 import akka.http.scaladsl.unmarshalling.Unmarshal
 import akka.stream.ActorMaterializer
+import com.typesafe.scalalogging.StrictLogging
 
-import scala.concurrent.{ ExecutionContext, Future }
+import scala.concurrent.{ExecutionContext, Future}
 
 sealed trait PairPrice {
   val date: ZonedDateTime
@@ -68,7 +69,7 @@ case class PairPrices(prices: List[PairPrice]) {
 
 }
 
-object PairPrice {
+object PairPrice extends StrictLogging {
   private val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd").withZone(ZoneId.of("UTC"))
 
   def fromUrl(s: String): PairPrices = {
@@ -106,6 +107,7 @@ object PairPrice {
           ZonedDateTime.of(date, time, ZoneId.of("UTC")),
           if (splitted(priceLineId) != "") BigDecimal(splitted(priceLineId)) else BigDecimal(0))
       }
+    logger.info("Latest price : {}",prices.last.date)
     PairPrices(prices)
   }
 

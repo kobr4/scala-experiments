@@ -41,9 +41,8 @@ class TradingOps(val api: PoloAPIInterface)(implicit ec: ExecutionContext) exten
       quoteList.find(q => (q.pair.left == currencyPair.left)
         && (q.pair.right == currencyPair.right)).map { q =>
         if ((q.last - targetPrice).abs < percentage(targetPrice, pricePctDeltaThreshold)) {
-          val amount = getAmount(currencyPair, asset, q.last, targetPrice * quantity.quantity)
-          logger.info("Will sell on pair : {} for {} amount: {}", currencyPair.toString, q.last, amount)
-          api.sell(currencyPair.toString, q.last, amount)
+          logger.info("Will sell on pair : {} for {} amount: {}", currencyPair.toString, q.last, quantity.quantity)
+          api.sell(currencyPair.toString, q.last, quantity.quantity)
         } else {
           logger.info("Sell could not be processed because spread was too high {} vs {}", q.last, targetPrice)
           Future("SELL could not processed")
