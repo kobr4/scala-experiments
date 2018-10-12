@@ -10,7 +10,7 @@ import akka.http.scaladsl.unmarshalling.Unmarshal
 import akka.stream.ActorMaterializer
 import com.typesafe.scalalogging.StrictLogging
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{ ExecutionContext, Future }
 
 sealed trait PairPrice {
   val date: ZonedDateTime
@@ -107,7 +107,7 @@ object PairPrice extends StrictLogging {
           ZonedDateTime.of(date, time, ZoneId.of("UTC")),
           if (splitted(priceLineId) != "") BigDecimal(splitted(priceLineId)) else BigDecimal(0))
       }
-    logger.info("Latest price : {}",prices.last.date)
+    logger.info("Latest price : {}", prices.last.date)
     PairPrices(prices)
   }
 

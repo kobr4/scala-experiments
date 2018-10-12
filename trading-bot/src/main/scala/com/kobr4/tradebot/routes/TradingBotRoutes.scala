@@ -13,6 +13,7 @@ import com.kobr4.tradebot.QuickstartServer
 import com.kobr4.tradebot.api.{ PoloApi, PoloOrder, SupportedExchange }
 import com.kobr4.tradebot.engine.Strategy
 import com.kobr4.tradebot.model.{ Asset, Order, Quantity }
+import com.kobr4.tradebot.scheduler.TradeBotDailyJob
 import com.kobr4.tradebot.services.{ PriceService, TradeBotService, TradingOps }
 import play.api.libs.functional.syntax._
 import play.api.libs.json.{ JsPath, Json, Reads, Writes }
@@ -157,6 +158,8 @@ trait TradingBotRoutes extends PlayJsonSupport with PriceApiRoutes {
           complete(tradeHistoryList)
         }
       }
+    } ~ path("currently_trading") {
+      complete(TradeBotDailyJob.assetMap)
     }
   } ~ pathSingleSlash {
     getFromResource("public/api.html")

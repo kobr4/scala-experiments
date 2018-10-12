@@ -322,6 +322,20 @@ class InHouseInfo extends React.Component {
     return fields;
   }
 
+  rowsFromArray(jsArr) {
+    var fields = [];  
+    jsArr.forEach(function(jsObj) {
+      fields.push(<tr><td>{jsObj[0]}</td><td>{jsObj[1]}</td></tr>);
+      
+    })
+    return fields;
+  }
+
+
+  requestCurrentlyTrading = () => RestUtils.performRestPriceReq((currencyWeightList)=> 
+    { this.setState({currentlyTradingFields: this.rowsFromArray(currencyWeightList)})},
+    '/inhouse/currently_trading'
+  )
 
   requestBalance = () => RestUtils.performRestPriceReq((balanceList)=> 
     { this.setState({balancesFields: this.rowsFromObjets(balanceList)})},
@@ -332,6 +346,7 @@ class InHouseInfo extends React.Component {
     super(props);
 
     this.state = { 
+      currentlyTradingFields : [],
       balancesFields : []
     }
 
@@ -339,13 +354,20 @@ class InHouseInfo extends React.Component {
 
   componentDidMount() {
     this.requestBalance();
+    this.requestCurrentlyTrading();
   }
 
   render() {
     return (
+      <span>
+      <Panel title='Currently trading'>
+        <ResponseTable first='Currency' second='Weight' responseFields={this.state.currentlyTradingFields}/>
+      </Panel>
+
       <Panel title='Balances'>
         <ResponseTable first='Currency' second='Quantity' responseFields={this.state.balancesFields}/>
       </Panel>
+      </span>
     );
   }
 }
