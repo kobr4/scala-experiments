@@ -12,7 +12,9 @@ import play.api.libs.json.{ JsObject, Json, Writes }
 import scala.concurrent.ExecutionContext
 import scala.util.{ Failure, Success }
 
-sealed trait Order
+sealed trait Order {
+  val date: ZonedDateTime
+}
 
 case class Buy(asset: Asset, price: BigDecimal, quantity: BigDecimal, date: ZonedDateTime) extends Order
 

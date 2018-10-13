@@ -141,7 +141,7 @@ class PoloApi(
               }
             case _ => None
           }
-      }.toList
+      }.toList.sortBy(_.date.toEpochSecond)
     }
   }
 
