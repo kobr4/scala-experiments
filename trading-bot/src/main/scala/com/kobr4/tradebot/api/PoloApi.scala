@@ -137,7 +137,7 @@ class PoloApi(
           s.toUpperCase.split('_').map(s => Asset.fromString(s)).toList match {
             case Some(a) :: Some(b) :: Nil =>
               v.as[JsArray].value.toList.map { jsValue =>
-                jsValue.as[PoloTrade].toOrder(a)
+                jsValue.as[PoloTrade].toOrder(if (a == Asset.Usd) b else a)
               }
             case _ => None
           }

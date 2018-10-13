@@ -31,15 +31,13 @@ object AlternativeStrategy extends Strategy {
     maybeSellAll
       .when(portfolio.assets(asset).quantity > 0)
       .whenBelowMovingAverge(current, currentPrice, priceData)
-    /*
       .whenLastBuyingPrice(asset, (buyPrice) => {
         buyPrice + buyPrice * 20 / 100 < currentPrice || buyPrice - buyPrice * 10 / 100 > currentPrice
       })
-      */
   }
 
   def runStrategy(asset: Asset, current: ZonedDateTime, priceData: PairPrices, portfolio: Portfolio, weight: BigDecimal = BigDecimal(1)): Option[Order] = {
-    buyStrategy(asset, portfolio, current, priceData).orElse(
+    buyStrategy(asset, portfolio, current, priceData, weight).orElse(
       sellStrategy(asset, portfolio, current, priceData))
   }
 }

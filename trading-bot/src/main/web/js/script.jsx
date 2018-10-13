@@ -26,7 +26,7 @@ function HelloWorld(props) {
 }
 
 function GraphResultBase(props) {
-  let datas = props.datas.map(data => 
+  const datas = props.datas.map(data => 
     ({ 
         label: data.name,
         fillColor: 'rgba(0,0,0,0)',
@@ -35,7 +35,7 @@ function GraphResultBase(props) {
         data : data.datapoints
       })
     )
-    let chartData = { labels : [],datasets : datas };
+    const chartData = { labels : [],datasets : datas };
   return (
     <Line data={chartData} width="800" height="400"/>
   );
@@ -331,6 +331,15 @@ class InHouseInfo extends React.Component {
     return fields;
   }
 
+  rowsFromTradeList(jsArr) {
+    var fields = [];  
+    jsArr.forEach(function(jsObj) {
+      fields.push(<tr><td>{jsObj.date}</td><td>{jsObj.type}</td><td>{jsObj.asset}</td><td>{jsObj.price}</td></tr>);
+      
+    })
+    return fields;
+  }
+  
 
   requestCurrentlyTrading = () => RestUtils.performRestPriceReq((currencyWeightList)=> 
     { this.setState({currentlyTradingFields: this.rowsFromArray(currencyWeightList)})},
@@ -342,12 +351,18 @@ class InHouseInfo extends React.Component {
     '/inhouse/balances'
   )
 
+  requestTradeHistory = () => RestUtils.performRestPriceReq((tradeList)=> 
+    { this.setState({tradeHistoryFields: this.rowsFromTradeList(tradeList)})},
+    '/inhouse/trade_history'
+  )
+
   constructor(props) {
     super(props);
 
     this.state = { 
       currentlyTradingFields : [],
-      balancesFields : []
+      balancesFields : [],
+      tradeHistoryFields : []
     }
 
   }
@@ -355,18 +370,30 @@ class InHouseInfo extends React.Component {
   componentDidMount() {
     this.requestBalance();
     this.requestCurrentlyTrading();
+    this.requestTradeHistory();
   }
 
   render() {
     return (
       <span>
-      <Panel title='Currently trading'>
+      <Panel title='Currently Trading'>
         <ResponseTable first='Currency' second='Weight' responseFields={this.state.currentlyTradingFields}/>
       </Panel>
 
       <Panel title='Balances'>
         <ResponseTable first='Currency' second='Quantity' responseFields={this.state.balancesFields}/>
       </Panel>
+
+      <Panel title='Trade History'>
+      <table className="table table-bordered table-hover">
+       <tbody>
+       <tr><th>Date</th><th>Type</th><th>Currency</th><th>Price</th></tr>
+       {
+         this.state.tradeHistoryFields.map(field => field)
+       }
+       </tbody>
+       </table>
+      </Panel>      
       </span>
     );
   }

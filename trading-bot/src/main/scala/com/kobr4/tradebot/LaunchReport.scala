@@ -28,7 +28,7 @@ object LaunchReport {
   val date = ZonedDateTime.parse("2018-01-01T01:00:00.000Z")
   val initialAmount = BigDecimal(10000)
   val fees = BigDecimal(0.1)
-  val strategy = SafeStrategy
+  val strategy = AlternativeStrategy
 
   def runAndReport(asset: Asset)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[RunReport] = {
     PriceService.getPriceData(asset).map { pd =>

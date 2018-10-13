@@ -2,10 +2,10 @@ package com.kobr4.tradebot
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
-import com.kobr4.tradebot.api.{PoloAPIInterface, PoloApi}
+import com.kobr4.tradebot.api.{ PoloAPIInterface, PoloApi }
 import com.kobr4.tradebot.engine.SafeStrategy
 import com.kobr4.tradebot.model.Asset
-import com.kobr4.tradebot.services.{PriceService, TradeBotService, TradingOps}
+import com.kobr4.tradebot.services.{ PriceService, TradeBotService, TradingOps }
 import org.scalatest.FlatSpec
 import org.scalatest.concurrent.PatienceConfiguration.Timeout
 import org.scalatest.concurrent.ScalaFutures
@@ -27,7 +27,7 @@ class TradeBotServiceIT extends FlatSpec with ScalaFutures with MockitoSugar {
     val apiMock = mock[PoloAPIInterface]
     val tradingOps = new TradingOps(apiMock)
     when(apiMock.returnTicker()).thenReturn(poloApi.returnTicker())
-    when(apiMock.buy(any(),any(),any())).thenReturn(Future.successful("TOTO"))
+    when(apiMock.buy(any(), any(), any())).thenReturn(Future.successful("TOTO"))
 
     val result = for {
       priceData <- PriceService.getPriceData(Asset.Eth)
@@ -46,7 +46,7 @@ class TradeBotServiceIT extends FlatSpec with ScalaFutures with MockitoSugar {
     val apiMock = mock[PoloAPIInterface]
     val tradingOps = new TradingOps(apiMock)
     when(apiMock.returnTicker()).thenReturn(poloApi.returnTicker())
-    when(apiMock.buy(any(),any(),any())).thenReturn(Future.successful("TOTO"))
+    when(apiMock.buy(any(), any(), any())).thenReturn(Future.successful("TOTO"))
 
     val result = TradeBotService.runMapAndTrade(Map(Asset.Btc -> BigDecimal(0.3), Asset.Eth -> BigDecimal(0.3),
       Asset.Xmr -> BigDecimal(0.2), Asset.Xlm -> BigDecimal(0.1), Asset.Doge -> BigDecimal(0.1)), SafeStrategy, poloApi, tradingOps)

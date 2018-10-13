@@ -5,12 +5,14 @@ import akka.stream.ActorMaterializer
 import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.WireMock._
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration.options
-import com.kobr4.tradebot.api.{ PoloApi, PoloOrder }
-import com.kobr4.tradebot.model.{ Asset, Quantity }
+import com.kobr4.tradebot.api.{PoloApi, PoloOrder}
+import com.kobr4.tradebot.model.Asset.Usd
+import com.kobr4.tradebot.model.{Asset, Buy, Quantity}
 import org.scalatest.concurrent.PatienceConfiguration.Timeout
 import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.{ BeforeAndAfterEach, FlatSpec, Matchers }
+import org.scalatest.{BeforeAndAfterEach, FlatSpec, Matchers}
 
+import scala.collection.immutable.Range
 import scala.concurrent.duration._
 
 class PoloApiTest extends FlatSpec with Matchers with ScalaFutures with BeforeAndAfterEach {
@@ -29,7 +31,7 @@ class PoloApiTest extends FlatSpec with Matchers with ScalaFutures with BeforeAn
     wireMockServer.stop()
   }
 
-  "API" should "return balances" in {
+  it should "return balances" in {
 
     wireMockServer.stubFor(post(urlEqualTo("/tradingApi"))
       .willReturn(aResponse()
@@ -42,7 +44,7 @@ class PoloApiTest extends FlatSpec with Matchers with ScalaFutures with BeforeAn
     map(Asset.Btc) shouldBe Quantity(BigDecimal("0.59098578"))
   }
 
-  "API" should "return deposit adresses" in {
+  it should "return deposit adresses" in {
 
     wireMockServer.stubFor(post(urlEqualTo("/tradingApi"))
       .willReturn(aResponse()
@@ -55,7 +57,7 @@ class PoloApiTest extends FlatSpec with Matchers with ScalaFutures with BeforeAn
     map(Asset.Btc) shouldBe "19YqztHmspv2egyD6jQM3yn81x5t5krVdJ"
   }
 
-  "API" should "return open orders" in {
+  it should "return open orders" in {
 
     wireMockServer.stubFor(post(urlEqualTo("/tradingApi"))
       .willReturn(aResponse()
@@ -70,7 +72,7 @@ class PoloApiTest extends FlatSpec with Matchers with ScalaFutures with BeforeAn
     list should contain(PoloOrder(120466, BigDecimal("0.025"), BigDecimal("100")))
   }
 
-  "API" should "place a sell order" in {
+  it should "place a sell order" in {
 
     wireMockServer.stubFor(post(urlEqualTo("/tradingApi"))
       .willReturn(aResponse()
@@ -83,7 +85,7 @@ class PoloApiTest extends FlatSpec with Matchers with ScalaFutures with BeforeAn
     api.sell("BTC_USD", BigDecimal("1"), BigDecimal("1")).futureValue(Timeout(10 seconds))
   }
 
-  "API" should "place a buy order" in {
+  it should "place a buy order" in {
 
     wireMockServer.stubFor(post(urlEqualTo("/tradingApi"))
       .willReturn(aResponse()
@@ -96,7 +98,7 @@ class PoloApiTest extends FlatSpec with Matchers with ScalaFutures with BeforeAn
     api.buy("BTC_USD", BigDecimal("1"), BigDecimal("1")).futureValue(Timeout(10 seconds))
   }
 
-  "API" should "return ticker" in {
+  it should "return ticker" in {
     wireMockServer.stubFor(get(urlEqualTo("/public?command=returnTicker"))
       .willReturn(aResponse()
         .withHeader("Content-Type", "text/plain")
@@ -115,7 +117,54 @@ class PoloApiTest extends FlatSpec with Matchers with ScalaFutures with BeforeAn
     quoteList.head.last shouldBe BigDecimal("0.0251")
   }
 
-  "API" should "provide HMAC-512 signature" in {
+  it should "return trade history" in {
+    wireMockServer.stubFor(post(urlEqualTo("/tradingApi"))
+      .willReturn(aResponse()
+        .withHeader("Content-Type", "text/plain")
+        .withBody(
+          """
+            |  { "BTC_USDT": [
+            |    {
+            |      "globalTradeID": 29251512,
+            |      "tradeID": "1385888",
+            |      "date": "2016-05-03 01:29:55",
+            |      "rate": "0.00014243",
+            |      "amount": "353.74692925",
+            |      "total": "0.05038417",
+            |      "fee": "0.00200000",
+            |      "orderNumber": "12603322113",
+            |      "type": "buy",
+            |      "category": "settlement"
+            |    },
+            |    {
+            |      "globalTradeID": 29251511,
+            |      "tradeID": "1385887",
+            |      "date": "2016-05-03 01:29:55",
+            |      "rate": "0.00014111",
+            |      "amount": "311.24262497",
+            |      "total": "0.04391944",
+            |      "fee": "0.00200000",
+            |      "orderNumber": "12603319116",
+            |      "type": "sell",
+            |      "category": "marginTrade"
+            |    } ]
+            |    }
+          """.stripMargin)))
+
+    val api = new PoloApi(DefaultConfiguration.PoloApi.Key, DefaultConfiguration.PoloApi.Secret, "http://127.0.0.1:2345")
+    val orderList = api.returnTradeHistory().futureValue(Timeout(10 seconds))
+
+    val order = orderList.head
+    val buy = order match {
+      case b: Buy => b
+    }
+
+    buy.asset shouldBe Asset.Btc
+    buy.price shouldBe BigDecimal(0.00014243)
+    buy.quantity shouldBe BigDecimal(353.74692925)
+  }
+
+  it should "provide HMAC-512 signature" in {
     val signature = PoloApi.generateHMAC512("toto", "command=returnBalances")
 
     signature shouldBe "5e6ec0bd24181eeef34ef1c70eb65e116dcbfabd96f4c5409d64f2f028fffaac14295dd6f86e8876f31eee845913edca53e4052b121739497a19b46f5e49ca75"
