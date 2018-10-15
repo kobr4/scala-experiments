@@ -18,7 +18,7 @@ import play.api.libs.json._
 
 import scala.concurrent.{ ExecutionContext, Future }
 
-case class PoloOrder(orderNumber: Long, rate: BigDecimal, amount: BigDecimal)
+case class PoloOrder(orderNumber: String, rate: BigDecimal, amount: BigDecimal)
 
 case class PoloTrade(globalTradeID: Long, tradeID: Long, date: ZonedDateTime, rate: BigDecimal, amount: BigDecimal,
   total: BigDecimal, fee: BigDecimal, orderNumber: Long, `type`: String, category: String) {
@@ -83,7 +83,7 @@ class PoloApi(
   import play.api.libs.functional.syntax._
 
   implicit val poloOrderReads: Reads[PoloOrder] = (
-    (JsPath \ "orderNumber").read[String].map(s => s.toLong) and
+    (JsPath \ "orderNumber").read[String] and
     (JsPath \ "rate").read[BigDecimal] and
     (JsPath \ "amount").read[BigDecimal])(PoloOrder.apply _)
 
@@ -119,7 +119,7 @@ class PoloApi(
       Json.parse(message).as[JsArray].value.map { order => order.as[PoloOrder] }.toList
     }
 
-  override def cancelOrder(orderNumber: Long): Future[Boolean] = {
+  override def cancelOrder(orderNumber: String): Future[Boolean] = {
     PoloApi.httpRequestPost(tradingUrl, CancelOrder.build(nonce, orderNumber), apiKey, apiSecret).map { message =>
       Json.parse(message).as[JsObject].value.get("success").exists(_.as[Int] match {
         case 1 => true
@@ -238,9 +238,9 @@ object PoloApi extends StrictLogging {
 
     val OrderNumber = "orderNumber"
 
-    def build(nonce: Long, orderNumber: Long): FormData = akka.http.scaladsl.model.FormData(Map(
+    def build(nonce: Long, orderNumber: String): FormData = akka.http.scaladsl.model.FormData(Map(
       PoloApi.Command -> CancelOrder,
-      PoloApi.CancelOrder.OrderNumber -> orderNumber.toString,
+      PoloApi.CancelOrder.OrderNumber -> orderNumber,
       PoloApi.Nonce -> nonce.toString))
   }
 

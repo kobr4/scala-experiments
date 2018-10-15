@@ -69,7 +69,7 @@ class PoloApiTest extends FlatSpec with Matchers with ScalaFutures with BeforeAn
     val api = new PoloApi(DefaultConfiguration.PoloApi.Key, DefaultConfiguration.PoloApi.Secret, "http://127.0.0.1:2345")
     val list = api.returnOpenOrders().futureValue(Timeout(10 seconds))
 
-    list should contain(PoloOrder(120466, BigDecimal("0.025"), BigDecimal("100")))
+    list should contain(PoloOrder("120466", BigDecimal("0.025"), BigDecimal("100")))
   }
 
   it should "place a sell order" in {

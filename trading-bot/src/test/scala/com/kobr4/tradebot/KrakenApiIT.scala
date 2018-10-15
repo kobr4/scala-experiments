@@ -8,7 +8,7 @@ import org.scalatest.{ FlatSpec, Matchers }
 import org.scalatest.concurrent.ScalaFutures
 import scala.concurrent.duration._
 
-class KrakenIT extends FlatSpec with ScalaFutures with Matchers {
+class KrakenApiIT extends FlatSpec with ScalaFutures with Matchers {
 
   implicit val as = ActorSystem()
   implicit val am = ActorMaterializer()
@@ -48,7 +48,7 @@ class KrakenIT extends FlatSpec with ScalaFutures with Matchers {
 
     println(balanceMap)
   }
-  /*
+
   it should "return deposit addresses" in {
 
     val krakenApi = new KrakenApi()
@@ -57,5 +57,22 @@ class KrakenIT extends FlatSpec with ScalaFutures with Matchers {
 
     println(balanceMap)
   }
-*/
+
+  it should "return open orders" in {
+
+    val krakenApi = new KrakenApi()
+
+    val orderList = krakenApi.returnOpenOrders().futureValue(Timeout(10 seconds))
+
+    println(orderList)
+  }
+
+  it should "return trades history" in {
+
+    val krakenApi = new KrakenApi()
+
+    val orderList = krakenApi.returnTradeHistory().futureValue(Timeout(10 seconds))
+
+    println(orderList)
+  }
 }

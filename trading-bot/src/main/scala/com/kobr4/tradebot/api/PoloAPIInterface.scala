@@ -14,7 +14,7 @@ trait PoloAPIInterface {
 
   def returnOpenOrders(): Future[List[PoloOrder]]
 
-  def cancelOrder(orderNumber: Long): Future[Boolean]
+  def cancelOrder(orderNumber: String): Future[Boolean]
 
   def returnTradeHistory(
     start: ZonedDateTime = ZonedDateTime.parse("2018-01-01T01:00:00.000Z"),

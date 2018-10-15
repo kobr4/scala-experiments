@@ -72,7 +72,7 @@ trait TradingBotRoutes extends PlayJsonSupport with PriceApiRoutes {
     (JsPath \ "quantity").write[BigDecimal]) { a: (Asset, Quantity) => (a._1, a._2.quantity) }
 
   implicit val poloOrderWrites: Writes[PoloOrder] = (
-    (JsPath \ "orderNumber").write[Long] and
+    (JsPath \ "orderNumber").write[String] and
     (JsPath \ "rate").write[BigDecimal] and
     (JsPath \ "amount").write[BigDecimal])(unlift(PoloOrder.unapply))
 
