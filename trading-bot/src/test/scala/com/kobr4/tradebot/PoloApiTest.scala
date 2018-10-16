@@ -5,7 +5,7 @@ import akka.stream.ActorMaterializer
 import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.WireMock._
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration.options
-import com.kobr4.tradebot.api.{ PoloApi, PoloOrder }
+import com.kobr4.tradebot.api.{ CurrencyPair, PoloApi, PoloOrder }
 import com.kobr4.tradebot.model.Asset.Usd
 import com.kobr4.tradebot.model.{ Asset, Buy, Quantity }
 import org.scalatest.concurrent.PatienceConfiguration.Timeout
@@ -85,7 +85,7 @@ class PoloApiTest extends FlatSpec with Matchers with ScalaFutures with BeforeAn
             |,"rate":"0.00000173","total":"0.00058625","tradeID":"16164","type":"sell"}]}""".stripMargin)))
 
     val api = new PoloApi(DefaultConfiguration.PoloApi.Key, DefaultConfiguration.PoloApi.Secret, poloUrl)
-    api.sell("BTC_USD", BigDecimal("1"), BigDecimal("1")).futureValue(Timeout(10 seconds))
+    api.sell(CurrencyPair(Asset.Btc, Asset.Usd), BigDecimal("1"), BigDecimal("1")).futureValue(Timeout(10 seconds))
   }
 
   it should "place a buy order" in {
@@ -98,7 +98,7 @@ class PoloApiTest extends FlatSpec with Matchers with ScalaFutures with BeforeAn
             |,"rate":"0.00000173","total":"0.00058625","tradeID":"16164","type":"buy"}]}""".stripMargin)))
 
     val api = new PoloApi(DefaultConfiguration.PoloApi.Key, DefaultConfiguration.PoloApi.Secret, poloUrl)
-    api.buy("BTC_USD", BigDecimal("1"), BigDecimal("1")).futureValue(Timeout(10 seconds))
+    api.buy(CurrencyPair(Asset.Btc, Asset.Usd), BigDecimal("1"), BigDecimal("1")).futureValue(Timeout(10 seconds))
   }
 
   it should "return ticker" in {

@@ -32,7 +32,6 @@ object TradeBotService {
   }
 
   def runAndTrade(asset: Asset, priceData: PairPrices, strategy: Strategy, poloApi: ExchangeApi, tradingsOps: TradingOps)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[Option[Order]] = {
-
     Portfolio.fromApi(poloApi, Map(asset -> priceData)).map { portfolio =>
       strategy.runStrategy(asset, ZonedDateTime.now(), priceData, portfolio).map(order => Order.process(order, tradingsOps))
     }

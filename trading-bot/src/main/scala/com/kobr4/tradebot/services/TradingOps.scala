@@ -27,7 +27,7 @@ class TradingOps(val api: ExchangeApi)(implicit ec: ExecutionContext) extends St
         if ((q.last - targetPrice).abs < percentage(targetPrice, pricePctDeltaThreshold)) {
           val amount = getAmount(currencyPair, asset, q.last, targetPrice * quantity.quantity)
           logger.info("Will buy on pair : {} for {} amount: {}", currencyPair.toString, q.last, amount)
-          api.buy(currencyPair.toString, q.last, amount)
+          api.buy(currencyPair, q.last, amount)
         } else {
           logger.info("Buy could not be processed because spread was too high {} vs {}", q.last, targetPrice)
           Future("BUY could not processed")
@@ -42,7 +42,7 @@ class TradingOps(val api: ExchangeApi)(implicit ec: ExecutionContext) extends St
         && (q.pair.right == currencyPair.right)).map { q =>
         if ((q.last - targetPrice).abs < percentage(targetPrice, pricePctDeltaThreshold)) {
           logger.info("Will sell on pair : {} for {} amount: {}", currencyPair.toString, q.last, quantity.quantity)
-          api.sell(currencyPair.toString, q.last, quantity.quantity)
+          api.sell(currencyPair, q.last, quantity.quantity)
         } else {
           logger.info("Sell could not be processed because spread was too high {} vs {}", q.last, targetPrice)
           Future("SELL could not processed")

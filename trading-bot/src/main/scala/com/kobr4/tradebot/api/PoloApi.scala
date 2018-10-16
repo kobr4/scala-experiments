@@ -145,11 +145,11 @@ class PoloApi(
     }
   }
 
-  override def buy(currencyPair: String, rate: BigDecimal, amount: BigDecimal): Future[String] =
-    PoloApi.httpRequestPost(tradingUrl, BuySell.build(nonce, currencyPair, rate, amount, true), apiKey, apiSecret)
+  override def buy(currencyPair: CurrencyPair, rate: BigDecimal, amount: BigDecimal): Future[String] =
+    PoloApi.httpRequestPost(tradingUrl, BuySell.build(nonce, currencyPair.toString, rate, amount, true), apiKey, apiSecret)
 
-  override def sell(currencyPair: String, rate: BigDecimal, amount: BigDecimal): Future[String] =
-    PoloApi.httpRequestPost(tradingUrl, BuySell.build(nonce, currencyPair, rate, amount, false), apiKey, apiSecret)
+  override def sell(currencyPair: CurrencyPair, rate: BigDecimal, amount: BigDecimal): Future[String] =
+    PoloApi.httpRequestPost(tradingUrl, BuySell.build(nonce, currencyPair.toString, rate, amount, false), apiKey, apiSecret)
 
   override def returnTicker()(implicit ec: ExecutionContext): Future[List[Quote]] = PoloApi.httpRequest(publicUrl, Public.returnTicker).map { message =>
     Json.parse(message).as[JsObject].fields.flatMap {

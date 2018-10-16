@@ -10,4 +10,5 @@ object CoinMetricsPriceUrl {
   val xrp = "https://coinmetrics.io/data/xrp.csv"
   val xlm = "https://coinmetrics.io/data/xlm.csv"
   val dgb = "https://coinmetrics.io/data/dgb.csv"
+  val ada = "https://coinmetrics.io/data/ada.csv"
 }

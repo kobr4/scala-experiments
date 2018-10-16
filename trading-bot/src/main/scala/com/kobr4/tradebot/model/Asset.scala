@@ -24,6 +24,8 @@ object Asset {
 
   case object Dgb extends Asset { override def toString: String = "DGB" }
 
+  case object Ada extends Asset { override def toString: String = "ADA" }
+
   case class Custom(code: String) extends Asset { override def toString: String = code }
 
   def fromString(s: String): Option[Asset] = s match {
@@ -38,6 +40,7 @@ object Asset {
     case "XLM" => Some(Asset.Xlm)
     case "USD" => Some(Asset.Usd)
     case "USDT" => Some(Asset.Usd)
+    case "ADA" => Some(Asset.Ada)
     case code => Some(Custom(code))
   }
 

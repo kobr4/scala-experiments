@@ -46,6 +46,7 @@ object PriceService {
     case Asset.Xrp => getCoinmetricsPricesWithCache(CoinMetricsPriceUrl.xrp)
     case Asset.Xlm => getCoinmetricsPricesWithCache(CoinMetricsPriceUrl.xlm)
     case Asset.Dgb => getCoinmetricsPricesWithCache(CoinMetricsPriceUrl.dgb)
+    case Asset.Ada => getCoinmetricsPricesWithCache(CoinMetricsPriceUrl.ada)
     case other => getYahooPricesWithCache(other.toString)
   }
 
@@ -60,7 +61,6 @@ object PriceService {
 
   def getPriceAt(asset: Asset, date: ZonedDateTime)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[BigDecimal] =
     getPricesWithCache(asset).map { pairPrices =>
-
       pairPrices.prices.map(p => (Math.abs(p.date.toEpochSecond - date.toEpochSecond), p.price)).minBy(_._1)._2
     }
 

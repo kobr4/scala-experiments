@@ -28,26 +28,26 @@ class TradingOpsTest extends FlatSpec with Matchers with ScalaFutures with Mocki
 
     val apiMock = mock[ExchangeApi]
     when(apiMock.returnTicker()).thenReturn(Future.successful(List(btcUsd)))
-    when(apiMock.buy(any[String], any[BigDecimal], any[BigDecimal])).thenReturn(Future.successful("success"))
+    when(apiMock.buy(any[CurrencyPair], any[BigDecimal], any[BigDecimal])).thenReturn(Future.successful("success"))
 
     val tradingOps = new TradingOps(apiMock)
 
     tradingOps.buyAtMarketValue(BigDecimal("7890.55745487"), pair, Asset.Btc, Quantity(1)).futureValue(Timeout(10 seconds))
 
-    verify(apiMock).buy("USDT_BTC", BigDecimal("7890.55745487"), BigDecimal("1"))
+    verify(apiMock).buy(CurrencyPair(Asset.Usd, Asset.Btc), BigDecimal("7890.55745487"), BigDecimal("1"))
   }
 
   "TradingOps" should "place a sell order at market value" in {
 
     val apiMock = mock[ExchangeApi]
     when(apiMock.returnTicker()).thenReturn(Future.successful(List(btcUsd)))
-    when(apiMock.sell(any[String], any[BigDecimal], any[BigDecimal])).thenReturn(Future.successful("success"))
+    when(apiMock.sell(any[CurrencyPair], any[BigDecimal], any[BigDecimal])).thenReturn(Future.successful("success"))
 
     val tradingOps = new TradingOps(apiMock)
 
     tradingOps.sellAtMarketValue(BigDecimal("7890.55745487"), pair, Asset.Btc, Quantity(1)).futureValue(Timeout(10 seconds))
 
-    verify(apiMock).sell("USDT_BTC", 7890.55745487, 1)
+    verify(apiMock).sell(CurrencyPair(Asset.Usd, Asset.Btc), 7890.55745487, 1)
   }
 
   "TradingOps" should "cancel an order" in {

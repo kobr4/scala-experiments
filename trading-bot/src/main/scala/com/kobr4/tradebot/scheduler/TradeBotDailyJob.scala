@@ -2,7 +2,7 @@ package com.kobr4.tradebot.scheduler
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
-import com.kobr4.tradebot.api.PoloApi
+import com.kobr4.tradebot.api.{ ExchangeApi, Poloniex }
 import com.kobr4.tradebot.engine.SafeStrategy
 import com.kobr4.tradebot.model.Asset
 import com.kobr4.tradebot.services.{ TradeBotService, TradingOps }
@@ -13,15 +13,20 @@ import scala.util.{ Failure, Success }
 
 class TradeBotDailyJob extends SchedulerJobInterface with StrictLogging {
 
+  def getExchangeInterface()(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): ExchangeApi =
+    ExchangeApi(Poloniex)
+
+  def getAssetMap(): Map[Asset, BigDecimal] = TradeBotDailyJob.assetMap
+
   override def run()(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Unit = {
 
     logger.info("Running Job: TradeBotDailyJob")
 
-    val poloApi = new PoloApi()
+    val exchangeApi = getExchangeInterface()
 
-    val tradingOps = new TradingOps(poloApi)
+    val tradingOps = new TradingOps(exchangeApi)
 
-    val eventualResult = TradeBotService.runMapAndTrade(TradeBotDailyJob.assetMap, SafeStrategy, poloApi, tradingOps).map { orderList =>
+    val eventualResult = TradeBotService.runMapAndTrade(getAssetMap(), SafeStrategy, exchangeApi, tradingOps).map { orderList =>
       orderList.foreach(order => logger.info(order.toString))
     }
 

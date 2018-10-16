@@ -10,10 +10,10 @@ import akka.http.scaladsl.server.directives.RouteDirectives.complete
 import akka.http.scaladsl.unmarshalling.Unmarshaller
 import akka.stream.ActorMaterializer
 import com.kobr4.tradebot.QuickstartServer
-import com.kobr4.tradebot.api.{ ExchangeApi, PoloApi, PoloOrder, SupportedExchange }
+import com.kobr4.tradebot.api._
 import com.kobr4.tradebot.engine.Strategy
 import com.kobr4.tradebot.model.{ Asset, Order, Quantity }
-import com.kobr4.tradebot.scheduler.TradeBotDailyJob
+import com.kobr4.tradebot.scheduler.{ KrakenDailyJob, TradeBotDailyJob }
 import com.kobr4.tradebot.services.{ PriceService, TradeBotService, TradingOps }
 import play.api.libs.functional.syntax._
 import play.api.libs.json.{ JsPath, Json, Reads, Writes }
@@ -165,7 +165,12 @@ trait TradingBotRoutes extends PlayJsonSupport with PriceApiRoutes {
         }
       }
     } ~ path("currently_trading") {
-      complete(TradeBotDailyJob.assetMap)
+      get {
+        parameters('exchange.as(stringToSupportedExchange)) {
+          case Poloniex => complete(TradeBotDailyJob.assetMap)
+          case Kraken => complete(KrakenDailyJob.assetMap)
+        }
+      }
     }
   } ~ pathSingleSlash {
     getFromResource("public/api.html")

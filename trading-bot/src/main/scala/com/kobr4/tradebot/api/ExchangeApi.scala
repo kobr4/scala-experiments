@@ -22,9 +22,9 @@ trait ExchangeApi {
     start: ZonedDateTime = ZonedDateTime.parse("2018-01-01T01:00:00.000Z"),
     end: ZonedDateTime = ZonedDateTime.now()): Future[List[Order]]
 
-  def buy(currencyPair: String, rate: BigDecimal, amount: BigDecimal): Future[String]
+  def buy(currencyPair: CurrencyPair, rate: BigDecimal, amount: BigDecimal): Future[String]
 
-  def sell(currencyPair: String, rate: BigDecimal, amount: BigDecimal): Future[String]
+  def sell(currencyPair: CurrencyPair, rate: BigDecimal, amount: BigDecimal): Future[String]
 
   def returnTicker()(implicit ec: ExecutionContext): Future[List[Quote]]
 }
