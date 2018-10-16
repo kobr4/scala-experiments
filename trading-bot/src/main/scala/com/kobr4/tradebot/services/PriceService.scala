@@ -5,11 +5,11 @@ import java.time.ZonedDateTime
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import com.kobr4.tradebot.api._
-import com.kobr4.tradebot.model.{ Asset, PairPrice, PairPrices }
+import com.kobr4.tradebot.model.{Asset, EthUsd, PairPrice, PairPrices}
 import scalacache.Cache
 import scalacache.guava.GuavaCache
 
-import scala.concurrent.{ ExecutionContext, Future }
+import scala.concurrent.{ExecutionContext, Future}
 
 object PriceService {
 
@@ -58,6 +58,17 @@ object PriceService {
 
   def getPriceHistory(asset: Asset, startDate: ZonedDateTime, endDate: ZonedDateTime)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[List[BigDecimal]] =
     getPricesWithCache(asset).map { prices => groupAndFilter(prices, startDate, endDate) }
+
+  def getPairPrice(pair: CurrencyPair, startDate: ZonedDateTime, endDate: ZonedDateTime)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[PairPrices] = {
+    for {
+      leftPrices <- getPricesWithCache(pair.left)
+      rightPrices <- getPricesWithCache(pair.right)
+    } yield {
+      val pairPriceList = leftPrices.filter(startDate, endDate).prices.zip(rightPrices.filter(startDate, endDate).prices).
+        map(pairTuple  => EthUsd(pairTuple._1.date, pairTuple._1.price / pairTuple._2.price))
+      PairPrices (pairPriceList)
+    }
+  }
 
   def getPriceAt(asset: Asset, date: ZonedDateTime)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[BigDecimal] =
     getPricesWithCache(asset).map { pairPrices =>
