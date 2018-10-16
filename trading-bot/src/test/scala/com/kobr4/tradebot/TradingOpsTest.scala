@@ -2,7 +2,7 @@ package com.kobr4.tradebot
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
-import com.kobr4.tradebot.api.{ CurrencyPair, PoloAPIInterface, PoloOrder, Quote }
+import com.kobr4.tradebot.api.{ CurrencyPair, ExchangeApi, PoloOrder, Quote }
 import com.kobr4.tradebot.model.{ Asset, Quantity }
 import com.kobr4.tradebot.services.TradingOps
 import org.mockito.Mockito._
@@ -26,7 +26,7 @@ class TradingOpsTest extends FlatSpec with Matchers with ScalaFutures with Mocki
 
   "TradingOps" should "place a buy order at market value" in {
 
-    val apiMock = mock[PoloAPIInterface]
+    val apiMock = mock[ExchangeApi]
     when(apiMock.returnTicker()).thenReturn(Future.successful(List(btcUsd)))
     when(apiMock.buy(any[String], any[BigDecimal], any[BigDecimal])).thenReturn(Future.successful("success"))
 
@@ -39,7 +39,7 @@ class TradingOpsTest extends FlatSpec with Matchers with ScalaFutures with Mocki
 
   "TradingOps" should "place a sell order at market value" in {
 
-    val apiMock = mock[PoloAPIInterface]
+    val apiMock = mock[ExchangeApi]
     when(apiMock.returnTicker()).thenReturn(Future.successful(List(btcUsd)))
     when(apiMock.sell(any[String], any[BigDecimal], any[BigDecimal])).thenReturn(Future.successful("success"))
 
@@ -52,7 +52,7 @@ class TradingOpsTest extends FlatSpec with Matchers with ScalaFutures with Mocki
 
   "TradingOps" should "cancel an order" in {
 
-    val apiMock = mock[PoloAPIInterface]
+    val apiMock = mock[ExchangeApi]
     when(apiMock.returnOpenOrders()).thenReturn(Future.successful(List(PoloOrder("1", 1, 1))))
     when(apiMock.cancelOrder(any[String])).thenReturn(Future.successful(true))
 
@@ -65,7 +65,7 @@ class TradingOpsTest extends FlatSpec with Matchers with ScalaFutures with Mocki
 
   "TradingOps" should "load portfolio" in {
 
-    val apiMock = mock[PoloAPIInterface]
+    val apiMock = mock[ExchangeApi]
     when(apiMock.returnBalances).thenReturn(Future.successful(Map[Asset, Quantity](Asset.Eth -> Quantity(1))))
 
     val tradingOps = new TradingOps(apiMock)

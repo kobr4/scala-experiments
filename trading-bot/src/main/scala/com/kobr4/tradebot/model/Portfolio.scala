@@ -4,7 +4,7 @@ import java.time.ZonedDateTime
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
-import com.kobr4.tradebot.api.PoloAPIInterface
+import com.kobr4.tradebot.api.ExchangeApi
 import com.kobr4.tradebot.model.Asset.Usd
 import com.kobr4.tradebot.services.PriceService
 
@@ -64,7 +64,7 @@ object Portfolio {
     mutable.ListBuffer.empty[Order],
     priceMap)
 
-  def fromApi(api: PoloAPIInterface, priceData: Map[Asset, PairPrices])(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[Portfolio] = {
+  def fromApi(api: ExchangeApi, priceData: Map[Asset, PairPrices])(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[Portfolio] = {
     for {
       balancesMap <- api.returnBalances
       orderHistory <- api.returnTradeHistory()

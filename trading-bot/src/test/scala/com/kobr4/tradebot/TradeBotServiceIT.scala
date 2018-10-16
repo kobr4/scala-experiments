@@ -2,7 +2,7 @@ package com.kobr4.tradebot
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
-import com.kobr4.tradebot.api.{ PoloAPIInterface, PoloApi }
+import com.kobr4.tradebot.api.{ KrakenApi, ExchangeApi, PoloApi }
 import com.kobr4.tradebot.engine.SafeStrategy
 import com.kobr4.tradebot.model.Asset
 import com.kobr4.tradebot.services.{ PriceService, TradeBotService, TradingOps }
@@ -12,6 +12,7 @@ import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.mockito.MockitoSugar
 import org.mockito.Mockito._
 import org.mockito.Matchers.any
+
 import scala.concurrent.Future
 import scala.concurrent.duration._
 
@@ -24,7 +25,7 @@ class TradeBotServiceIT extends FlatSpec with ScalaFutures with MockitoSugar {
   it should "run and trade one asset" in {
 
     val poloApi = new PoloApi()
-    val apiMock = mock[PoloAPIInterface]
+    val apiMock = mock[ExchangeApi]
     val tradingOps = new TradingOps(apiMock)
     when(apiMock.returnTicker()).thenReturn(poloApi.returnTicker())
     when(apiMock.buy(any(), any(), any())).thenReturn(Future.successful("TOTO"))
@@ -43,7 +44,7 @@ class TradeBotServiceIT extends FlatSpec with ScalaFutures with MockitoSugar {
   it should "run and trade multiple asset" in {
 
     val poloApi = new PoloApi()
-    val apiMock = mock[PoloAPIInterface]
+    val apiMock = mock[ExchangeApi]
     val tradingOps = new TradingOps(apiMock)
     when(apiMock.returnTicker()).thenReturn(poloApi.returnTicker())
     when(apiMock.buy(any(), any(), any())).thenReturn(Future.successful("TOTO"))
@@ -54,6 +55,25 @@ class TradeBotServiceIT extends FlatSpec with ScalaFutures with MockitoSugar {
     val orderList = result.futureValue(Timeout(10 seconds))
 
     orderList.foreach(order => println(order))
+
+  }
+
+  it should "run and trade one asset with Kraken API" in {
+
+    val krakenApi = new KrakenApi()
+    val apiMock = mock[ExchangeApi]
+    val tradingOps = new TradingOps(apiMock)
+    when(apiMock.returnTicker()).thenReturn(krakenApi.returnTicker())
+    when(apiMock.buy(any(), any(), any())).thenReturn(Future.successful("TOTO"))
+
+    val result = for {
+      priceData <- PriceService.getPriceData(Asset.Eth)
+      result <- TradeBotService.runAndTrade(Asset.Eth, priceData, SafeStrategy, krakenApi, tradingOps)
+    } yield result
+
+    val order = result.futureValue(Timeout(10 seconds))
+
+    println(order)
 
   }
 }

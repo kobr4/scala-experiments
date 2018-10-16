@@ -2,11 +2,13 @@ package com.kobr4.tradebot.api
 
 import java.time.ZonedDateTime
 
+import akka.actor.ActorSystem
+import akka.stream.ActorMaterializer
 import com.kobr4.tradebot.model.{ Asset, Order, Quantity }
 
 import scala.concurrent.{ ExecutionContext, Future }
 
-trait PoloAPIInterface {
+trait ExchangeApi {
 
   def returnBalances: Future[Map[Asset, Quantity]]
 
@@ -25,4 +27,13 @@ trait PoloAPIInterface {
   def sell(currencyPair: String, rate: BigDecimal, amount: BigDecimal): Future[String]
 
   def returnTicker()(implicit ec: ExecutionContext): Future[List[Quote]]
+}
+
+object ExchangeApi {
+
+  def apply(supportedExchange: SupportedExchange)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): ExchangeApi = supportedExchange match {
+    case Kraken => new KrakenApi()
+    case Poloniex => new PoloApi()
+  }
+
 }

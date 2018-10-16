@@ -70,7 +70,7 @@ object Quote {
 class PoloApi(
   val apiKey: String = DefaultConfiguration.PoloApi.Key,
   val apiSecret: String = DefaultConfiguration.PoloApi.Secret,
-  val poloUrl: String = PoloApi.rootUrl)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext) extends PoloAPIInterface {
+  val poloUrl: String = PoloApi.rootUrl)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext) extends ExchangeApi {
 
   def nonce = System.currentTimeMillis()
 

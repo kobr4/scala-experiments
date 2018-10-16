@@ -14,10 +14,13 @@ import org.scalatest.{ BeforeAndAfterEach, FlatSpec, Matchers }
 
 import scala.collection.immutable.Range
 import scala.concurrent.duration._
+import scala.util.Random
 
 class PoloApiTest extends FlatSpec with Matchers with ScalaFutures with BeforeAndAfterEach {
 
-  val wireMockServer = new WireMockServer(options().port(2345))
+  val port = Math.abs(Random.nextInt()) % 4096 + 1024
+  val poloUrl = s"http://127.0.0.1:$port"
+  val wireMockServer = new WireMockServer(options().port(port))
 
   implicit val as = ActorSystem()
   implicit val am = ActorMaterializer()
@@ -38,7 +41,7 @@ class PoloApiTest extends FlatSpec with Matchers with ScalaFutures with BeforeAn
         .withHeader("Content-Type", "text/plain")
         .withBody("""{"BTC":"0.59098578","LTC":"3.31117268"}""")))
 
-    val api = new PoloApi(DefaultConfiguration.PoloApi.Key, DefaultConfiguration.PoloApi.Secret, "http://127.0.0.1:2345")
+    val api = new PoloApi(DefaultConfiguration.PoloApi.Key, DefaultConfiguration.PoloApi.Secret, poloUrl)
     val map = api.returnBalances.futureValue(Timeout(10 seconds))
 
     map(Asset.Btc) shouldBe Quantity(BigDecimal("0.59098578"))
@@ -51,7 +54,7 @@ class PoloApiTest extends FlatSpec with Matchers with ScalaFutures with BeforeAn
         .withHeader("Content-Type", "text/plain")
         .withBody("""{"BTC":"19YqztHmspv2egyD6jQM3yn81x5t5krVdJ","LTC":"LPgf9kjv9H1Vuh4XSaKhzBe8JHdou1WgUB"}""")))
 
-    val api = new PoloApi(DefaultConfiguration.PoloApi.Key, DefaultConfiguration.PoloApi.Secret, "http://127.0.0.1:2345")
+    val api = new PoloApi(DefaultConfiguration.PoloApi.Key, DefaultConfiguration.PoloApi.Secret, poloUrl)
     val map = api.returnDepositAddresses.futureValue(Timeout(10 seconds))
 
     map(Asset.Btc) shouldBe "19YqztHmspv2egyD6jQM3yn81x5t5krVdJ"
@@ -66,7 +69,7 @@ class PoloApiTest extends FlatSpec with Matchers with ScalaFutures with BeforeAn
           """[{"orderNumber":"120466","type":"sell","rate":"0.025","amount":"100","total":"2.5"},
             |{"orderNumber":"120467","type":"sell","rate":"0.04","amount":"100","total":"4"}]""".stripMargin)))
 
-    val api = new PoloApi(DefaultConfiguration.PoloApi.Key, DefaultConfiguration.PoloApi.Secret, "http://127.0.0.1:2345")
+    val api = new PoloApi(DefaultConfiguration.PoloApi.Key, DefaultConfiguration.PoloApi.Secret, poloUrl)
     val list = api.returnOpenOrders().futureValue(Timeout(10 seconds))
 
     list should contain(PoloOrder("120466", BigDecimal("0.025"), BigDecimal("100")))
@@ -81,7 +84,7 @@ class PoloApiTest extends FlatSpec with Matchers with ScalaFutures with BeforeAn
           """{"orderNumber":31226040,"resultingTrades":[{"amount":"338.8732","date":"2014-10-18 23:03:21"
             |,"rate":"0.00000173","total":"0.00058625","tradeID":"16164","type":"sell"}]}""".stripMargin)))
 
-    val api = new PoloApi(DefaultConfiguration.PoloApi.Key, DefaultConfiguration.PoloApi.Secret, "http://127.0.0.1:2345")
+    val api = new PoloApi(DefaultConfiguration.PoloApi.Key, DefaultConfiguration.PoloApi.Secret, poloUrl)
     api.sell("BTC_USD", BigDecimal("1"), BigDecimal("1")).futureValue(Timeout(10 seconds))
   }
 
@@ -94,7 +97,7 @@ class PoloApiTest extends FlatSpec with Matchers with ScalaFutures with BeforeAn
           """{"orderNumber":31226040,"resultingTrades":[{"amount":"338.8732","date":"2014-10-18 23:03:21"
             |,"rate":"0.00000173","total":"0.00058625","tradeID":"16164","type":"buy"}]}""".stripMargin)))
 
-    val api = new PoloApi(DefaultConfiguration.PoloApi.Key, DefaultConfiguration.PoloApi.Secret, "http://127.0.0.1:2345")
+    val api = new PoloApi(DefaultConfiguration.PoloApi.Key, DefaultConfiguration.PoloApi.Secret, poloUrl)
     api.buy("BTC_USD", BigDecimal("1"), BigDecimal("1")).futureValue(Timeout(10 seconds))
   }
 
@@ -109,7 +112,7 @@ class PoloApiTest extends FlatSpec with Matchers with ScalaFutures with BeforeAn
           |"highestBid":"0.00004903","percentChange":"0.16701570","baseVolume":"0.45347489","quoteVolume":"9094"}}
         """.stripMargin)))
 
-    val api = new PoloApi(DefaultConfiguration.PoloApi.Key, DefaultConfiguration.PoloApi.Secret, "http://127.0.0.1:2345")
+    val api = new PoloApi(DefaultConfiguration.PoloApi.Key, DefaultConfiguration.PoloApi.Secret, poloUrl)
     val quoteList = api.returnTicker().futureValue(Timeout(10 seconds))
 
     quoteList.head.pair.left shouldBe Asset.Btc
@@ -151,7 +154,7 @@ class PoloApiTest extends FlatSpec with Matchers with ScalaFutures with BeforeAn
             |    }
           """.stripMargin)))
 
-    val api = new PoloApi(DefaultConfiguration.PoloApi.Key, DefaultConfiguration.PoloApi.Secret, "http://127.0.0.1:2345")
+    val api = new PoloApi(DefaultConfiguration.PoloApi.Key, DefaultConfiguration.PoloApi.Secret, poloUrl)
     val orderList = api.returnTradeHistory().futureValue(Timeout(10 seconds))
 
     val order = orderList.head

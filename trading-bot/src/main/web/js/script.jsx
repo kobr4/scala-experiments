@@ -343,17 +343,17 @@ class InHouseInfo extends React.Component {
 
   requestCurrentlyTrading = () => RestUtils.performRestPriceReq((currencyWeightList)=> 
     { this.setState({currentlyTradingFields: this.rowsFromArray(currencyWeightList)})},
-    '/inhouse/currently_trading'
+    '/inhouse/currently_trading',[['exchange', this.props.exchange]]
   )
 
   requestBalance = () => RestUtils.performRestPriceReq((balanceList)=> 
     { this.setState({balancesFields: this.rowsFromObjets(balanceList)})},
-    '/inhouse/balances'
+    '/inhouse/balances',[['exchange', this.props.exchange]]
   )
 
   requestTradeHistory = () => RestUtils.performRestPriceReq((tradeList)=> 
     { this.setState({tradeHistoryFields: this.rowsFromTradeList(tradeList)})},
-    '/inhouse/trade_history'
+    '/inhouse/trade_history',[['exchange', this.props.exchange]]
   )
 
   constructor(props) {
@@ -409,7 +409,8 @@ ReactDOM.render(
         <Route path='/xmr_price' render={() => ( <GraphResult endpoint={priceEndpoint} title='XMR backtest' asset='XMR'/>)} />
         <Route path='/goog_price' render={() => ( <GraphResult endpoint={priceEndpoint} title='GOOG backtest' asset='GOOG'/>)} />
         <Route path='/trading' render={() => ( <TradingForm/>)} />
-        <Route path='/inhouse_info' render={() => ( <InHouseInfo/>)} />
+        <Route path='/inhouse_info_poloniex' render={() => ( <InHouseInfo exchange='poloniex'/>)} />
+        <Route path='/inhouse_info_kraken' render={() => ( <InHouseInfo exchange='kraken'/>)} />
         <Route path='/' render={() => ( <TradingGlobal />)} />
       </Switch>
     </BrowserRouter>,

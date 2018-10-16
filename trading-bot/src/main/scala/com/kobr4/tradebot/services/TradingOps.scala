@@ -1,13 +1,13 @@
 package com.kobr4.tradebot.services
 
-import com.kobr4.tradebot.api.{ CurrencyPair, PoloAPIInterface }
+import com.kobr4.tradebot.api.{ CurrencyPair, ExchangeApi }
 import com.kobr4.tradebot.model.{ Asset, Portfolio, Quantity }
 import com.typesafe.scalalogging.StrictLogging
 
 import scala.concurrent.{ ExecutionContext, Future }
 import scala.math.BigDecimal.RoundingMode
 
-class TradingOps(val api: PoloAPIInterface)(implicit ec: ExecutionContext) extends StrictLogging {
+class TradingOps(val api: ExchangeApi)(implicit ec: ExecutionContext) extends StrictLogging {
 
   private def percentage(base: BigDecimal, pct: BigDecimal): BigDecimal = base * pct / BigDecimal(100)
 

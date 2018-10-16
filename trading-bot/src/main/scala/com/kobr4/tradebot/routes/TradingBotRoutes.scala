@@ -10,7 +10,7 @@ import akka.http.scaladsl.server.directives.RouteDirectives.complete
 import akka.http.scaladsl.unmarshalling.Unmarshaller
 import akka.stream.ActorMaterializer
 import com.kobr4.tradebot.QuickstartServer
-import com.kobr4.tradebot.api.{ PoloApi, PoloOrder, SupportedExchange }
+import com.kobr4.tradebot.api.{ ExchangeApi, PoloApi, PoloOrder, SupportedExchange }
 import com.kobr4.tradebot.engine.Strategy
 import com.kobr4.tradebot.model.{ Asset, Order, Quantity }
 import com.kobr4.tradebot.scheduler.TradeBotDailyJob
@@ -139,23 +139,29 @@ trait TradingBotRoutes extends PlayJsonSupport with PriceApiRoutes {
   } ~ pathPrefix("inhouse") {
     path("balances") {
       get {
-        val poloApi = new PoloApi()
-        onSuccess(poloApi.returnBalances.map(_.toList)) { assetQuantityList =>
-          complete(assetQuantityList)
+        parameters('exchange.as(stringToSupportedExchange)) { exchange =>
+          val exchangeApi = ExchangeApi(exchange)
+          onSuccess(exchangeApi.returnBalances.map(_.toList)) { assetQuantityList =>
+            complete(assetQuantityList)
+          }
         }
       }
     } ~ path("open_orders") {
       get {
-        val poloApi = new PoloApi()
-        onSuccess(poloApi.returnOpenOrders()) { openOrdersList =>
-          complete(openOrdersList)
+        parameters('exchange.as(stringToSupportedExchange)) { exchange =>
+          val exchangeApi = ExchangeApi(exchange)
+          onSuccess(exchangeApi.returnOpenOrders()) { openOrdersList =>
+            complete(openOrdersList)
+          }
         }
       }
     } ~ path("trade_history") {
       get {
-        val poloApi = new PoloApi()
-        onSuccess(poloApi.returnTradeHistory()) { tradeHistoryList =>
-          complete(tradeHistoryList)
+        parameters('exchange.as(stringToSupportedExchange)) { exchange =>
+          val exchangeApi = ExchangeApi(exchange)
+          onSuccess(exchangeApi.returnTradeHistory()) { tradeHistoryList =>
+            complete(tradeHistoryList)
+          }
         }
       }
     } ~ path("currently_trading") {

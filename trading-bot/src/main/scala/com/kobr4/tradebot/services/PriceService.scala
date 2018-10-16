@@ -77,14 +77,6 @@ object PriceService {
     getPricesWithCache(asset)
 
   def priceTicker(exchange: SupportedExchange)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[List[Quote]] = {
-    exchange match {
-      case Poloniex =>
-        val api = new PoloApi()
-        api.returnTicker()
-      case Kraken =>
-        val api = new KrakenApi()
-        api.returnTicker()
-    }
-
+    ExchangeApi(exchange).returnTicker()
   }
 }

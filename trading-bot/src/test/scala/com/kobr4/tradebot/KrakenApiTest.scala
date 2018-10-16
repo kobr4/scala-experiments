@@ -3,18 +3,20 @@ package com.kobr4.tradebot
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import com.github.tomakehurst.wiremock.WireMockServer
-import com.github.tomakehurst.wiremock.client.WireMock.{aResponse, post, urlEqualTo}
+import com.github.tomakehurst.wiremock.client.WireMock.{ aResponse, post, urlEqualTo }
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration.options
-import com.kobr4.tradebot.api.{KrakenApi, PoloApi, PoloOrder}
+import com.kobr4.tradebot.api.{ KrakenApi, PoloApi, PoloOrder }
 import org.scalatest.concurrent.PatienceConfiguration.Timeout
-import org.scalatest.{BeforeAndAfterEach, FlatSpec, Matchers}
+import org.scalatest.{ BeforeAndAfterEach, FlatSpec, Matchers }
 import org.scalatest.concurrent.ScalaFutures
 
 import scala.concurrent.duration._
+import scala.util.Random
 
 class KrakenApiTest extends FlatSpec with Matchers with ScalaFutures with BeforeAndAfterEach {
 
-  val wireMockServer = new WireMockServer(options().port(2345))
+  val port = Math.abs(Random.nextInt()) % 4096 + 1024
+  val wireMockServer = new WireMockServer(options().port(port))
 
   implicit val as = ActorSystem()
   implicit val am = ActorMaterializer()
@@ -72,7 +74,7 @@ class KrakenApiTest extends FlatSpec with Matchers with ScalaFutures with Before
             |   }
             |}""".stripMargin)))
 
-    val api = new KrakenApi("http://127.0.0.1:2345", DefaultConfiguration.KrakenApi.Key, DefaultConfiguration.KrakenApi.Secret)
+    val api = new KrakenApi(s"http://127.0.0.1:$port", DefaultConfiguration.KrakenApi.Key, DefaultConfiguration.KrakenApi.Secret)
     val list = api.returnOpenOrders().futureValue(Timeout(10 seconds))
 
     list should contain(PoloOrder("O7ICPO-F4CLJ-MVBLHC", BigDecimal(1), BigDecimal(3)))

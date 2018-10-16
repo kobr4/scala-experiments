@@ -4,7 +4,7 @@ import java.time.ZonedDateTime
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
-import com.kobr4.tradebot.api.{ PoloAPIInterface, PoloApi }
+import com.kobr4.tradebot.api.{ ExchangeApi, PoloApi }
 import com.kobr4.tradebot.engine.Strategy
 import com.kobr4.tradebot.model.Asset.Usd
 import com.kobr4.tradebot.model._
@@ -31,14 +31,14 @@ object TradeBotService {
     }
   }
 
-  def runAndTrade(asset: Asset, priceData: PairPrices, strategy: Strategy, poloApi: PoloAPIInterface, tradingsOps: TradingOps)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[Option[Order]] = {
+  def runAndTrade(asset: Asset, priceData: PairPrices, strategy: Strategy, poloApi: ExchangeApi, tradingsOps: TradingOps)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[Option[Order]] = {
 
     Portfolio.fromApi(poloApi, Map(asset -> priceData)).map { portfolio =>
       strategy.runStrategy(asset, ZonedDateTime.now(), priceData, portfolio).map(order => Order.process(order, tradingsOps))
     }
   }
 
-  def runMapAndTrade(assetMap: Map[Asset, BigDecimal], strategy: Strategy, poloApi: PoloAPIInterface, tradingsOps: TradingOps)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[List[Order]] = {
+  def runMapAndTrade(assetMap: Map[Asset, BigDecimal], strategy: Strategy, poloApi: ExchangeApi, tradingsOps: TradingOps)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[List[Order]] = {
     val eventualPData = Future.sequence(assetMap.keys.toList.map(asset => PriceService.getPriceData(asset).map(asset -> _)))
     eventualPData.map(_.toMap).flatMap { pDataMap =>
       Portfolio.fromApi(poloApi, pDataMap).map { portfolio =>
