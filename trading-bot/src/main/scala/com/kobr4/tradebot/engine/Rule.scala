@@ -7,7 +7,7 @@ import com.kobr4.tradebot.model._
 object Rule {
 
   trait Condition[T] {
-    def whenCashAvailable(implicit portfolio: Portfolio): T
+    def whenCashAvailable(asset: Asset)(implicit portfolio: Portfolio): T
 
     def whenBelowMovingAverge(current: ZonedDateTime, currentPrice: BigDecimal, priceData: PairPrices): T
 
@@ -26,7 +26,7 @@ object Rule {
 
     implicit class ConditionOrder[T <: Order](input: Option[T]) extends Condition[Option[T]] {
 
-      override def whenCashAvailable(implicit portfolio: Portfolio): Option[T] = input.filter(_ => portfolio.assets(Asset.Usd).quantity > 20)
+      override def whenCashAvailable(asset: Asset)(implicit portfolio: Portfolio): Option[T] = input.filter(_ => portfolio.assets(asset).quantity > 0)
 
       override def whenBelowMovingAverge(current: ZonedDateTime, currentPrice: BigDecimal, priceData: PairPrices): Option[T] = priceData.movingAverage(current, 20).filter(_ > currentPrice).flatMap(_ => input)
 
@@ -40,7 +40,7 @@ object Rule {
 
       override def whenLastBuyingPrice(asset: Asset, f: (BigDecimal) => Boolean)(implicit portfolio: Portfolio): Option[T] =
         portfolio.orderList.flatMap {
-          case o @ Buy(ass, _, _, _) if ass == asset => Some(o)
+          case o @ Buy(pair, _, _, _) if pair.right == asset => Some(o)
           case _ => None
         }.lastOption.filter(buy => f(buy.price)).flatMap(_ => input)
     }

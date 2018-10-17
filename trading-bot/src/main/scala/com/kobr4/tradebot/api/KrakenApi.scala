@@ -57,6 +57,7 @@ object CurrencyPairHelper {
     case CurrencyPair(Asset.Usd, Asset.Ada) => s"ADAUSD"
     case CurrencyPair(Asset.Usd, Asset.Btc) => s"XXBTZUSD"
     case CurrencyPair(Asset.Usd, a: Asset) => s"X${a}ZUSD"
+    case CurrencyPair(b: Asset, a: Asset) => s"$b$a"
   }
 }
 
@@ -66,12 +67,12 @@ case class KrakenTrade(ordertxid: String, pair: String, `type`: String, price: B
     case "buy" =>
       val currencyPair = CurrencyPairHelper.fromString(pair)
       Buy(
-        if (currencyPair.left == Asset.Usd) currencyPair.right else currencyPair.left,
+        currencyPair,
         price, vol, ZonedDateTime.ofInstant(Instant.ofEpochSecond(time), ZoneId.of("UTC")))
     case "sell" =>
       val currencyPair = CurrencyPairHelper.fromString(pair)
       Sell(
-        if (currencyPair.left == Asset.Usd) currencyPair.right else currencyPair.left,
+        currencyPair,
         price, vol, ZonedDateTime.ofInstant(Instant.ofEpochSecond(time), ZoneId.of("UTC")))
   }
 }

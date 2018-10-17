@@ -16,28 +16,21 @@ sealed trait Order {
   val date: ZonedDateTime
 }
 
-case class Buy(asset: Asset, price: BigDecimal, quantity: BigDecimal, date: ZonedDateTime) extends Order
+case class Buy(pair: CurrencyPair, price: BigDecimal, quantity: BigDecimal, date: ZonedDateTime) extends Order
 
-case class Sell(asset: Asset, price: BigDecimal, quantity: BigDecimal, date: ZonedDateTime) extends Order
+case class Sell(pair: CurrencyPair, price: BigDecimal, quantity: BigDecimal, date: ZonedDateTime) extends Order
 
 case class Quantity(quantity: BigDecimal)
 
 object Order extends StrictLogging {
 
-  private def getCurrencyPair(asset: Asset): String = {
-    asset match {
-      case Asset.Btc => "BTC_USD"
-      case Asset.Eth => "ETH_USD"
-    }
-  }
-
   def process(order: Order, tradingOps: TradingOps)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Order = {
 
     val eventualResult = order match {
       case b: Buy =>
-        tradingOps.buyAtMarketValue(b.price, CurrencyPair(Asset.Usd, b.asset), b.asset, Quantity(b.quantity))
+        tradingOps.buyAtMarketValue(b.price, b.pair, b.pair.right, Quantity(b.quantity))
       case s: Sell =>
-        tradingOps.sellAtMarketValue(s.price, CurrencyPair(Asset.Usd, s.asset), s.asset, Quantity(s.quantity))
+        tradingOps.sellAtMarketValue(s.price, s.pair, s.pair.right, Quantity(s.quantity))
     }
 
     eventualResult.onComplete {
@@ -54,7 +47,7 @@ object Order extends StrictLogging {
     def writes(buy: Buy): JsObject = Json.obj(
       "quantity" -> buy.quantity,
       "price" -> buy.price,
-      "asset" -> buy.asset.toString,
+      "asset" -> buy.pair.right.toString,
       "date" -> buy.date.toOffsetDateTime.toString(),
       "type" -> "BUY")
   }
@@ -63,7 +56,7 @@ object Order extends StrictLogging {
     def writes(sell: Sell): JsObject = Json.obj(
       "quantity" -> sell.quantity,
       "price" -> sell.price,
-      "asset" -> sell.asset.toString,
+      "asset" -> sell.pair.right.toString,
       "date" -> sell.date.toOffsetDateTime.toString(),
       "type" -> "SELL")
   }

@@ -23,9 +23,9 @@ case class PoloOrder(orderNumber: String, rate: BigDecimal, amount: BigDecimal)
 case class PoloTrade(globalTradeID: Long, tradeID: Long, date: ZonedDateTime, rate: BigDecimal, amount: BigDecimal,
   total: BigDecimal, fee: BigDecimal, orderNumber: Long, `type`: String, category: String) {
 
-  def toOrder(asset: Asset): Order = this.`type` match {
-    case "buy" => Buy(asset, rate, amount, date)
-    case "sell" => Sell(asset, rate, amount, date)
+  def toOrder(pair: CurrencyPair): Order = this.`type` match {
+    case "buy" => Buy(pair, rate, amount, date)
+    case "sell" => Sell(pair, rate, amount, date)
   }
 }
 
@@ -137,7 +137,7 @@ class PoloApi(
           s.toUpperCase.split('_').map(s => Asset.fromString(s)).toList match {
             case Some(a) :: Some(b) :: Nil =>
               v.as[JsArray].value.toList.map { jsValue =>
-                jsValue.as[PoloTrade].toOrder(if (a == Asset.Usd) b else a)
+                jsValue.as[PoloTrade].toOrder(CurrencyPair(a,b))
               }
             case _ => None
           }

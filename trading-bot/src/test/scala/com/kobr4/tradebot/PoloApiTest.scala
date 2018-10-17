@@ -126,7 +126,7 @@ class PoloApiTest extends FlatSpec with Matchers with ScalaFutures with BeforeAn
         .withHeader("Content-Type", "text/plain")
         .withBody(
           """
-            |  { "BTC_USDT": [
+            |  { "USDT_BTC": [
             |    {
             |      "globalTradeID": 29251512,
             |      "tradeID": "1385888",
@@ -162,7 +162,7 @@ class PoloApiTest extends FlatSpec with Matchers with ScalaFutures with BeforeAn
       case b: Buy => b
     }
 
-    buy.asset shouldBe Asset.Btc
+    buy.pair.right shouldBe Asset.Btc
     buy.price shouldBe BigDecimal(0.00014243)
     buy.quantity shouldBe BigDecimal(353.74692925)
   }
