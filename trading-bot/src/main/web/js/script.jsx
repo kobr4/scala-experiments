@@ -264,7 +264,8 @@ class GraphResult extends React.Component {
   render() {
     return (
           <span>
-          
+          {
+          !this.props.pairChoice &&             
           <Panel title='Real-time prices'>
             <PanelTable headers={['Currency','Price', 'Change']}>
             <tbody>
@@ -272,12 +273,20 @@ class GraphResult extends React.Component {
             </tbody>
             </PanelTable>
           </Panel>
+          }
 
           <Panel title={this.props.asset+' price history'}>
             <GraphResultBase datas={[ { name: this.props.asset, color: 'rgba(220,220,220,1)', datapoints: this.state.btcdatapoints},
               { name: 'MA30', color: 'rgba(220,0,0,1)', datapoints: this.state.ma30datapoints } ]}/>
             <FormContainer handleSubmit={this.handleSubmit} submit="Run trade-bot">  
               <FormTable>
+              {
+                this.props.pairChoice &&                
+                <FormRow label='Pair'>
+                  <FormOption name='left' values={[ ['USD','USD'], ['BTC','BTC'] ]} onChange={(event) => this.setState({currency_left: event.target.value})}/>    
+                  <FormOption name='right' values={[ ['BTC','BTC'], ['ETH','ETH'], ['XMR','XMR'], ['XRP','XRP'], ['XLM','XLM'] ]} onChange={(event) => this.setState({currency_left: event.target.value})}/>    
+                </FormRow>
+              }                
                 <FormRow label='Start'>
                   <DatePicker title='start' selected={this.state.start} onChange={(date) => this.setState({start: date})}/>
                 </FormRow>
@@ -415,6 +424,7 @@ ReactDOM.render(
         <Route path='/btc_price' render={() => ( <GraphResult endpoint={priceEndpoint} title='BTC backtest' asset='BTC'/>)} />
         <Route path='/eth_price' render={() => ( <GraphResult endpoint={priceEndpoint} title='ETH backtest' asset='ETH'/>)} />
         <Route path='/xmr_price' render={() => ( <GraphResult endpoint={priceEndpoint} title='XMR backtest' asset='XMR'/>)} />
+        <Route path='/crypto_price' render={() => ( <GraphResult endpoint={priceEndpoint} title='Crypto backtest' asset='BTC' pairChoice/>)} />
         <Route path='/goog_price' render={() => ( <GraphResult endpoint={priceEndpoint} title='GOOG backtest' asset='GOOG'/>)} />
         <Route path='/trading' render={() => ( <TradingForm/>)} />
         <Route path='/inhouse_info_poloniex' render={() => ( <InHouseInfo exchange='poloniex'/>)} />
