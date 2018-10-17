@@ -4,7 +4,7 @@ import java.time.ZonedDateTime
 
 import com.kobr4.tradebot.api.CurrencyPair
 import com.kobr4.tradebot.model._
-import play.api.libs.json.{JsPath, Reads}
+import play.api.libs.json.{ JsPath, Reads }
 
 import scala.math.BigDecimal.RoundingMode
 

@@ -18,6 +18,12 @@ class RestUtils {
         xhttp.send();
     }
 
+    static performRestReqWithPromise(path, params = []) {
+        return(new Promise(function(resolve, reject) {
+            performRestReq(resolve(jsonResponse), path, params);
+        }))
+    }
+
     static performRestPostReq(updateCallback, path, params = []) {
         var xhttp = new XMLHttpRequest();
         xhttp.onreadystatechange = function() {

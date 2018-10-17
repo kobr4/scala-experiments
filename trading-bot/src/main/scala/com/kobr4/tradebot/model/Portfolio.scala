@@ -8,7 +8,7 @@ import com.kobr4.tradebot.api.ExchangeApi
 import com.kobr4.tradebot.services.PriceService
 
 import scala.collection.mutable
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{ ExecutionContext, Future }
 
 case class InvalidPortfolioState(order: Order) extends RuntimeException(s"Invalid state $order")
 

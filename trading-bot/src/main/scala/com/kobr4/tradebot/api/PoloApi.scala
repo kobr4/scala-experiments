@@ -137,7 +137,7 @@ class PoloApi(
           s.toUpperCase.split('_').map(s => Asset.fromString(s)).toList match {
             case Some(a) :: Some(b) :: Nil =>
               v.as[JsArray].value.toList.map { jsValue =>
-                jsValue.as[PoloTrade].toOrder(CurrencyPair(a,b))
+                jsValue.as[PoloTrade].toOrder(CurrencyPair(a, b))
               }
             case _ => None
           }

@@ -6,11 +6,11 @@ import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import com.kobr4.tradebot.LaunchReport.date
 import com.kobr4.tradebot.api.CurrencyPair
-import com.kobr4.tradebot.engine.{AlternativeStrategy, SafeStrategy, Strategy}
+import com.kobr4.tradebot.engine.{ AlternativeStrategy, SafeStrategy, Strategy }
 import com.kobr4.tradebot.model._
-import com.kobr4.tradebot.services.{PriceService, TradeBotService}
+import com.kobr4.tradebot.services.{ PriceService, TradeBotService }
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{ ExecutionContext, Future }
 import scala.util.Failure
 import scala.util.control.NonFatal
 
@@ -85,7 +85,7 @@ object LaunchReport {
     implicit val ec: ExecutionContext = system.dispatcher
 
     runPairAndReport(CurrencyPair(Asset.Btc, Asset.Eth)).map(_.print()).recover {
-      case NonFatal(t) => println("Failed with error : "+t.printStackTrace())
+      case NonFatal(t) => println("Failed with error : " + t.printStackTrace())
     }
 
     val assetList = List(Asset.Btc, Asset.Eth, Asset.Xmr, Asset.Xlm, Asset.Doge)

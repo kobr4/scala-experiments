@@ -186,20 +186,28 @@ class TradingForm extends React.Component {
 
 class GraphResult extends React.Component {
 
-  requestBTC = () => RestUtils.performRestPriceReq((prices) => { this.setState({btcdatapoints : prices}) }, 
-    this.props.endpoint, [ ['asset', this.props.asset], ['start', this.state.start.format(moment.defaultFormatUtc)], ['end',this.state.end.format(moment.defaultFormatUtc)]]);
+  requestBTC = () => RestUtils.performRestPriceReqWithPromise( this.props.endpoint, 
+    [ ['asset', this.props.asset], ['start', this.state.start.format(moment.defaultFormatUtc)], 
+      ['end',this.state.end.format(moment.defaultFormatUtc)] ]
+    ).then((prices) => { this.setState({btcdatapoints : prices}) });
   
 
-  requestMA30 = () => RestUtils.performRestPriceReq((prices) => { this.setState({ma30datapoints : prices})}, 
-    movingEndpoint, [ ['asset', this.props.asset], ['start', this.state.start.format(moment.defaultFormatUtc)], ['end',this.state.end.format(moment.defaultFormatUtc)], ['days', 20] ]);
+  requestMA30 = () => RestUtils.performRestPriceReqWithPromise( movingEndpoint, 
+    [ ['asset', this.props.asset], ['start', this.state.start.format(moment.defaultFormatUtc)], 
+      ['end',this.state.end.format(moment.defaultFormatUtc)], ['days', 20] ]
+    ).then((prices) => { this.setState({ma30datapoints : prices})});
 
   handleSubmit = (event) => {
-    RestUtils.performRestReq((tradeBotResponse) => {
+    RestUtils.performRestReqWithPromise( '/trade_bot', 
+      [ ['asset', this.props.asset], ['start', this.state.start.format(moment.defaultFormatUtc)], 
+        ['end',this.state.end.format(moment.defaultFormatUtc)], ['initial', this.state.initial], 
+        ['fees', this.state.fees], ['strategy', this.state.strategy] ]
+    ).then((tradeBotResponse) => {
       this.setState({responseFields : Helper.buildResponseComponent(tradeBotResponse)});
       buildExecutionResult(tradeBotResponse, this.state.initial, this.props.asset, this.state.start, this.state.end, 
         (result) =>  this.setState({executionResultFields: <ExecutionResultPanel result={result}/>})
       );
-    }, '/trade_bot', [['asset', this.props.asset], ['start', this.state.start.format(moment.defaultFormatUtc)], ['end',this.state.end.format(moment.defaultFormatUtc)], ['initial', this.state.initial], ['fees', this.state.fees], ['strategy', this.state.strategy]]) ;
+    }) ;
     event.preventDefault();
   }
 

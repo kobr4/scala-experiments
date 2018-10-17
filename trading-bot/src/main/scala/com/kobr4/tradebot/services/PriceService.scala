@@ -5,11 +5,11 @@ import java.time.ZonedDateTime
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import com.kobr4.tradebot.api._
-import com.kobr4.tradebot.model.{Asset, EthUsd, PairPrice, PairPrices}
+import com.kobr4.tradebot.model.{ Asset, EthUsd, PairPrice, PairPrices }
 import scalacache.Cache
 import scalacache.guava.GuavaCache
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{ ExecutionContext, Future }
 
 object PriceService {
 
@@ -65,8 +65,8 @@ object PriceService {
       rightPrices <- getPricesWithCache(pair.right)
     } yield {
       val pairPriceList = leftPrices.filter(startDate, endDate).prices.zip(rightPrices.filter(startDate, endDate).prices).
-        map(pairTuple  => EthUsd(pairTuple._1.date, pairTuple._1.price / pairTuple._2.price))
-      PairPrices (pairPriceList)
+        map(pairTuple => EthUsd(pairTuple._1.date, pairTuple._1.price / pairTuple._2.price))
+      PairPrices(pairPriceList)
     }
   }
 
