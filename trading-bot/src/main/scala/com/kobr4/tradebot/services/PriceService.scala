@@ -37,6 +37,13 @@ object PriceService {
     }
   }
 
+  private def getPricesOrPair(pair: CurrencyPair, startDate: ZonedDateTime, endDate: ZonedDateTime)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[PairPrices] = {
+    if (pair.left == Asset.Usd)
+      getPricesWithCache(pair.right)
+    else
+      getPairPrice(pair, startDate, endDate)
+  }
+
   private def getPricesWithCache(asset: Asset)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[PairPrices] = asset match {
     case Asset.Btc => getCoinmetricsPricesWithCache(CoinMetricsPriceUrl.btc)
     case Asset.Eth => getCoinmetricsPricesWithCache(CoinMetricsPriceUrl.eth)
@@ -56,8 +63,8 @@ object PriceService {
   private def filter(pairPrices: PairPrices, startDate: ZonedDateTime, endDate: ZonedDateTime)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext) =
     pairPrices.filter(p => p.date.isAfter(startDate) && p.date.isBefore(endDate))
 
-  def getPriceHistory(asset: Asset, startDate: ZonedDateTime, endDate: ZonedDateTime)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[List[BigDecimal]] =
-    getPricesWithCache(asset).map { prices => groupAndFilter(prices, startDate, endDate) }
+  def getPriceHistory(pair: CurrencyPair, startDate: ZonedDateTime, endDate: ZonedDateTime)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[List[BigDecimal]] =
+    getPricesOrPair(pair, startDate, endDate).map { prices => groupAndFilter(prices, startDate, endDate) }
 
   def getPairPrice(pair: CurrencyPair, startDate: ZonedDateTime, endDate: ZonedDateTime)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[PairPrices] = {
     for {
@@ -65,7 +72,7 @@ object PriceService {
       rightPrices <- getPricesWithCache(pair.right)
     } yield {
       val pairPriceList = leftPrices.filter(startDate, endDate).prices.zip(rightPrices.filter(startDate, endDate).prices).
-        map(pairTuple => EthUsd(pairTuple._1.date, pairTuple._1.price / pairTuple._2.price))
+        map(pairTuple => EthUsd(pairTuple._1.date, pairTuple._2.price / pairTuple._1.price))
       PairPrices(pairPriceList)
     }
   }
@@ -75,11 +82,11 @@ object PriceService {
       pairPrices.prices.map(p => (Math.abs(p.date.toEpochSecond - date.toEpochSecond), p.price)).minBy(_._1)._2
     }
 
-  def getMovingAverageHistory(asset: Asset, startDate: ZonedDateTime, endDate: ZonedDateTime, days: Int)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[List[BigDecimal]] =
-    getPricesWithCache(asset).map(_.movingAverage(days).filter(p => p.date.isAfter(startDate) && p.date.isBefore(endDate)).groupByMonth.map(merge => merge._2.map(_.price).sum / merge._2.length))
+  def getMovingAverageHistory(pair: CurrencyPair, startDate: ZonedDateTime, endDate: ZonedDateTime, days: Int)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[List[BigDecimal]] =
+    getPricesOrPair(pair, startDate, endDate).map(_.movingAverage(days).filter(p => p.date.isAfter(startDate) && p.date.isBefore(endDate)).groupByMonth.map(merge => merge._2.map(_.price).sum / merge._2.length))
 
-  def getWeightedMovingAverageHistory(asset: Asset, startDate: ZonedDateTime, endDate: ZonedDateTime, days: Int)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[List[BigDecimal]] =
-    getPricesWithCache(asset).map(_.weightedMovingAverage(days).filter(p => p.date.isAfter(startDate) && p.date.isBefore(endDate)).groupByMonth.map(merge => merge._2.map(_.price).sum / merge._2.length))
+  def getWeightedMovingAverageHistory(pair: CurrencyPair, startDate: ZonedDateTime, endDate: ZonedDateTime, days: Int)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[List[BigDecimal]] =
+    getPricesOrPair(pair, startDate, endDate).map(_.weightedMovingAverage(days).filter(p => p.date.isAfter(startDate) && p.date.isBefore(endDate)).groupByMonth.map(merge => merge._2.map(_.price).sum / merge._2.length))
 
   def getPriceData(asset: Asset, startDate: ZonedDateTime, endDate: ZonedDateTime = ZonedDateTime.now())(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[PairPrices] =
     getPricesWithCache(asset).map(filter(_, startDate, endDate))

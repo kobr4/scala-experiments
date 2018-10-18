@@ -8,7 +8,7 @@ import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.server.directives.RouteDirectives.complete
 import akka.http.scaladsl.unmarshalling.Unmarshaller
 import akka.stream.ActorMaterializer
-import com.kobr4.tradebot.api.SupportedExchange
+import com.kobr4.tradebot.api.{ CurrencyPair, Quote, SupportedExchange }
 import com.kobr4.tradebot.model.Asset
 import com.kobr4.tradebot.services.PriceService
 
@@ -28,11 +28,15 @@ trait PriceApiRoutes extends PlayJsonSupport {
 
   private val stringToSupportedExchange = Unmarshaller.strict[String, SupportedExchange](s => SupportedExchange.fromString(s))
 
+  private val stringToCurrencyPair = Unmarshaller.strict[String, CurrencyPair](s => s.toUpperCase.split('_').map(s => Asset.fromString(s)).toList match {
+    case Some(a) :: Some(b) :: Nil => CurrencyPair(a, b)
+  })
+
   lazy val priceApiRoutes: Route =
     path("price_history") {
       get {
-        parameters('asset.as(stringToAsset), 'start.as(stringToZonedDateTime), 'end.as(stringToZonedDateTime)) { (asset, start, end) =>
-          onSuccess(PriceService.getPriceHistory(asset, start, end)) { priceList =>
+        parameters('asset.as(stringToAsset), 'start.as(stringToZonedDateTime), 'end.as(stringToZonedDateTime), 'pair.as(stringToCurrencyPair).?) { (asset, start, end, maybePair) =>
+          onSuccess(PriceService.getPriceHistory(maybePair.getOrElse(CurrencyPair(Asset.Usd, asset)), start, end)) { priceList =>
             complete(priceList)
           }
         }
@@ -48,8 +52,8 @@ trait PriceApiRoutes extends PlayJsonSupport {
     } ~
       path("moving") {
         get {
-          parameters('asset.as(stringToAsset), 'start.as(stringToZonedDateTime), 'end.as(stringToZonedDateTime), 'days.as[Int]) { (asset, start, end, days) =>
-            onSuccess(PriceService.getMovingAverageHistory(asset, start, end, days)) { priceList =>
+          parameters('asset.as(stringToAsset), 'start.as(stringToZonedDateTime), 'end.as(stringToZonedDateTime), 'days.as[Int], 'pair.as(stringToCurrencyPair).?) { (asset, start, end, days, maybePair) =>
+            onSuccess(PriceService.getMovingAverageHistory(maybePair.getOrElse(CurrencyPair(Asset.Usd, asset)), start, end, days)) { priceList =>
               complete(priceList)
             }
           }
@@ -57,8 +61,8 @@ trait PriceApiRoutes extends PlayJsonSupport {
       } ~
       path("weighted_moving") {
         get {
-          parameters('asset.as(stringToAsset), 'start.as(stringToZonedDateTime), 'end.as(stringToZonedDateTime), 'days.as[Int]) { (asset, start, end, days) =>
-            onSuccess(PriceService.getWeightedMovingAverageHistory(asset, start, end, days)) { priceList =>
+          parameters('asset.as(stringToAsset), 'start.as(stringToZonedDateTime), 'end.as(stringToZonedDateTime), 'days.as[Int], 'pair.as(stringToCurrencyPair).?) { (asset, start, end, days, maybePair) =>
+            onSuccess(PriceService.getWeightedMovingAverageHistory(maybePair.getOrElse(CurrencyPair(Asset.Usd, asset)), start, end, days)) { priceList =>
               complete(priceList)
             }
           }

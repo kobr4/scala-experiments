@@ -19,9 +19,9 @@ class RestUtils {
     }
 
     static performRestReqWithPromise(path, params = []) {
-        return(new Promise(function(resolve, reject) {
-            performRestReq(resolve(jsonResponse), path, params);
-        }))
+        return new Promise((resolve, reject) => {
+            RestUtils.performRestReq( (jsonResponse) => resolve(jsonResponse), path, params);
+        })
     }
 
     static performRestPostReq(updateCallback, path, params = []) {

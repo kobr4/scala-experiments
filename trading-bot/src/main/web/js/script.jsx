@@ -188,13 +188,13 @@ class GraphResult extends React.Component {
 
   requestBTC = () => RestUtils.performRestPriceReqWithPromise( this.props.endpoint, 
     [ ['asset', this.props.asset], ['start', this.state.start.format(moment.defaultFormatUtc)], 
-      ['end',this.state.end.format(moment.defaultFormatUtc)] ]
+      ['end',this.state.end.format(moment.defaultFormatUtc)], ['pair', this.state.currency_left+'_'+this.state.currency_right]  ]
     ).then((prices) => { this.setState({btcdatapoints : prices}) });
   
 
   requestMA30 = () => RestUtils.performRestPriceReqWithPromise( movingEndpoint, 
     [ ['asset', this.props.asset], ['start', this.state.start.format(moment.defaultFormatUtc)], 
-      ['end',this.state.end.format(moment.defaultFormatUtc)], ['days', 20] ]
+      ['end',this.state.end.format(moment.defaultFormatUtc)], ['days', 20], ['pair', this.state.currency_left+'_'+this.state.currency_right]  ]
     ).then((prices) => { this.setState({ma30datapoints : prices})});
 
   handleSubmit = (event) => {
@@ -239,6 +239,8 @@ class GraphResult extends React.Component {
       fees: '0.1',
       strategy: 'safe',
       currencyFields : [],
+      currency_left : 'USD',
+      currency_right : this.props.asset,
       executionResultFields : null
     }
 
@@ -284,7 +286,7 @@ class GraphResult extends React.Component {
                 this.props.pairChoice &&                
                 <FormRow label='Pair'>
                   <FormOption name='left' values={[ ['USD','USD'], ['BTC','BTC'] ]} onChange={(event) => this.setState({currency_left: event.target.value})}/>    
-                  <FormOption name='right' values={[ ['BTC','BTC'], ['ETH','ETH'], ['XMR','XMR'], ['XRP','XRP'], ['XLM','XLM'] ]} onChange={(event) => this.setState({currency_left: event.target.value})}/>    
+                  <FormOption name='right' values={[ ['BTC','BTC'], ['ETH','ETH'], ['XMR','XMR'], ['XRP','XRP'], ['XLM','XLM'] ]} onChange={(event) => this.setState({currency_right: event.target.value})}/>    
                 </FormRow>
               }                
                 <FormRow label='Start'>
