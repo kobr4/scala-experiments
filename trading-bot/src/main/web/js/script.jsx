@@ -42,7 +42,7 @@ function GraphResultBase(props) {
 }
 
 
-function computeExecutionResult(tradeBotResponse, initial, firstDayPrice, lastDayPrice, asset, start, end) {
+function computeExecutionResult(tradeBotResponse, initial, firstDayPrice, lastDayPrice, currency_left, currency_right, start, end) {
 
   var lastPortfolioValue = (tradeBotResponse.slice(-1)[0].price *  tradeBotResponse.slice(-1)[0].quantity).toFixed(2);
   
@@ -53,26 +53,26 @@ function computeExecutionResult(tradeBotResponse, initial, firstDayPrice, lastDa
   var buyAndHoldPerformance = (buyAndHoldValue * 100 / initial - 100).toFixed(2);
 
   return {
-    asset : asset,
+    asset : currency_right,
     start : start.format("MMM Do YY"),
     end : end.format("MMM Do YY"),
-    initial : initial+' USD',
-    lastPortfolioValue: lastPortfolioValue+' USD', 
+    initial : initial+' '+currency_left,
+    lastPortfolioValue: lastPortfolioValue+' '+currency_left, 
     performance: (performance > 0 ? '+':'')+performance+' %', 
-    buyAndHoldValue: buyAndHoldValue+' USD', 
+    buyAndHoldValue: buyAndHoldValue+' '+currency_left, 
     buyAndHoldPerformance: (buyAndHoldPerformance > 0 ? '+':'')+buyAndHoldPerformance+' %'
   } 
 }
 
 
-function buildExecutionResult(tradeBotResponse, initial, asset, start, end, updateCallback) {
+function buildExecutionResult(tradeBotResponse, initial, currency_left, currency_right, start, end, updateCallback) {
   var promises = [ 
-    RestUtils.performRestPriceReqWithPromise(priceAtEndpoint, [ ['asset', asset], ['date', start.format(moment.defaultFormatUtc)] ]), 
-    RestUtils.performRestPriceReqWithPromise(priceAtEndpoint, [ ['asset', asset], ['date', end.format(moment.defaultFormatUtc)] ])
+    RestUtils.performRestPriceReqWithPromise(priceAtEndpoint, [ ['asset', currency_right], ['date', start.format(moment.defaultFormatUtc)] ]), 
+    RestUtils.performRestPriceReqWithPromise(priceAtEndpoint, [ ['asset', currency_right], ['date', end.format(moment.defaultFormatUtc)] ])
     ];
   
   Promise.all(promises).then( (prices) => {
-    let result = computeExecutionResult(tradeBotResponse, initial, prices[0], prices[1], asset, start, end);
+    let result = computeExecutionResult(tradeBotResponse, initial, prices[0], prices[1], currency_left, currency_right, start, end);
     updateCallback(result);
   });
 }
@@ -80,7 +80,7 @@ function buildExecutionResult(tradeBotResponse, initial, asset, start, end, upda
 function ExecutionResultPanel(props) {
   return (
     <tbody>
-      <tr><td>Traded asset</td><td>{props.result.asset}</td></tr>
+      <tr><td>Traded pair</td><td>{props.result.asset}</td></tr>
       <tr><td>Traded period</td><td>{props.result.start} to {props.result.end}</td></tr>
       <tr><td>Initial amount</td><td>{props.result.initial}</td></tr>
       <tr><td>Current portfolio valuation</td><td>{props.result.lastPortfolioValue} [ {props.result.performance} ]</td></tr>
@@ -201,10 +201,10 @@ class GraphResult extends React.Component {
     RestUtils.performRestReqWithPromise( '/trade_bot', 
       [ ['asset', this.props.asset], ['start', this.state.start.format(moment.defaultFormatUtc)], 
         ['end',this.state.end.format(moment.defaultFormatUtc)], ['initial', this.state.initial], 
-        ['fees', this.state.fees], ['strategy', this.state.strategy] ]
+        ['fees', this.state.fees], ['strategy', this.state.strategy], ['pair', this.state.currency_left+'_'+this.state.currency_right] ]
     ).then((tradeBotResponse) => {
       this.setState({responseFields : Helper.buildResponseComponent(tradeBotResponse)});
-      buildExecutionResult(tradeBotResponse, this.state.initial, this.props.asset, this.state.start, this.state.end, 
+      buildExecutionResult(tradeBotResponse, this.state.initial, this.state.currency_left, this.state.currency_right, this.state.start, this.state.end, 
         (result) =>  this.setState({executionResultFields: <ExecutionResultPanel result={result}/>})
       );
     }) ;
@@ -295,7 +295,7 @@ class GraphResult extends React.Component {
                 <FormRow label='End'>
                   <DatePicker title='end' selected={this.state.end} onChange={(date) => this.setState({end: date})}/>
                 </FormRow>
-                <FormRow label='Initial amount (USD)'>
+                <FormRow label={'Initial amount ('+this.state.currency_left+')'}>
                   <FormTextField value={this.state.initial} name="initial" handleTextChange={(event) => this.setState({initial: event.target.value})} />
                 </FormRow>
                 <FormRow label='Transaction fees'>

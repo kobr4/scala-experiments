@@ -67,6 +67,10 @@ trait TradingBotRoutes extends PlayJsonSupport with PriceApiRoutes {
 
   private val stringToSupportedExchange = Unmarshaller.strict[String, SupportedExchange](s => SupportedExchange.fromString(s))
 
+  private val stringToCurrencyPair = Unmarshaller.strict[String, CurrencyPair](s => s.toUpperCase.split('_').map(s => Asset.fromString(s)).toList match {
+    case Some(a) :: Some(b) :: Nil => CurrencyPair(a, b)
+  })
+
   implicit val assetQuantityWrites: Writes[(Asset, Quantity)] = (
     (JsPath \ "asset").write[Asset] and
     (JsPath \ "quantity").write[BigDecimal]) { a: (Asset, Quantity) => (a._1, a._2.quantity) }
@@ -85,8 +89,8 @@ trait TradingBotRoutes extends PlayJsonSupport with PriceApiRoutes {
   } ~ path("trade_bot") {
     get {
       parameters('asset.as(stringToAsset), 'start.as(stringToZonedDateTime), 'end.as(stringToZonedDateTime),
-        'initial.as(stringToBigDecimal), 'fees.as(stringToBigDecimal), 'strategy.as(stringToStrategy)) { (asset, start, end, initial, fees, strategy) =>
-          onSuccess(PriceService.getPriceData(asset, start, end).map(pdata => TradeBotService.run(asset, start, initial, pdata, fees, strategy))) { orderList =>
+        'initial.as(stringToBigDecimal), 'fees.as(stringToBigDecimal), 'strategy.as(stringToStrategy), 'pair.as(stringToCurrencyPair).?) { (asset, start, end, initial, fees, strategy, maybePair) =>
+          onSuccess(PriceService.getPriceData(maybePair.getOrElse(CurrencyPair(Asset.Usd, asset)), start, end).map(pdata => TradeBotService.runPair(maybePair.getOrElse(CurrencyPair(Asset.Usd, asset)), start, initial, pdata, fees, strategy))) { orderList =>
             complete(orderList)
           }
         }
@@ -119,7 +123,7 @@ trait TradingBotRoutes extends PlayJsonSupport with PriceApiRoutes {
               val tradingOps = new TradingOps(poloApi)
               val zd = ZonedDateTime.parse("2017-01-01T00:00:00-00:00")
               onSuccess(
-                PriceService.getPriceData(scheduled.asset, zd).map { pData =>
+                PriceService.getPriceData(CurrencyPair(Asset.Usd, scheduled.asset), zd).map { pData =>
                   QuickstartServer.schedulingService.schedule(
                     "toto",
                     scheduled.toCronExpression,

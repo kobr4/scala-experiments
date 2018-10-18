@@ -88,8 +88,8 @@ object PriceService {
   def getWeightedMovingAverageHistory(pair: CurrencyPair, startDate: ZonedDateTime, endDate: ZonedDateTime, days: Int)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[List[BigDecimal]] =
     getPricesOrPair(pair, startDate, endDate).map(_.weightedMovingAverage(days).filter(p => p.date.isAfter(startDate) && p.date.isBefore(endDate)).groupByMonth.map(merge => merge._2.map(_.price).sum / merge._2.length))
 
-  def getPriceData(asset: Asset, startDate: ZonedDateTime, endDate: ZonedDateTime = ZonedDateTime.now())(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[PairPrices] =
-    getPricesWithCache(asset).map(filter(_, startDate, endDate))
+  def getPriceData(pair: CurrencyPair, startDate: ZonedDateTime, endDate: ZonedDateTime = ZonedDateTime.now())(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[PairPrices] =
+    getPricesOrPair(pair, startDate, endDate)
 
   def getPriceData(asset: Asset)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[PairPrices] =
     getPricesWithCache(asset)
