@@ -4,7 +4,7 @@ import play.api.libs.json.{ JsPath, JsString, Reads, Writes }
 
 sealed trait Asset {
 
-  val code : String
+  val code: String
 
   override def toString: String = { code }
 }
