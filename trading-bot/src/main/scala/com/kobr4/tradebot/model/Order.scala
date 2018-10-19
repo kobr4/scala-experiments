@@ -30,7 +30,7 @@ object Order extends StrictLogging {
       case b: Buy =>
         tradingOps.buyAtMarketValue(b.price, b.pair, b.pair.right, Quantity(b.quantity))
       case s: Sell =>
-        tradingOps.sellAtMarketValue(s.price, s.pair, s.pair.right, Quantity(s.quantity))
+        tradingOps.sellAtMarketValue(s.price, s.pair, Quantity(s.quantity))
     }
 
     eventualResult.onComplete {

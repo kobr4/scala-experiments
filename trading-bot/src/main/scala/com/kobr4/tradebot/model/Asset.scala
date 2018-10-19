@@ -41,6 +41,7 @@ object Asset {
     case "USD" => Some(Asset.Usd)
     case "USDT" => Some(Asset.Usd)
     case "ADA" => Some(Asset.Ada)
+    case "STR" => Some(Asset.Xlm)
     case code => Some(Custom(code))
   }
 

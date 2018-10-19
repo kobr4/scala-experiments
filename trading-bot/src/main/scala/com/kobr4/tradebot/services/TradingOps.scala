@@ -36,7 +36,7 @@ class TradingOps(val api: ExchangeApi)(implicit ec: ExecutionContext) extends St
     }
   }
 
-  def sellAtMarketValue(targetPrice: BigDecimal, currencyPair: CurrencyPair, asset: Asset, quantity: Quantity): Future[String] = {
+  def sellAtMarketValue(targetPrice: BigDecimal, currencyPair: CurrencyPair, quantity: Quantity): Future[String] = {
     api.returnTicker().flatMap { quoteList =>
       quoteList.find(q => (q.pair.left == currencyPair.left)
         && (q.pair.right == currencyPair.right)).map { q =>
