@@ -2,31 +2,36 @@ package com.kobr4.tradebot.model
 
 import play.api.libs.json.{ JsPath, JsString, Reads, Writes }
 
-sealed trait Asset
+sealed trait Asset {
+
+  val code : String
+
+  override def toString: String = { code }
+}
 
 object Asset {
 
-  case object Eth extends Asset { override def toString: String = "ETH" }
+  case object Eth extends Asset { val code = "ETH" }
 
-  case object Btc extends Asset { override def toString: String = "BTC" }
+  case object Btc extends Asset { val code = "BTC" }
 
-  case object Xmr extends Asset { override def toString: String = "XMR" }
+  case object Xmr extends Asset { val code = "XMR" }
 
-  case object Doge extends Asset { override def toString: String = "DOGE" }
+  case object Doge extends Asset { val code = "DOGE" }
 
-  case object Xrp extends Asset { override def toString: String = "XRP" }
+  case object Xrp extends Asset { val code = "XRP" }
 
-  case object Xem extends Asset { override def toString: String = "XEM" }
+  case object Xem extends Asset { val code = "XEM" }
 
-  case object Xlm extends Asset { override def toString: String = "STR" }
+  case object Xlm extends Asset { val code = "STR" }
 
-  case object Usd extends Asset { override def toString: String = "USDT" }
+  case object Usd extends Asset { val code = "USDT" }
 
-  case object Dgb extends Asset { override def toString: String = "DGB" }
+  case object Dgb extends Asset { val code = "DGB" }
 
-  case object Ada extends Asset { override def toString: String = "ADA" }
+  case object Ada extends Asset { val code = "ADA" }
 
-  case class Custom(code: String) extends Asset { override def toString: String = code }
+  case class Custom(code: String) extends Asset
 
   def fromString(s: String): Option[Asset] = s match {
     case "ETH" => Some(Asset.Eth)
