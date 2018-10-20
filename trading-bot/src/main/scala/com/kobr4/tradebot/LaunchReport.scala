@@ -34,10 +34,10 @@ case class RunMultipleReport(finalBalance: BigDecimal, strategy: Strategy) {
 
 object LaunchReport {
 
-  val date = ZonedDateTime.parse("2018-01-01T01:00:00.000Z")
+  val date = ZonedDateTime.parse("2017-01-01T01:00:00.000Z")
   val initialAmount = BigDecimal(10000)
   val fees = BigDecimal(0.1)
-  val strategy = SafeStrategy
+  val strategy = AlternativeStrategy
 
   def runPairAndReport(pair: CurrencyPair)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[RunPairReport] = {
     PriceService.getPairPrice(pair, date, ZonedDateTime.now()).map { pd =>
@@ -91,7 +91,7 @@ object LaunchReport {
     val assetList = List(Asset.Btc, Asset.Eth, Asset.Xmr, Asset.Xlm, Asset.Doge)
     Future.sequence(assetList.map(asset => runAndReport(asset))).map { reportList => reportList.foreach(_.print()) }
 
-    val assetWeight: Map[Asset, BigDecimal] = Map(Asset.Btc -> BigDecimal(0.3), Asset.Eth -> BigDecimal(0.3), Asset.Xmr -> BigDecimal(0.2), Asset.Xlm -> BigDecimal(0.1), Asset.Doge -> BigDecimal(0.1))
+    val assetWeight: Map[Asset, BigDecimal] = Map(Asset.Btc -> BigDecimal(0.3), Asset.Eth -> BigDecimal(0.3), Asset.Xmr -> BigDecimal(0.1), Asset.Xrp -> BigDecimal(0.1), Asset.Xlm -> BigDecimal(0.1), Asset.Doge -> BigDecimal(0.1))
     val eventualRun = runMultipleAndReport(assetWeight).map(_.print())
 
     eventualRun.onComplete {

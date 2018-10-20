@@ -49,7 +49,7 @@ object SafeStrategy extends Strategy {
     // Sexy DSL ! <3
     MaybeBuy(pair, quantity, assetPrice, current)
       .whenCashAvailable(pair.left)
-      .whenAboveMovingAverge(current, assetPrice, priceData)
+      .whenAboveMovingAverge(current, assetPrice, priceData, 20)
   }
 
   /* sell if below moving average and if 20% gain or 10% loss */
@@ -61,7 +61,7 @@ object SafeStrategy extends Strategy {
 
     maybeSellAll
       .when(portfolio.assets(pair.right).quantity > 0)
-      .whenBelowMovingAverge(current, currentPrice, priceData)
+      .whenBelowMovingAverge(current, currentPrice, priceData, 20)
     /*
       .whenLastBuyingPrice(asset, (buyPrice) => {
         buyPrice + buyPrice * 20 / 100 < currentPrice || buyPrice - buyPrice * 10 / 100 > currentPrice

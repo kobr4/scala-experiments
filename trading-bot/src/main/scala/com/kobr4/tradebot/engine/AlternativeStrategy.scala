@@ -19,7 +19,8 @@ object AlternativeStrategy extends Strategy {
 
     MaybeBuy(pair, quantity, assetPrice, current)
       .whenCashAvailable(pair.left)
-      .whenAboveMovingAverge(current, assetPrice, priceData)
+      .whenAboveMovingAverge(current, assetPrice, priceData, 20)
+      .whenAboveMovingAverge(current, assetPrice, priceData, 10)
   }
 
   /* sell if below moving average and if 20% gain or 10% loss */
@@ -31,10 +32,9 @@ object AlternativeStrategy extends Strategy {
 
     maybeSellAll
       .when(portfolio.assets(pair.right).quantity > 0)
-      .whenBelowMovingAverge(current, currentPrice, priceData)
-      .whenLastBuyingPrice(pair.right, (buyPrice) => {
-        buyPrice + buyPrice * 20 / 100 < currentPrice || buyPrice - buyPrice * 10 / 100 > currentPrice
-      })
+      //.whenStops(pair.right, 20, -20, currentPrice)
+      .whenBelowMovingAverge(current, currentPrice, priceData, 20)
+    //.or(in => in.whenBelowMovingAverge(current, currentPrice, priceData, 10).orElse(in.whenStops(pair.right, 20, -10, currentPrice)))
   }
 
   def runStrategy(pair: CurrencyPair, current: ZonedDateTime, priceData: PairPrices, portfolio: Portfolio, weight: BigDecimal = BigDecimal(1)): Option[Order] = {
