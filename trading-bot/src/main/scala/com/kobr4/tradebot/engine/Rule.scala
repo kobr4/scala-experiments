@@ -9,13 +9,13 @@ object Rule {
   trait Condition[T] {
     def whenCashAvailable(asset: Asset)(implicit portfolio: Portfolio): T
 
-    def whenBelowMovingAverge(current: ZonedDateTime, currentPrice: BigDecimal, priceData: PairPrices, days: Int): T
+    def whenBelowMovingAverage(current: ZonedDateTime, currentPrice: BigDecimal, priceData: PairPrices, days: Int): T
 
-    def whenAboveMovingAverge(current: ZonedDateTime, currentPrice: BigDecimal, priceData: PairPrices, days: Int): T
+    def whenAboveMovingAverage(current: ZonedDateTime, currentPrice: BigDecimal, priceData: PairPrices, days: Int): T
 
-    def whenBelowWeightedMovingAverge(current: ZonedDateTime, currentPrice: BigDecimal, priceData: PairPrices, days: Int): T
+    def whenBelowWeightedMovingAverage(current: ZonedDateTime, currentPrice: BigDecimal, priceData: PairPrices, days: Int): T
 
-    def whenAboveWeightedMovingAverge(current: ZonedDateTime, currentPrice: BigDecimal, priceData: PairPrices, days: Int): T
+    def whenAboveWeightedMovingAverage(current: ZonedDateTime, currentPrice: BigDecimal, priceData: PairPrices, days: Int): T
 
     def when(v: Boolean): T
 
@@ -31,13 +31,13 @@ object Rule {
 
       override def whenCashAvailable(asset: Asset)(implicit portfolio: Portfolio): Option[T] = input.filter(_ => portfolio.assets(asset).quantity > 0)
 
-      override def whenBelowMovingAverge(current: ZonedDateTime, currentPrice: BigDecimal, priceData: PairPrices, days: Int): Option[T] = priceData.movingAverage(current, days).filter(_ > currentPrice).flatMap(_ => input)
+      override def whenBelowMovingAverage(current: ZonedDateTime, currentPrice: BigDecimal, priceData: PairPrices, days: Int): Option[T] = priceData.movingAverage(current, days).filter(_ > currentPrice).flatMap(_ => input)
 
-      override def whenBelowWeightedMovingAverge(current: ZonedDateTime, currentPrice: BigDecimal, priceData: PairPrices, days: Int): Option[T] = priceData.weightedMovingAverage(current, days).filter(_ > currentPrice).flatMap(_ => input)
+      override def whenBelowWeightedMovingAverage(current: ZonedDateTime, currentPrice: BigDecimal, priceData: PairPrices, days: Int): Option[T] = priceData.weightedMovingAverage(current, days).filter(_ > currentPrice).flatMap(_ => input)
 
-      override def whenAboveMovingAverge(current: ZonedDateTime, currentPrice: BigDecimal, priceData: PairPrices, days: Int): Option[T] = priceData.movingAverage(current, days).filter(_ < currentPrice).flatMap(_ => input)
+      override def whenAboveMovingAverage(current: ZonedDateTime, currentPrice: BigDecimal, priceData: PairPrices, days: Int): Option[T] = priceData.movingAverage(current, days).filter(_ < currentPrice).flatMap(_ => input)
 
-      override def whenAboveWeightedMovingAverge(current: ZonedDateTime, currentPrice: BigDecimal, priceData: PairPrices, days: Int): Option[T] = priceData.weightedMovingAverage(current, days).filter(_ < currentPrice).flatMap(_ => input)
+      override def whenAboveWeightedMovingAverage(current: ZonedDateTime, currentPrice: BigDecimal, priceData: PairPrices, days: Int): Option[T] = priceData.weightedMovingAverage(current, days).filter(_ < currentPrice).flatMap(_ => input)
 
       override def when(v: Boolean): Option[T] = input.filter(_ => v)
 

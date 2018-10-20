@@ -19,8 +19,8 @@ object AlternativeStrategy extends Strategy {
 
     MaybeBuy(pair, quantity, assetPrice, current)
       .whenCashAvailable(pair.left)
-      .whenAboveMovingAverge(current, assetPrice, priceData, 20)
-      .whenAboveMovingAverge(current, assetPrice, priceData, 10)
+      .whenAboveMovingAverage(current, assetPrice, priceData, 20)
+      .whenAboveMovingAverage(current, assetPrice, priceData, 10)
   }
 
   /* sell if below moving average and if 20% gain or 10% loss */
@@ -33,7 +33,7 @@ object AlternativeStrategy extends Strategy {
     maybeSellAll
       .when(portfolio.assets(pair.right).quantity > 0)
       //.whenStops(pair.right, 20, -20, currentPrice)
-      .whenBelowMovingAverge(current, currentPrice, priceData, 20)
+      .whenBelowMovingAverage(current, currentPrice, priceData, 20)
     //.or(in => in.whenBelowMovingAverge(current, currentPrice, priceData, 10).orElse(in.whenStops(pair.right, 20, -10, currentPrice)))
   }
 
