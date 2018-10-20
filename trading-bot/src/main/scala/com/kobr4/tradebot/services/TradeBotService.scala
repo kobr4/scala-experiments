@@ -44,7 +44,7 @@ object TradeBotService {
   }
 
   def runMapAndTrade(assetMap: Map[Asset, BigDecimal], strategy: Strategy, poloApi: ExchangeApi, tradingsOps: TradingOps)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[List[Order]] = {
-    val eventualPData = Future.sequence(assetMap.keys.toList.map(asset => PriceService.getPriceData(asset).map(asset -> _)))
+    val eventualPData = Future.sequence(assetMap.keys.toList.map(asset => PriceService.getPriceDataWithoutCache(asset).map(asset -> _)))
     eventualPData.map(_.toMap).flatMap { pDataMap =>
       Portfolio.fromApi(poloApi, pDataMap).map { portfolio =>
         assetMap.keys.toList.flatMap { asset =>

@@ -57,6 +57,19 @@ object PriceService {
     case other => getYahooPricesWithCache(other.toString)
   }
 
+  private def getPricesWithoutCache(asset: Asset)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[PairPrices] = asset match {
+    case Asset.Btc => PairPrice.fromUrlAsync(CoinMetricsPriceUrl.btc)
+    case Asset.Eth => PairPrice.fromUrlAsync(CoinMetricsPriceUrl.eth)
+    case Asset.Xmr => PairPrice.fromUrlAsync(CoinMetricsPriceUrl.xmr)
+    case Asset.Doge => PairPrice.fromUrlAsync(CoinMetricsPriceUrl.doge)
+    case Asset.Xem => PairPrice.fromUrlAsync(CoinMetricsPriceUrl.xem)
+    case Asset.Xrp => PairPrice.fromUrlAsync(CoinMetricsPriceUrl.xrp)
+    case Asset.Xlm => PairPrice.fromUrlAsync(CoinMetricsPriceUrl.xlm)
+    case Asset.Dgb => PairPrice.fromUrlAsync(CoinMetricsPriceUrl.dgb)
+    case Asset.Ada => PairPrice.fromUrlAsync(CoinMetricsPriceUrl.ada)
+    case other => getYahooPricesWithCache(other.toString)
+  }
+
   private def groupAndFilter(pairPrices: PairPrices, startDate: ZonedDateTime, endDate: ZonedDateTime)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): List[BigDecimal] =
     pairPrices.filter(p => p.date.isAfter(startDate) && p.date.isBefore(endDate)).groupByMonth.map(merge => merge._2.map(_.price).sum / merge._2.length)
 
@@ -93,6 +106,9 @@ object PriceService {
 
   def getPriceData(asset: Asset)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[PairPrices] =
     getPricesWithCache(asset)
+
+  def getPriceDataWithoutCache(asset: Asset)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[PairPrices] =
+    getPricesWithoutCache(asset)
 
   def priceTicker(exchange: SupportedExchange)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[List[Quote]] = {
     ExchangeApi(exchange).returnTicker()
