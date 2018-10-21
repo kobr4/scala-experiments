@@ -1,18 +1,18 @@
 package com.kobr4.tradebot.api
 
+import java.time.ZonedDateTime
+
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.HttpRequest
 import akka.http.scaladsl.model.headers.RawHeader
 import akka.http.scaladsl.unmarshalling.Unmarshal
 import akka.stream.ActorMaterializer
-import com.kobr4.tradebot.model.{ PairPrice, PairPrices }
+import com.kobr4.tradebot.model.{PairPrice, PairPrices}
 
-import scala.concurrent.{ ExecutionContext, Future }
+import scala.concurrent.{ExecutionContext, Future}
 
 object YahooFinanceApi {
-
-  val url = "https://query1.finance.yahoo.com/v7/finance/download/BTC-USD?period1=1279317600&period2=1538258400&interval=1d&events=history"
 
   val cookierUrl = "https://uk.finance.yahoo.com/quote/BTC-USD/history"
 
@@ -20,7 +20,7 @@ object YahooFinanceApi {
 
   private def buildCrumbAndCookieUrl(code: String) = s"https://uk.finance.yahoo.com/quote/$code/history"
 
-  private def buildCsvRequestUrl(code: String) = s"https://query1.finance.yahoo.com/v7/finance/download/$code?period1=1279317600&period2=1538258400&interval=1d&events=history"
+  private def buildCsvRequestUrl(code: String) = s"https://query1.finance.yahoo.com/v7/finance/download/$code?period1=1279317600&period2=${ZonedDateTime.now().toEpochSecond}&interval=1d&events=history"
 
   private def httpRequestFromCrumbAndCookie(url: String)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[Option[(String, String)]] = {
     Http().singleRequest(HttpRequest(uri = s"$url")).flatMap { response =>

@@ -6,7 +6,7 @@ import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import com.kobr4.tradebot.api.CurrencyPair
 import com.kobr4.tradebot.engine._
-import com.kobr4.tradebot.model.{Asset, Buy, PairPrices, Sell}
+import com.kobr4.tradebot.model._
 import com.kobr4.tradebot.services.{PriceService, TradeBotService}
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -15,8 +15,9 @@ import scala.util.control.NonFatal
 object LaunchSearch {
 
   val date = ZonedDateTime.parse("2017-01-01T01:00:00.000Z")
-  val initialAmount = BigDecimal(10)
+  val initialAmount = BigDecimal(10000)
   val fees = BigDecimal(0.1)
+  val pair = CurrencyPair(Asset.Usd, Asset.Custom("SOI.PA"))
 
   def runPairAndReport(pair: CurrencyPair, strategy: Strategy, pd: PairPrices)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): RunPairReport = {
 
@@ -35,6 +36,15 @@ object LaunchSearch {
     )
   }
 
+  def runMultipleAndReport(assetWeight: Map[Asset, BigDecimal], priceMap: Map[Asset, PairPrices], strategy: Strategy)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext) = {
+    val pdList = TradeBotService.runMapT(assetWeight, priceMap, date, initialAmount, fees, strategy)
+    val portfolio = Portfolio.create(priceMap)
+    portfolio.assets(Asset.Usd) = Quantity(initialAmount)
+    pdList.foreach { tuple => portfolio.update(tuple, BigDecimal(0.1)) }
+    RunMultipleReport(portfolio.balance(Asset.Usd, ZonedDateTime.now()), strategy)
+
+  }
+
   def main(args: Array[String]): Unit = {
 
     implicit val system: ActorSystem = ActorSystem("helloAkkaHttpServer")
@@ -42,13 +52,19 @@ object LaunchSearch {
     implicit val ec: ExecutionContext = system.dispatcher
 
     println("Launching length: " + RuleGenerator.getAll(2).combinations(2).toList.length)
-    PriceService.getPairPrice(CurrencyPair(Asset.Btc, Asset.Eth), date, ZonedDateTime.now()).map { pd =>
 
-      val reportList = RuleGenerator.getAll(2).combinations(2).toList.flatMap { buyList =>
-        RuleGenerator.getAll(2).combinations(2).toList.map { sellList =>
+    //PriceService.getPriceData(pair, date, ZonedDateTime.now()).map { pd =>
+
+    val assetWeight: Map[Asset, BigDecimal] = Map(Asset.Btc -> BigDecimal(0.3), Asset.Eth -> BigDecimal(0.3),
+      Asset.Xmr -> BigDecimal(0.1), Asset.Xrp -> BigDecimal(0.1), Asset.Xlm -> BigDecimal(0.1), Asset.Doge -> BigDecimal(0.1))
+    val eventualPData = Future.sequence(assetWeight.keys.toList.map(asset => PriceService.getPriceData(asset).map(asset -> _)))
+    eventualPData.map { priceMap =>
+      val reportList = RuleGenerator.getAll(2).combinations(2).toList.par.flatMap { buyList =>
+        RuleGenerator.getAll(2).combinations(2).toList.par.map { sellList =>
           val strategy = GeneratedStrategy(buyList, sellList)
-          val report = runPairAndReport(CurrencyPair(Asset.Btc, Asset.Eth), strategy, pd)
-          report
+          //runPairAndReport(pair, strategy, pd)
+          runMultipleAndReport(assetWeight, priceMap.toMap, strategy)
+
         }
       }
 
