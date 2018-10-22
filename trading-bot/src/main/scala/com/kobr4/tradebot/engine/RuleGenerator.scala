@@ -30,6 +30,20 @@ case class WhenStops(high : Int,low: Int) extends ConditionObject {
   }
 }
 
+case class WhenHigh(days : Int) extends ConditionObject {
+
+  def when[T <: Order](in: Option[T], asset: Asset, current: ZonedDateTime, assetPrice: BigDecimal, priceData: PairPrices)(implicit portfolio: Portfolio): Option[T] = {
+    in.whenHigh(current, assetPrice, priceData, days)
+  }
+}
+
+case class WhenLow(days : Int) extends ConditionObject {
+
+  def when[T <: Order](in: Option[T], asset: Asset, current: ZonedDateTime, assetPrice: BigDecimal, priceData: PairPrices)(implicit portfolio: Portfolio): Option[T] = {
+    in.whenLow(current, assetPrice, priceData, days)
+  }
+}
+
 case class WhenNoOp() extends ConditionObject {
 
   def when[T <: Order](in: Option[T], asset: Asset, current: ZonedDateTime, assetPrice: BigDecimal, priceData: PairPrices)(implicit portfolio: Portfolio): Option[T] = {
@@ -41,19 +55,25 @@ object RuleGenerator {
 
   private def getNoop(n : Int) = (for(a <- 1 to n) yield WhenNoOp()).toList
 
+  def getAllWhenHigh = List(WhenHigh(10), WhenHigh(20), WhenHigh(30))
+
+  def getAllWhenLow = List(WhenLow(10), WhenLow(20), WhenLow(30))
+
   def getAllWhenStops = List(WhenStops(10,-10),WhenStops(20,-20),WhenStops(30,-30))
 
   def getAllWhenAboveMovingAverage = List(
     WhenAboveMovingAverage(10),
     WhenAboveMovingAverage(20),
-    WhenAboveMovingAverage(30))
+    WhenAboveMovingAverage(30),
+    WhenAboveMovingAverage(50))
 
   def getAllWhenBelowMovingAverage = List(
     WhenBelowMovingAverage(10),
     WhenBelowMovingAverage(20),
-    WhenBelowMovingAverage(30))
+    WhenBelowMovingAverage(30),
+    WhenBelowMovingAverage(50))
 
-  def getAll(n : Int): List[ConditionObject] = getAllWhenAboveMovingAverage ::: getAllWhenBelowMovingAverage ::: getAllWhenStops::: getNoop(n)
+  def getAll(n : Int): List[ConditionObject] = getAllWhenAboveMovingAverage ::: getAllWhenBelowMovingAverage ::: getAllWhenStops::: getAllWhenHigh :::  getAllWhenLow ::: getNoop(n)
 }
 
 

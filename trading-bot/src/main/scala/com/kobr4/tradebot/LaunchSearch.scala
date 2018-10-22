@@ -8,16 +8,18 @@ import com.kobr4.tradebot.api.CurrencyPair
 import com.kobr4.tradebot.engine._
 import com.kobr4.tradebot.model._
 import com.kobr4.tradebot.services.{PriceService, TradeBotService}
+import com.typesafe.scalalogging.StrictLogging
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.NonFatal
 
-object LaunchSearch {
+object LaunchSearch extends StrictLogging {
 
   val date = ZonedDateTime.parse("2017-01-01T01:00:00.000Z")
   val initialAmount = BigDecimal(10000)
   val fees = BigDecimal(0.1)
   val pair = CurrencyPair(Asset.Usd, Asset.Custom("SOI.PA"))
+  //val pair = CurrencyPair(Asset.Usd, Asset.Eth)
 
   def runPairAndReport(pair: CurrencyPair, strategy: Strategy, pd: PairPrices)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): RunPairReport = {
 
@@ -51,28 +53,31 @@ object LaunchSearch {
     implicit val am: ActorMaterializer = ActorMaterializer()
     implicit val ec: ExecutionContext = system.dispatcher
 
-    println("Launching length: " + RuleGenerator.getAll(2).combinations(2).toList.length)
+    logger.info("Launching length: {}",RuleGenerator.getAll(2).combinations(2).toList.length)
 
-    //PriceService.getPriceData(pair, date, ZonedDateTime.now()).map { pd =>
+    PriceService.getPriceData(pair, date, ZonedDateTime.now()).map { pd =>
 
-    val assetWeight: Map[Asset, BigDecimal] = Map(Asset.Btc -> BigDecimal(0.3), Asset.Eth -> BigDecimal(0.3),
-      Asset.Xmr -> BigDecimal(0.1), Asset.Xrp -> BigDecimal(0.1), Asset.Xlm -> BigDecimal(0.1), Asset.Doge -> BigDecimal(0.1))
-    val eventualPData = Future.sequence(assetWeight.keys.toList.map(asset => PriceService.getPriceData(asset).map(asset -> _)))
-    eventualPData.map { priceMap =>
+    //val assetWeight: Map[Asset, BigDecimal] = Map(Asset.Btc -> BigDecimal(0.3), Asset.Eth -> BigDecimal(0.3),
+    //  Asset.Xmr -> BigDecimal(0.1), Asset.Xrp -> BigDecimal(0.1), Asset.Xlm -> BigDecimal(0.1), Asset.Doge -> BigDecimal(0.1))
+    //val assetWeight: Map[Asset, BigDecimal]
+    // = Map(Asset.Custom("GLE.PA") -> BigDecimal(0.2), Asset.Custom("BNP.PA") -> BigDecimal(0.3), Asset.Custom("FP.PA") -> BigDecimal(0.3), Asset.Custom("ENGI.PA") -> BigDecimal(0.2))
+    //val eventualPData = Future.sequence(assetWeight.keys.toList.map(asset => PriceService.getPriceData(asset).map(asset -> _)))
+    //eventualPData.map { priceMap =>
+
       val reportList = RuleGenerator.getAll(2).combinations(2).toList.par.flatMap { buyList =>
         RuleGenerator.getAll(2).combinations(2).toList.par.map { sellList =>
           val strategy = GeneratedStrategy(buyList, sellList)
-          //runPairAndReport(pair, strategy, pd)
-          runMultipleAndReport(assetWeight, priceMap.toMap, strategy)
+          runPairAndReport(pair, strategy, pd)
+          //runMultipleAndReport(assetWeight, priceMap.toMap, strategy)
 
         }
       }
 
       reportList.maxBy(report => report.finalBalance).print()
 
-      println("Search ended")
+      logger.info("Search ended")
     }.recover {
-      case NonFatal(t) => println("Failed with error : " + t.printStackTrace())
+      case NonFatal(t) => logger.info("Failed with error : " + t.printStackTrace())
     }
 
   }
