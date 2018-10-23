@@ -15,11 +15,11 @@ import scala.util.control.NonFatal
 
 object LaunchSearch extends StrictLogging {
 
-  val date = ZonedDateTime.parse("2017-01-01T01:00:00.000Z")
+  val date = ZonedDateTime.parse("2018-01-01T01:00:00.000Z")
   val initialAmount = BigDecimal(10000)
   val fees = BigDecimal(0.1)
-  val pair = CurrencyPair(Asset.Usd, Asset.Custom("SOI.PA"))
-  //val pair = CurrencyPair(Asset.Usd, Asset.Eth)
+  //val pair = CurrencyPair(Asset.Usd, Asset.Custom("SOI.PA"))
+  val pair = CurrencyPair(Asset.Usd, Asset.Btc)
 
   def runPairAndReport(pair: CurrencyPair, strategy: Strategy, pd: PairPrices)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): RunPairReport = {
 
@@ -55,24 +55,22 @@ object LaunchSearch extends StrictLogging {
 
     logger.info("Launching length: {}",RuleGenerator.getAll(2).combinations(2).toList.length)
 
-    PriceService.getPriceData(pair, date, ZonedDateTime.now()).map { pd =>
+    //PriceService.getPriceData(pair, date, ZonedDateTime.now()).map { pd =>
 
-    //val assetWeight: Map[Asset, BigDecimal] = Map(Asset.Btc -> BigDecimal(0.3), Asset.Eth -> BigDecimal(0.3),
-    //  Asset.Xmr -> BigDecimal(0.1), Asset.Xrp -> BigDecimal(0.1), Asset.Xlm -> BigDecimal(0.1), Asset.Doge -> BigDecimal(0.1))
+    val assetWeight: Map[Asset, BigDecimal] = Map(Asset.Btc -> BigDecimal(0.3), Asset.Eth -> BigDecimal(0.3),
+      Asset.Xmr -> BigDecimal(0.1), Asset.Xrp -> BigDecimal(0.1), Asset.Xlm -> BigDecimal(0.1), Asset.Doge -> BigDecimal(0.1))
     //val assetWeight: Map[Asset, BigDecimal]
     // = Map(Asset.Custom("GLE.PA") -> BigDecimal(0.2), Asset.Custom("BNP.PA") -> BigDecimal(0.3), Asset.Custom("FP.PA") -> BigDecimal(0.3), Asset.Custom("ENGI.PA") -> BigDecimal(0.2))
-    //val eventualPData = Future.sequence(assetWeight.keys.toList.map(asset => PriceService.getPriceData(asset).map(asset -> _)))
-    //eventualPData.map { priceMap =>
+    val eventualPData = Future.sequence(assetWeight.keys.toList.map(asset => PriceService.getPriceData(asset).map(asset -> _)))
+    eventualPData.map { priceMap =>
 
       val reportList = RuleGenerator.getAll(2).combinations(2).toList.par.flatMap { buyList =>
         RuleGenerator.getAll(2).combinations(2).toList.par.map { sellList =>
           val strategy = GeneratedStrategy(buyList, sellList)
-          runPairAndReport(pair, strategy, pd)
-          //runMultipleAndReport(assetWeight, priceMap.toMap, strategy)
-
+          //runPairAndReport(pair, strategy, pd)
+          runMultipleAndReport(assetWeight, priceMap.toMap, strategy)
         }
       }
-
       reportList.maxBy(report => report.finalBalance).print()
 
       logger.info("Search ended")

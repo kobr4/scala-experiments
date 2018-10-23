@@ -108,3 +108,22 @@ case class GeneratedStrategy(buyList : List[ConditionObject], sellList : List[Co
       sellStrategy(pair, portfolio, current, priceData))
   }
 }
+
+case class AggregatedStrategy(strategyList : List[GeneratedStrategy]) extends Strategy {
+
+  def buyStrategy(pair: CurrencyPair, portfolio: Portfolio, current: ZonedDateTime, priceData: PairPrices, weight: BigDecimal = BigDecimal(1)): Option[Buy] = {
+    strategyList.foldLeft(strategyList.head.buyStrategy(pair,portfolio, current, priceData, weight))( (maybeBuy, strategy) =>
+      maybeBuy.orElse(strategy.buyStrategy(pair,portfolio, current, priceData, weight)))
+  }
+
+  def sellStrategy(pair: CurrencyPair, portfolio: Portfolio, current: ZonedDateTime, priceData: PairPrices, weight: BigDecimal = BigDecimal(1)): Option[Sell] = {
+    strategyList.foldLeft(strategyList.head.sellStrategy(pair,portfolio, current, priceData))( (maybeSell, strategy) =>
+      maybeSell.orElse(strategy.sellStrategy(pair,portfolio, current, priceData)))
+  }
+
+  override def runStrategy(pair: CurrencyPair, current: ZonedDateTime, priceData: PairPrices, portfolio: Portfolio, weight: BigDecimal = BigDecimal(1)): Option[Order] = {
+    buyStrategy(pair, portfolio, current, priceData, weight).orElse(
+      sellStrategy(pair, portfolio, current, priceData))
+  }
+
+}
