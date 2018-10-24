@@ -2,10 +2,13 @@ package com.kobr4.tradebot
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
-import com.kobr4.tradebot.api.KrakenApi
+import com.kobr4.tradebot.api.{CurrencyPair, KrakenApi}
+import com.kobr4.tradebot.model.Asset
+import com.kobr4.tradebot.scheduler.KrakenDailyJob
 import org.scalatest.concurrent.PatienceConfiguration.Timeout
-import org.scalatest.{ FlatSpec, Matchers }
+import org.scalatest.{FlatSpec, Matchers}
 import org.scalatest.concurrent.ScalaFutures
+
 import scala.concurrent.duration._
 
 class KrakenApiIT extends FlatSpec with ScalaFutures with Matchers {
@@ -27,6 +30,8 @@ class KrakenApiIT extends FlatSpec with ScalaFutures with Matchers {
     val krakenApi = new KrakenApi()
 
     val quoteList = krakenApi.returnTicker().futureValue(Timeout(10 seconds))
+
+    quoteList.map(_.pair) should contain allElementsOf KrakenDailyJob.assetMap.map(assetW => CurrencyPair(Asset.Usd, assetW._1)).toList
 
     println(quoteList)
   }

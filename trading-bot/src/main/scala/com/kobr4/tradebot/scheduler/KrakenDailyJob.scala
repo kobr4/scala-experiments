@@ -18,6 +18,6 @@ class KrakenDailyJob extends TradeBotDailyJob {
 
 object KrakenDailyJob {
 
-  val assetMap: Map[Asset, BigDecimal] = Map(Asset.Btc -> BigDecimal(0.3), Asset.Eth -> BigDecimal(0.3),
-    Asset.Xmr -> BigDecimal(0.2), Asset.Xlm -> BigDecimal(0.1), Asset.Ada -> BigDecimal(0.1))
+  val assetMap: Map[Asset, BigDecimal] = Map(Asset.Btc -> BigDecimal(0.4), Asset.Eth -> BigDecimal(0.3),
+    Asset.Xmr -> BigDecimal(0.3))
 }
