@@ -45,6 +45,7 @@ object Asset {
     case "XLM" => Some(Asset.Xlm)
     case "USD" => Some(Asset.Usd)
     case "USDT" => Some(Asset.Usd)
+    case "ZUSD" => Some(Asset.Usd)
     case "ADA" => Some(Asset.Ada)
     case "STR" => Some(Asset.Xlm)
     case xs if xs != "XUSD" && xs.startsWith("X") && xs.length == 4 => fromString(xs.substring(1))

@@ -2,7 +2,7 @@ package com.kobr4.tradebot
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
-import com.kobr4.tradebot.scheduler.TradeBotDailyJob
+import com.kobr4.tradebot.scheduler.{KrakenDailyJob, TradeBotDailyJob}
 
 import scala.concurrent.ExecutionContext
 
@@ -14,7 +14,8 @@ object LaunchJob {
     implicit val am: ActorMaterializer = ActorMaterializer()
     implicit val ec: ExecutionContext = system.dispatcher
 
-    val job = new TradeBotDailyJob()
+    //val job = new TradeBotDailyJob()
+    val job = new KrakenDailyJob()
 
     job.run()
 

@@ -57,7 +57,7 @@ object CurrencyPairHelper {
     case CurrencyPair(Asset.Usd, Asset.Ada) => s"ADAUSD"
     case CurrencyPair(Asset.Usd, Asset.Btc) => s"XXBTZUSD"
     case CurrencyPair(Asset.Usd, a: Asset) => s"X${a}ZUSD"
-    case CurrencyPair(b: Asset, a: Asset) => s"$b$a"
+    case CurrencyPair(b: Asset, a: Asset) => s"$a$b"
   }
 }
 
@@ -87,7 +87,7 @@ object KrakenTrade {
     (JsPath \ "type").read[String] and
     (JsPath \ "price").read[BigDecimal] and
     (JsPath \ "vol").read[BigDecimal] and
-    (JsPath \ "time").read[Long])(KrakenTrade.apply _)
+    (JsPath \ "time").read[BigDecimal].map(_.rounded.toLong))(KrakenTrade.apply _)
 }
 
 class KrakenApi(krakenUrl: String = KrakenApi.rootUrl, apiKey: String = DefaultConfiguration.KrakenApi.Key,
@@ -135,7 +135,7 @@ class KrakenApi(krakenUrl: String = KrakenApi.rootUrl, apiKey: String = DefaultC
               }
               (Asset.fromString(a), Asset.fromString(b)) match {
                 case (Some(asset1), Some(asset2)) =>
-                  v.asOpt[Quote](quoteReads(CurrencyPair(asset1, asset2)))
+                  v.asOpt[Quote](quoteReads(CurrencyPair(asset2, asset1)))
               }
           }.toList
         }
@@ -182,7 +182,6 @@ class KrakenApi(krakenUrl: String = KrakenApi.rootUrl, apiKey: String = DefaultC
     val reqNonce = nonce()
     KrakenApi.httpRequestPost(krakenUrl, s"$privateUrl/${KrakenApi.ReturnOpenOrders.ReturnOpenOrders}", reqNonce,
       KrakenApi.ReturnOpenOrders.build(reqNonce), apiKey, apiSecret).map { message =>
-        println(message)
         Json.parse(message).as[JsObject].value("result").as[JsObject].value("open").as[JsObject].value.toList.map {
           case (txid, jsOrder) =>
             val rate = jsOrder.as[JsObject].value("price").as[BigDecimal]
