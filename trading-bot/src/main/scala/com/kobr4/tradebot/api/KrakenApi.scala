@@ -91,7 +91,7 @@ object KrakenTrade {
 }
 
 class KrakenApi(krakenUrl: String = KrakenApi.rootUrl, apiKey: String = DefaultConfiguration.KrakenApi.Key,
-  apiSecret: String = DefaultConfiguration.KrakenApi.Secret)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext) extends ExchangeApi {
+  apiSecret: String = DefaultConfiguration.KrakenApi.Secret)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext) extends ExchangeApi with StrictLogging {
 
   private val publicUrl = s"$krakenUrl/0/public"
 
@@ -160,6 +160,7 @@ class KrakenApi(krakenUrl: String = KrakenApi.rootUrl, apiKey: String = DefaultC
     val reqNonce = nonce()
     KrakenApi.httpRequestPost(krakenUrl, s"$privateUrl/${KrakenApi.ReturnBalances.ReturnBalances}", reqNonce,
       KrakenApi.ReturnBalances.build(reqNonce), apiKey, apiSecret).map { message =>
+        logger.info(message)
         Json.parse(message).as[JsObject].value("result").as[JsObject].fields.flatMap {
           case (s, v) => Asset.fromString(s.toUpperCase).map { asset =>
             (asset, Quantity(BigDecimal(v.as[String])))
