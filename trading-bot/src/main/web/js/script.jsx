@@ -241,6 +241,7 @@ class GraphResult extends React.Component {
       currencyFields : [],
       currency_left : 'USD',
       currency_right : this.props.asset,
+      asset : this.props.asset,
       executionResultFields : null
     }
 
@@ -277,7 +278,7 @@ class GraphResult extends React.Component {
           </Panel>
           }
 
-          <Panel title={this.props.asset+' price history'}>
+          <Panel title={this.state.asset+' price history'}>
             <GraphResultBase datas={[ { name: this.props.asset, color: 'rgba(220,220,220,1)', datapoints: this.state.btcdatapoints},
               { name: 'MA30', color: 'rgba(220,0,0,1)', datapoints: this.state.ma30datapoints } ]}/>
             <FormContainer handleSubmit={this.handleSubmit} submit="Run trade-bot">  
@@ -288,7 +289,13 @@ class GraphResult extends React.Component {
                   <FormOption name='left' values={[ ['USD','USD'], ['BTC','BTC'] ]} onChange={(event) => this.setState({currency_left: event.target.value})}/>    
                   <FormOption name='right' values={[ ['BTC','BTC'], ['ETH','ETH'], ['XMR','XMR'], ['XRP','XRP'], ['XLM','XLM'] ]} onChange={(event) => this.setState({currency_right: event.target.value})}/>    
                 </FormRow>
-              }                
+              }          
+              {
+                this.props.stockChoice &&
+                <FormRow label='Stock code'>
+                <FormTextField value={this.state.currency_right} name="right" handleTextChange={(event) => this.setState({currency_right: event.target.value})} />
+                </FormRow>
+              }
                 <FormRow label='Start'>
                   <DatePicker title='start' selected={this.state.start} onChange={(date) => this.setState({start: date})}/>
                 </FormRow>
@@ -305,7 +312,7 @@ class GraphResult extends React.Component {
                   <FormOption name='strategy' values={[ ['safe','safe and defensive'], ['custom','custom undocumented'] ]} onChange={(event) => this.setState({strategy: event.target.value})}/>    
                 </FormRow>
                 <FormRow>
-                  <FormButton text='Update' handleClick={ (event) => this.componentDidMount() }/>
+                  <FormButton text='Update' handleClick={ (event) => { this.componentDidMount(); this.setState({asset: this.state.currency_right})} }/>
                 </FormRow>
               </FormTable>    
             </FormContainer>
@@ -368,7 +375,7 @@ class InHouseInfo extends React.Component {
   requestBalance = () => RestUtils.performRestPriceReq((balanceList)=> 
     { 
       this.requestTradeHistory()
-      this.setState({balancesFields: this.rowsFromObjets(balanceList)})},
+      this.setState({balancesFields: this.rowsFromObjets(balanceList.assetList), balance_valuation: balanceList.valuation})},
     '/inhouse/balances',[['exchange', this.props.exchange]]
   )
 
@@ -383,7 +390,8 @@ class InHouseInfo extends React.Component {
     this.state = { 
       currentlyTradingFields : [],
       balancesFields : [],
-      tradeHistoryFields : []
+      tradeHistoryFields : [],
+      balance_valuation : 0
     }
 
   }
@@ -400,7 +408,7 @@ class InHouseInfo extends React.Component {
         <ResponseTable first='Currency' second='Weight' responseFields={this.state.currentlyTradingFields}/>
       </Panel>
 
-      <Panel title='Balances'>
+      <Panel title={'Balances ['+(this.state.balance_valuation).toFixed(2)+' USD]'}>
         <ResponseTable first='Currency' second='Quantity' responseFields={this.state.balancesFields}/>
       </Panel>
 
@@ -428,7 +436,7 @@ ReactDOM.render(
         <Route path='/eth_price' render={() => ( <GraphResult endpoint={priceEndpoint} title='ETH backtest' asset='ETH'/>)} />
         <Route path='/xmr_price' render={() => ( <GraphResult endpoint={priceEndpoint} title='XMR backtest' asset='XMR'/>)} />
         <Route path='/crypto_price' render={() => ( <GraphResult endpoint={priceEndpoint} title='Crypto backtest' asset='BTC' pairChoice/>)} />
-        <Route path='/goog_price' render={() => ( <GraphResult endpoint={priceEndpoint} title='GOOG backtest' asset='GOOG'/>)} />
+        <Route path='/stock_price' render={() => ( <GraphResult endpoint={priceEndpoint} title='Stock backtest' asset='GOOG' stockChoice/>)} />
         <Route path='/trading' render={() => ( <TradingForm/>)} />
         <Route path='/inhouse_info_poloniex' render={() => ( <InHouseInfo exchange='poloniex'/>)} />
         <Route path='/inhouse_info_kraken' render={() => ( <InHouseInfo exchange='kraken'/>)} />

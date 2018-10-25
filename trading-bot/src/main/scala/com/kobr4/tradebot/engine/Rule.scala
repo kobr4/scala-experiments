@@ -56,7 +56,7 @@ object Rule {
 
       override def whenLastBuyingPrice(asset: Asset, f: (BigDecimal) => Boolean)(implicit portfolio: Portfolio): Option[T] =
         portfolio.orderList.flatMap {
-          case o@Buy(pair, _, _, _) if pair.right == asset => Some(o)
+          case o @ Buy(pair, _, _, _) if pair.right == asset => Some(o)
           case _ => None
         }.lastOption.filter(buy => f(buy.price)).flatMap(_ => input)
 

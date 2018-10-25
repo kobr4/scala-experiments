@@ -2,7 +2,7 @@ package com.kobr4.tradebot
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
-import com.kobr4.tradebot.scheduler.{KrakenDailyJob, TradeBotDailyJob}
+import com.kobr4.tradebot.scheduler.{ KrakenDailyJob, TradeBotDailyJob }
 
 import scala.concurrent.ExecutionContext
 

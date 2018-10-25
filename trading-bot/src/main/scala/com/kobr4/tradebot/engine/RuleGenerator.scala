@@ -5,9 +5,8 @@ import com.kobr4.tradebot.api.CurrencyPair
 import com.kobr4.tradebot.model._
 import com.kobr4.tradebot.engine.Rule.Condition._
 trait ConditionObject {
-  def when[T <: Order](in: Option[T], asset: Asset, current: ZonedDateTime, assetPrice: BigDecimal, priceData: PairPrices)(implicit portfolio: Portfolio) : Option[T]
+  def when[T <: Order](in: Option[T], asset: Asset, current: ZonedDateTime, assetPrice: BigDecimal, priceData: PairPrices)(implicit portfolio: Portfolio): Option[T]
 }
-
 
 case class WhenAboveMovingAverage(days: Int) extends ConditionObject {
 
@@ -23,21 +22,21 @@ case class WhenBelowMovingAverage(days: Int) extends ConditionObject {
   }
 }
 
-case class WhenStops(high : Int,low: Int) extends ConditionObject {
+case class WhenStops(high: Int, low: Int) extends ConditionObject {
 
   def when[T <: Order](in: Option[T], asset: Asset, current: ZonedDateTime, assetPrice: BigDecimal, priceData: PairPrices)(implicit portfolio: Portfolio): Option[T] = {
     in.whenStops(asset, high, low, assetPrice)
   }
 }
 
-case class WhenHigh(days : Int) extends ConditionObject {
+case class WhenHigh(days: Int) extends ConditionObject {
 
   def when[T <: Order](in: Option[T], asset: Asset, current: ZonedDateTime, assetPrice: BigDecimal, priceData: PairPrices)(implicit portfolio: Portfolio): Option[T] = {
     in.whenHigh(current, assetPrice, priceData, days)
   }
 }
 
-case class WhenLow(days : Int) extends ConditionObject {
+case class WhenLow(days: Int) extends ConditionObject {
 
   def when[T <: Order](in: Option[T], asset: Asset, current: ZonedDateTime, assetPrice: BigDecimal, priceData: PairPrices)(implicit portfolio: Portfolio): Option[T] = {
     in.whenLow(current, assetPrice, priceData, days)
@@ -53,13 +52,13 @@ case class WhenNoOp() extends ConditionObject {
 
 object RuleGenerator {
 
-  private def getNoop(n : Int) = (for(a <- 1 to n) yield WhenNoOp()).toList
+  private def getNoop(n: Int) = (for (a <- 1 to n) yield WhenNoOp()).toList
 
   def getAllWhenHigh = List(WhenHigh(10), WhenHigh(20), WhenHigh(30))
 
   def getAllWhenLow = List(WhenLow(10), WhenLow(20), WhenLow(30))
 
-  def getAllWhenStops = List(WhenStops(10,-10),WhenStops(20,-20),WhenStops(30,-30))
+  def getAllWhenStops = List(WhenStops(10, -10), WhenStops(20, -20), WhenStops(30, -30))
 
   def getAllWhenAboveMovingAverage = List(
     WhenAboveMovingAverage(10),
@@ -73,18 +72,16 @@ object RuleGenerator {
     WhenBelowMovingAverage(30),
     WhenBelowMovingAverage(50))
 
-  def getAll(n : Int): List[ConditionObject] = getAllWhenAboveMovingAverage ::: getAllWhenBelowMovingAverage ::: getAllWhenStops::: getAllWhenHigh :::  getAllWhenLow ::: getNoop(n)
+  def getAll(n: Int): List[ConditionObject] = getAllWhenAboveMovingAverage ::: getAllWhenBelowMovingAverage ::: getAllWhenStops ::: getAllWhenHigh ::: getAllWhenLow ::: getNoop(n)
 }
 
+case class GeneratedStrategy(buyList: List[ConditionObject], sellList: List[ConditionObject]) extends Strategy {
 
-case class GeneratedStrategy(buyList : List[ConditionObject], sellList : List[ConditionObject]) extends Strategy {
-
-  def runOrderList[T <: Order](input: Option[T], buyList : List[ConditionObject], asset: Asset, current: ZonedDateTime, assetPrice: BigDecimal, priceData: PairPrices)(implicit portfolio: Portfolio): Option[T] = (input, buyList) match {
-    case (None,_) => None
+  def runOrderList[T <: Order](input: Option[T], buyList: List[ConditionObject], asset: Asset, current: ZonedDateTime, assetPrice: BigDecimal, priceData: PairPrices)(implicit portfolio: Portfolio): Option[T] = (input, buyList) match {
+    case (None, _) => None
     case (other, Nil) => other
-    case (other,cond::tail) =>  runOrderList(cond.when(other, asset, current, assetPrice, priceData), tail, asset, current, assetPrice, priceData)
+    case (other, cond :: tail) => runOrderList(cond.when(other, asset, current, assetPrice, priceData), tail, asset, current, assetPrice, priceData)
   }
-
 
   def buyStrategy(pair: CurrencyPair, portfolio: Portfolio, current: ZonedDateTime, priceData: PairPrices, weight: BigDecimal = BigDecimal(1)): Option[Buy] = {
 
@@ -109,16 +106,16 @@ case class GeneratedStrategy(buyList : List[ConditionObject], sellList : List[Co
   }
 }
 
-case class AggregatedStrategy(strategyList : List[GeneratedStrategy]) extends Strategy {
+case class AggregatedStrategy(strategyList: List[GeneratedStrategy]) extends Strategy {
 
   def buyStrategy(pair: CurrencyPair, portfolio: Portfolio, current: ZonedDateTime, priceData: PairPrices, weight: BigDecimal = BigDecimal(1)): Option[Buy] = {
-    strategyList.foldLeft(strategyList.head.buyStrategy(pair,portfolio, current, priceData, weight))( (maybeBuy, strategy) =>
-      maybeBuy.orElse(strategy.buyStrategy(pair,portfolio, current, priceData, weight)))
+    strategyList.foldLeft(strategyList.head.buyStrategy(pair, portfolio, current, priceData, weight))((maybeBuy, strategy) =>
+      maybeBuy.orElse(strategy.buyStrategy(pair, portfolio, current, priceData, weight)))
   }
 
   def sellStrategy(pair: CurrencyPair, portfolio: Portfolio, current: ZonedDateTime, priceData: PairPrices, weight: BigDecimal = BigDecimal(1)): Option[Sell] = {
-    strategyList.foldLeft(strategyList.head.sellStrategy(pair,portfolio, current, priceData))( (maybeSell, strategy) =>
-      maybeSell.orElse(strategy.sellStrategy(pair,portfolio, current, priceData)))
+    strategyList.foldLeft(strategyList.head.sellStrategy(pair, portfolio, current, priceData))((maybeSell, strategy) =>
+      maybeSell.orElse(strategy.sellStrategy(pair, portfolio, current, priceData)))
   }
 
   override def runStrategy(pair: CurrencyPair, current: ZonedDateTime, priceData: PairPrices, portfolio: Portfolio, weight: BigDecimal = BigDecimal(1)): Option[Order] = {

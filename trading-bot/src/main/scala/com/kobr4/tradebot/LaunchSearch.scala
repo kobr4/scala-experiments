@@ -7,10 +7,10 @@ import akka.stream.ActorMaterializer
 import com.kobr4.tradebot.api.CurrencyPair
 import com.kobr4.tradebot.engine._
 import com.kobr4.tradebot.model._
-import com.kobr4.tradebot.services.{PriceService, TradeBotService}
+import com.kobr4.tradebot.services.{ PriceService, TradeBotService }
 import com.typesafe.scalalogging.StrictLogging
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{ ExecutionContext, Future }
 import scala.util.control.NonFatal
 
 object LaunchSearch extends StrictLogging {
@@ -34,8 +34,7 @@ object LaunchSearch extends StrictLogging {
 
       RunPairReport(pair, price * quantity, initialAmount / pd.currentPrice(date) * pd.currentPrice(ZonedDateTime.now()), strategy)
     }.getOrElse(
-      RunPairReport(pair, initialAmount, initialAmount, strategy)
-    )
+      RunPairReport(pair, initialAmount, initialAmount, strategy))
   }
 
   def runMultipleAndReport(assetWeight: Map[Asset, BigDecimal], priceMap: Map[Asset, PairPrices], strategy: Strategy)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext) = {
@@ -53,7 +52,7 @@ object LaunchSearch extends StrictLogging {
     implicit val am: ActorMaterializer = ActorMaterializer()
     implicit val ec: ExecutionContext = system.dispatcher
 
-    logger.info("Launching length: {}",RuleGenerator.getAll(2).combinations(2).toList.length)
+    logger.info("Launching length: {}", RuleGenerator.getAll(2).combinations(2).toList.length)
 
     //PriceService.getPriceData(pair, date, ZonedDateTime.now()).map { pd =>
 

@@ -8,9 +8,9 @@ import akka.http.scaladsl.model.HttpRequest
 import akka.http.scaladsl.model.headers.RawHeader
 import akka.http.scaladsl.unmarshalling.Unmarshal
 import akka.stream.ActorMaterializer
-import com.kobr4.tradebot.model.{PairPrice, PairPrices}
+import com.kobr4.tradebot.model.{ PairPrice, PairPrices }
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{ ExecutionContext, Future }
 
 object YahooFinanceApi {
 

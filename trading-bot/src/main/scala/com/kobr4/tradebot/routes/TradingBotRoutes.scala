@@ -12,7 +12,7 @@ import akka.stream.ActorMaterializer
 import com.kobr4.tradebot.QuickstartServer
 import com.kobr4.tradebot.api._
 import com.kobr4.tradebot.engine.Strategy
-import com.kobr4.tradebot.model.{ Asset, Order, Quantity }
+import com.kobr4.tradebot.model.{ Asset, Quantity }
 import com.kobr4.tradebot.scheduler.{ KrakenDailyJob, TradeBotDailyJob }
 import com.kobr4.tradebot.services.{ PriceService, TradeBotService, TradingOps }
 import play.api.libs.functional.syntax._
@@ -46,6 +46,8 @@ object ScheduledTradeBot {
 
 case object UnsupportedStrategyException extends RuntimeException
 
+case class Balances(valuation: BigDecimal, assetList: List[(Asset, Quantity)])
+
 trait TradingBotRoutes extends PlayJsonSupport with PriceApiRoutes {
 
   // we leave these abstract, since they will be provided by the App
@@ -74,6 +76,8 @@ trait TradingBotRoutes extends PlayJsonSupport with PriceApiRoutes {
   implicit val assetQuantityWrites: Writes[(Asset, Quantity)] = (
     (JsPath \ "asset").write[Asset] and
     (JsPath \ "quantity").write[BigDecimal]) { a: (Asset, Quantity) => (a._1, a._2.quantity) }
+
+  implicit val balancesWrites: Writes[Balances] = Json.writes[Balances]
 
   implicit val poloOrderWrites: Writes[PoloOrder] = (
     (JsPath \ "orderNumber").write[String] and
@@ -145,8 +149,15 @@ trait TradingBotRoutes extends PlayJsonSupport with PriceApiRoutes {
       get {
         parameters('exchange.as(stringToSupportedExchange)) { exchange =>
           val exchangeApi = ExchangeApi(exchange)
-          onSuccess(exchangeApi.returnBalances.map(_.toList)) { assetQuantityList =>
-            complete(assetQuantityList)
+          val eventualBalancePrice = for {
+            a <- exchangeApi.returnBalances.map(_.toList)
+            b <- exchangeApi.returnTicker()
+          } yield { (a, b) }
+          onSuccess(eventualBalancePrice) { (assetQuantityList, quoteList) =>
+            val usdValue = assetQuantityList.map(assetQ =>
+              quoteList.find(p => p.pair.left == Asset.Usd && p.pair.right == assetQ._1)
+                .map(_.last).getOrElse(BigDecimal(1)) * assetQ._2.quantity).sum
+            complete(Balances(usdValue, assetQuantityList))
           }
         }
       }

@@ -4,12 +4,12 @@ import java.time.ZonedDateTime
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
-import com.kobr4.tradebot.api.{CurrencyPair, ExchangeApi, PoloApi}
+import com.kobr4.tradebot.api.{ CurrencyPair, ExchangeApi, PoloApi }
 import com.kobr4.tradebot.engine.Strategy
 import com.kobr4.tradebot.model.Asset.Usd
 import com.kobr4.tradebot.model._
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{ ExecutionContext, Future }
 
 object TradeBotService {
 
@@ -34,7 +34,6 @@ object TradeBotService {
       strategy.runStrategy(CurrencyPair(Asset.Usd, assetData._1), assetData._2.date, priceMap(assetData._1), portfolio, assetMap(assetData._1)).map(order => portfolio.update(order, feesPercentage)))
 
   }
-
 
   def runMap(assetMap: Map[Asset, BigDecimal], startDate: ZonedDateTime, initialUsdAmount: BigDecimal, feesPercentage: BigDecimal, strategy: Strategy, endDate: ZonedDateTime = ZonedDateTime.now())(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[List[Order]] = {
     val eventualPData = Future.sequence(assetMap.keys.toList.map(asset => PriceService.getPriceData(asset).map(asset -> _)))
