@@ -49,7 +49,7 @@ object CurrencyPairHelper {
     }
     (Asset.fromString(a), Asset.fromString(b)) match {
       case (Some(asset1), Some(asset2)) =>
-        CurrencyPair(asset1, asset2)
+        CurrencyPair(asset2, asset1)
     }
   }
 

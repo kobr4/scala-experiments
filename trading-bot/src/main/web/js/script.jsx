@@ -366,7 +366,9 @@ class InHouseInfo extends React.Component {
   )
 
   requestBalance = () => RestUtils.performRestPriceReq((balanceList)=> 
-    { this.setState({balancesFields: this.rowsFromObjets(balanceList)})},
+    { 
+      requestTradeHistory()
+      this.setState({balancesFields: this.rowsFromObjets(balanceList)})},
     '/inhouse/balances',[['exchange', this.props.exchange]]
   )
 
@@ -389,7 +391,6 @@ class InHouseInfo extends React.Component {
   componentDidMount() {
     this.requestBalance();
     this.requestCurrentlyTrading();
-    this.requestTradeHistory();
   }
 
   render() {
