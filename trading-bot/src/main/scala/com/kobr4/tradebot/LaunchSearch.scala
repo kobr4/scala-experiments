@@ -7,7 +7,7 @@ import akka.stream.ActorMaterializer
 import com.kobr4.tradebot.api.CurrencyPair
 import com.kobr4.tradebot.engine._
 import com.kobr4.tradebot.model._
-import com.kobr4.tradebot.services.{ PriceService, TradeBotService }
+import com.kobr4.tradebot.services.{ PriceService, RunMultipleReport, RunPairReport, TradeBotService }
 import com.typesafe.scalalogging.StrictLogging
 
 import scala.concurrent.{ ExecutionContext, Future }

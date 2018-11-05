@@ -198,7 +198,21 @@ class GraphResult extends React.Component {
     ).then((prices) => { this.setState({ma30datapoints : prices})});
 
   handleSubmit = (event) => {
-    RestUtils.performRestReqWithPromise( '/trade_bot', 
+    RestUtils.performRestReqWithPromise( '/trade_bot/run', 
+      [ ['asset', this.props.asset], ['start', this.state.start.format(moment.defaultFormatUtc)], 
+        ['end',this.state.end.format(moment.defaultFormatUtc)], ['initial', this.state.initial], 
+        ['fees', this.state.fees], ['strategy', this.state.strategy], ['pair', this.state.currency_left+'_'+this.state.currency_right] ]
+    ).then((tradeBotResponse) => {
+      this.setState({responseFields : Helper.buildResponseComponent(tradeBotResponse)});
+      buildExecutionResult(tradeBotResponse, this.state.initial, this.state.currency_left, this.state.currency_right, this.state.start, this.state.end, 
+        (result) =>  this.setState({executionResultFields: <ExecutionResultPanel result={result}/>})
+      );
+    }) ;
+    event.preventDefault();
+  }
+
+  handleLearn = (event) => {
+    RestUtils.performRestReqWithPromise( '/trade_bot/search', 
       [ ['asset', this.props.asset], ['start', this.state.start.format(moment.defaultFormatUtc)], 
         ['end',this.state.end.format(moment.defaultFormatUtc)], ['initial', this.state.initial], 
         ['fees', this.state.fees], ['strategy', this.state.strategy], ['pair', this.state.currency_left+'_'+this.state.currency_right] ]
@@ -314,6 +328,9 @@ class GraphResult extends React.Component {
                 <FormRow>
                   <FormButton text='Update' handleClick={ (event) => { this.componentDidMount(); this.setState({asset: this.state.currency_right})} }/>
                 </FormRow>
+                <FormRow>
+                  <FormButton text='Learn' handleClick={ (event) => { this.handleLearn(event) } }/>
+                </FormRow>                
               </FormTable>    
             </FormContainer>
           </Panel>

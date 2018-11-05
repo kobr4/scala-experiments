@@ -4,14 +4,34 @@ import java.time.ZonedDateTime
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
-import com.kobr4.tradebot.api.{ CurrencyPair, ExchangeApi, PoloApi }
-import com.kobr4.tradebot.engine.Strategy
+import com.kobr4.tradebot.api.{ CurrencyPair, ExchangeApi }
+import com.kobr4.tradebot.engine.{ GeneratedStrategy, RuleGenerator, Strategy }
 import com.kobr4.tradebot.model.Asset.Usd
 import com.kobr4.tradebot.model._
+import com.typesafe.scalalogging.StrictLogging
 
 import scala.concurrent.{ ExecutionContext, Future }
+import scala.util.control.NonFatal
 
-object TradeBotService {
+case class RunReport(asset: Asset, finalBalance: BigDecimal, buyAndHold: BigDecimal, strategy: Strategy) {
+  def print(): Unit = {
+    println(this)
+  }
+}
+
+case class RunPairReport(pair: CurrencyPair, finalBalance: BigDecimal, buyAndHold: BigDecimal, strategy: Strategy) {
+  def print(): Unit = {
+    println(this)
+  }
+}
+
+case class RunMultipleReport(finalBalance: BigDecimal, strategy: Strategy) {
+  def print(): Unit = {
+    println(this)
+  }
+}
+
+object TradeBotService extends StrictLogging {
 
   val estimatedMarketFee = BigDecimal(0.25)
 
@@ -64,6 +84,38 @@ object TradeBotService {
         }
       }
     }
+  }
+
+  private def runMultipleAndReport(assetWeight: Map[Asset, BigDecimal], priceMap: Map[Asset, PairPrices],
+    strategy: Strategy, initialUsdAmount: BigDecimal, feesPercentage: BigDecimal, startDate: ZonedDateTime,
+    endDate: ZonedDateTime = ZonedDateTime.now())(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): RunMultipleReport = {
+    val pdList = TradeBotService.runMapT(assetWeight, priceMap, startDate, initialUsdAmount, feesPercentage, strategy, endDate)
+    val portfolio = Portfolio.create(priceMap)
+    portfolio.assets(Asset.Usd) = Quantity(initialUsdAmount)
+    pdList.foreach { tuple => portfolio.update(tuple, BigDecimal(0.1)) }
+    RunMultipleReport(portfolio.balance(Asset.Usd, ZonedDateTime.now()), strategy)
+
+  }
+
+  def bestRun(assetWeight: Map[Asset, BigDecimal], initialUsdAmount: BigDecimal,
+    feesPercentage: BigDecimal, startDate: ZonedDateTime, endDate: ZonedDateTime)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[RunMultipleReport] = {
+    logger.info("Search started")
+    val eventualPData = Future.sequence(assetWeight.keys.toList.map(asset => PriceService.getPriceData(asset).map(asset -> _)))
+    eventualPData.map { priceMap =>
+      logger.info("Search continued")
+      val reportList = RuleGenerator.getAll(2).combinations(2).toList.flatMap { buyList =>
+        RuleGenerator.getAll(2).combinations(2).toList.par.map { sellList =>
+          val strategy = GeneratedStrategy(buyList, sellList)
+          runMultipleAndReport(assetWeight, priceMap.toMap, strategy, initialUsdAmount, feesPercentage, startDate, endDate)
+        }
+      }
+      logger.info("Search ended")
+      reportList.maxBy(report => report.finalBalance)
+    }
+  }.recover {
+    case NonFatal(t) =>
+      logger.error("Error occured {}", t.getMessage)
+      throw t
   }
 
 }

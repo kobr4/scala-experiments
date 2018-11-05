@@ -4,33 +4,14 @@ import java.time.ZonedDateTime
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
-import com.kobr4.tradebot.LaunchReport.date
 import com.kobr4.tradebot.api.CurrencyPair
-import com.kobr4.tradebot.engine.{ AlternativeStrategy, SafeStrategy, Strategy }
+import com.kobr4.tradebot.engine.{ SafeStrategy, Strategy }
 import com.kobr4.tradebot.model._
-import com.kobr4.tradebot.services.{ PriceService, TradeBotService }
+import com.kobr4.tradebot.services._
 
 import scala.concurrent.{ ExecutionContext, Future }
 import scala.util.Failure
 import scala.util.control.NonFatal
-
-case class RunReport(asset: Asset, finalBalance: BigDecimal, buyAndHold: BigDecimal, strategy: Strategy) {
-  def print(): Unit = {
-    println(this)
-  }
-}
-
-case class RunPairReport(pair: CurrencyPair, finalBalance: BigDecimal, buyAndHold: BigDecimal, strategy: Strategy) {
-  def print(): Unit = {
-    println(this)
-  }
-}
-
-case class RunMultipleReport(finalBalance: BigDecimal, strategy: Strategy) {
-  def print(): Unit = {
-    println(this)
-  }
-}
 
 object LaunchReport {
 
