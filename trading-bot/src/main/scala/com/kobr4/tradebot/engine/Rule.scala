@@ -37,11 +37,15 @@ object Rule {
       override def whenCashAvailable(asset: Asset)(implicit portfolio: Portfolio): Option[T] = input.filter(_ => portfolio.assets(asset).quantity > 0)
 
       override def whenHigh(current: ZonedDateTime, currentPrice: BigDecimal, priceData: PairPrices, days: Int): Option[T] = {
-        if (priceData.prices.filter(p => p.date.isAfter(current.minusDays(days)) && p.date.isBefore(current)).map(_.price).max <= currentPrice) input else None
+        val prices = priceData.prices.filter(p => p.date.isAfter(current.minusDays(days)) && p.date.isBefore(current)).map(_.price)
+
+        if (prices.nonEmpty && prices.max <= currentPrice) input else None
       }
 
       override def whenLow(current: ZonedDateTime, currentPrice: BigDecimal, priceData: PairPrices, days: Int): Option[T] = {
-        if (priceData.prices.filter(p => p.date.isAfter(current.minusDays(days)) && p.date.isBefore(current)).map(_.price).min >= currentPrice) input else None
+        val prices = priceData.prices.filter(p => p.date.isAfter(current.minusDays(days)) && p.date.isBefore(current)).map(_.price)
+
+        if (prices.nonEmpty && prices.max >= currentPrice) input else None
       }
 
       override def whenBelowMovingAverage(current: ZonedDateTime, currentPrice: BigDecimal, priceData: PairPrices, days: Int): Option[T] = priceData.movingAverage(current, days).filter(_ > currentPrice).flatMap(_ => input)

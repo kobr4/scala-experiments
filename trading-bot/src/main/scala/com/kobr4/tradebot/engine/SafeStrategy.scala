@@ -15,7 +15,9 @@ trait Strategy {
   def runStrategy(pair: CurrencyPair, current: ZonedDateTime, priceData: PairPrices, portfolio: Portfolio, weight: BigDecimal = BigDecimal(1)): Option[Order]
 
   def getQuantity(current: ZonedDateTime, weight: BigDecimal, pair: CurrencyPair, assetPrice: BigDecimal)(implicit portfolio: Portfolio): BigDecimal = {
-    (((portfolio.balance(pair.left, current) * weight) - portfolio.balanceForAsset(pair.right, current)).max(0).min(portfolio.assets(pair.left).quantity) / assetPrice).setScale(4, RoundingMode.DOWN)
+    if (assetPrice != 0) {
+      (((portfolio.balance(pair.left, current) * weight) - portfolio.balanceForAsset(pair.right, current)).max(0).min(portfolio.assets(pair.left).quantity) / assetPrice).setScale(4, RoundingMode.DOWN)
+    } else BigDecimal(0)
   }
 
   def MaybeBuy(pair: CurrencyPair, quantity: BigDecimal, assetPrice: BigDecimal, current: ZonedDateTime): Option[Buy] =

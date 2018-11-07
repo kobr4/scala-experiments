@@ -5,20 +5,22 @@ import java.time.ZonedDateTime
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import com.kobr4.tradebot.api.CurrencyPair
-import com.kobr4.tradebot.engine.{ SafeStrategy, Strategy }
+import com.kobr4.tradebot.engine._
 import com.kobr4.tradebot.model._
 import com.kobr4.tradebot.services._
 
-import scala.concurrent.{ ExecutionContext, Future }
+import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Failure
 import scala.util.control.NonFatal
 
 object LaunchReport {
 
-  val date = ZonedDateTime.parse("2017-01-01T01:00:00.000Z")
+  val date = ZonedDateTime.parse("2018-01-01T01:00:00.000Z")
   val initialAmount = BigDecimal(10000)
   val fees = BigDecimal(0.1)
-  val strategy = SafeStrategy
+  val strategy = GeneratedStrategy(List(WhenAboveMovingAverage(10), WhenHigh(20)),
+    List(WhenAboveMovingAverage(30), WhenBelowMovingAverage(20)))
+  //val strategy = SafeStrategy
 
   def runPairAndReport(pair: CurrencyPair)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[RunPairReport] = {
     PriceService.getPairPrice(pair, date, ZonedDateTime.now()).map { pd =>
@@ -65,7 +67,7 @@ object LaunchReport {
     implicit val am: ActorMaterializer = ActorMaterializer()
     implicit val ec: ExecutionContext = system.dispatcher
 
-    runPairAndReport(CurrencyPair(Asset.Btc, Asset.Eth)).map(_.print()).recover {
+    runPairAndReport(CurrencyPair(Asset.Btc, Asset.Dash)).map(_.print()).recover {
       case NonFatal(t) => println("Failed with error : " + t.printStackTrace())
     }
 

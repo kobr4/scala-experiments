@@ -26,7 +26,7 @@ class TradeBotDailyJob extends SchedulerJobInterface with StrictLogging {
 
     val tradingOps = new TradingOps(exchangeApi)
 
-    val eventualResult = TradeBotService.runMapAndTrade(getAssetMap(), SafeStrategy, exchangeApi, tradingOps).map { orderList =>
+    val eventualResult = TradeBotService.runMapAndTrade(getAssetMap(), SafeStrategy, exchangeApi, tradingOps, Asset.Usd).map { orderList =>
       orderList.foreach(order => logger.info(order.toString))
     }
 

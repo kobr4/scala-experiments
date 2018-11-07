@@ -37,11 +37,13 @@ object PriceService {
     }
   }
 
-  private def getPricesOrPair(pair: CurrencyPair, startDate: ZonedDateTime, endDate: ZonedDateTime)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[PairPrices] = {
-    if (pair.left == Asset.Usd)
-      getPricesWithCache(pair.right)
-    else
-      getPairPrice(pair, startDate, endDate)
+  private def getPricesOrPair(pair: CurrencyPair, startDate: ZonedDateTime, endDate: ZonedDateTime, withCache: Boolean = true)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[PairPrices] = {
+    if (pair.left == Asset.Usd && withCache)
+        getPricesWithCache(pair.right)
+    else if (pair.left == Asset.Usd) {
+      getPricesWithoutCache(pair.right)
+    } else
+      getPairPrice(pair, startDate, endDate, withCache)
   }
 
   private def getPricesWithCache(asset: Asset)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[PairPrices] = asset match {
@@ -54,6 +56,11 @@ object PriceService {
     case Asset.Xlm => getCoinmetricsPricesWithCache(CoinMetricsPriceUrl.xlm)
     case Asset.Dgb => getCoinmetricsPricesWithCache(CoinMetricsPriceUrl.dgb)
     case Asset.Ada => getCoinmetricsPricesWithCache(CoinMetricsPriceUrl.ada)
+    case Asset.Ltc => getCoinmetricsPricesWithCache(CoinMetricsPriceUrl.ltc)
+    case Asset.Zec => getCoinmetricsPricesWithCache(CoinMetricsPriceUrl.zec)
+    case Asset.Dash => getCoinmetricsPricesWithCache(CoinMetricsPriceUrl.dash)
+    case Asset.Bch => getCoinmetricsPricesWithCache(CoinMetricsPriceUrl.bch)
+    case Asset.Maid => getCoinmetricsPricesWithCache(CoinMetricsPriceUrl.maid)
     case other => getYahooPricesWithCache(other.toString)
   }
 
@@ -67,6 +74,11 @@ object PriceService {
     case Asset.Xlm => PairPrice.fromUrlAsync(CoinMetricsPriceUrl.xlm)
     case Asset.Dgb => PairPrice.fromUrlAsync(CoinMetricsPriceUrl.dgb)
     case Asset.Ada => PairPrice.fromUrlAsync(CoinMetricsPriceUrl.ada)
+    case Asset.Ltc => PairPrice.fromUrlAsync(CoinMetricsPriceUrl.ltc)
+    case Asset.Zec => PairPrice.fromUrlAsync(CoinMetricsPriceUrl.zec)
+    case Asset.Dash => PairPrice.fromUrlAsync(CoinMetricsPriceUrl.dash)
+    case Asset.Bch => PairPrice.fromUrlAsync(CoinMetricsPriceUrl.bch)
+    case Asset.Maid => PairPrice.fromUrlAsync(CoinMetricsPriceUrl.maid)
     case other => getYahooPricesWithCache(other.toString)
   }
 
@@ -79,10 +91,10 @@ object PriceService {
   def getPriceHistory(pair: CurrencyPair, startDate: ZonedDateTime, endDate: ZonedDateTime)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[List[BigDecimal]] =
     getPricesOrPair(pair, startDate, endDate).map { prices => groupAndFilter(prices, startDate, endDate) }
 
-  def getPairPrice(pair: CurrencyPair, startDate: ZonedDateTime, endDate: ZonedDateTime)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[PairPrices] = {
+  def getPairPrice(pair: CurrencyPair, startDate: ZonedDateTime, endDate: ZonedDateTime, withCache: Boolean = true)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[PairPrices] = {
     for {
-      leftPrices <- getPricesWithCache(pair.left)
-      rightPrices <- getPricesWithCache(pair.right)
+      leftPrices <- if (withCache) getPricesWithCache(pair.left) else getPricesWithoutCache(pair.left)
+      rightPrices <- if (withCache) getPricesWithCache(pair.right) else getPricesWithoutCache(pair.right)
     } yield {
       val pairPriceList = leftPrices.filter(startDate, endDate).prices.zip(rightPrices.filter(startDate, endDate).prices).
         map(pairTuple => EthUsd(pairTuple._1.date, pairTuple._2.price / pairTuple._1.price))

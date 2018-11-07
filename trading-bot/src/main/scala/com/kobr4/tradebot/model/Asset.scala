@@ -13,6 +13,8 @@ object Asset {
 
   case object Eth extends Asset { val code = "ETH" }
 
+  case object Ltc extends Asset { val code = "LTC" }
+
   case object Btc extends Asset { val code = "BTC" }
 
   case object Xmr extends Asset { val code = "XMR" }
@@ -31,6 +33,14 @@ object Asset {
 
   case object Ada extends Asset { val code = "ADA" }
 
+  case object Bch extends Asset { val code = "BCH" }
+
+  case object Dash extends Asset { val code = "DASH" }
+
+  case object Zec extends Asset { val code = "ZEC" }
+
+  case object Maid extends Asset { val code = "MAID" }
+
   case class Custom(code: String) extends Asset
 
   def fromString(s: String): Option[Asset] = s match {
@@ -48,6 +58,11 @@ object Asset {
     case "ZUSD" => Some(Asset.Usd)
     case "ADA" => Some(Asset.Ada)
     case "STR" => Some(Asset.Xlm)
+    case "LTC" => Some(Asset.Ltc)
+    case "BCH" => Some(Asset.Bch)
+    case "DASH" => Some(Asset.Dash)
+    case "ZEC" => Some(Asset.Zec)
+    case "MAID" => Some(Asset.Maid)
     case xs if xs != "XUSD" && xs.startsWith("X") && xs.length == 4 => fromString(xs.substring(1))
     case code => Some(Custom(code))
   }

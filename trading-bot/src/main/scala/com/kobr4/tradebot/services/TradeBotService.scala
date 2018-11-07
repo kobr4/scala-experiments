@@ -47,11 +47,12 @@ object TradeBotService extends StrictLogging {
     priceData.prices.filter(p => p.date.isAfter(startDate) && p.date.isBefore(endDate)).flatMap(p => strategy.runStrategy(pair, p.date, priceData, portfolio).map(order => portfolio.update(order, feesPercentage)))
   }
 
-  def runMapT(assetMap: Map[Asset, BigDecimal], priceMap: Map[Asset, PairPrices], startDate: ZonedDateTime, initialUsdAmount: BigDecimal, feesPercentage: BigDecimal, strategy: Strategy, endDate: ZonedDateTime = ZonedDateTime.now())(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): List[Order] = {
+  def runMapT(assetMap: Map[Asset, BigDecimal], priceMap: Map[Asset, PairPrices], startDate: ZonedDateTime,
+              baseAsset: Asset, initialAmount: BigDecimal, feesPercentage: BigDecimal, strategy: Strategy, endDate: ZonedDateTime = ZonedDateTime.now())(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): List[Order] = {
     val portfolio = Portfolio.create(priceMap)
-    portfolio.assets(Usd) = Quantity(initialUsdAmount)
+    portfolio.assets(baseAsset) = Quantity(initialAmount)
     priceMap.keys.toList.flatMap(asset => priceMap(asset).prices.filter(p => p.date.isAfter(startDate) && p.date.isBefore(endDate)).map((asset, _))).sortBy(_._2.date.toEpochSecond).flatMap(assetData =>
-      strategy.runStrategy(CurrencyPair(Asset.Usd, assetData._1), assetData._2.date, priceMap(assetData._1), portfolio, assetMap(assetData._1)).map(order => portfolio.update(order, feesPercentage)))
+      strategy.runStrategy(CurrencyPair(baseAsset, assetData._1), assetData._2.date, priceMap(assetData._1), portfolio, assetMap(assetData._1)).map(order => portfolio.update(order, feesPercentage)))
 
   }
 
@@ -71,12 +72,12 @@ object TradeBotService extends StrictLogging {
     }
   }
 
-  def runMapAndTrade(assetMap: Map[Asset, BigDecimal], strategy: Strategy, poloApi: ExchangeApi, tradingsOps: TradingOps)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[List[Order]] = {
+  def runMapAndTrade(assetMap: Map[Asset, BigDecimal], strategy: Strategy, poloApi: ExchangeApi, tradingsOps: TradingOps, baseAsset: Asset)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[List[Order]] = {
     val eventualPData = Future.sequence(assetMap.keys.toList.map(asset => PriceService.getPriceDataWithoutCache(asset).map(asset -> _)))
     eventualPData.map(_.toMap).flatMap { pDataMap =>
       Portfolio.fromApi(poloApi, pDataMap).map { portfolio =>
         assetMap.keys.toList.flatMap { asset =>
-          strategy.runStrategy(CurrencyPair(Asset.Usd, asset), ZonedDateTime.now(), pDataMap(asset), portfolio, assetMap(asset)).map(order => {
+          strategy.runStrategy(CurrencyPair(baseAsset, asset), ZonedDateTime.now(), pDataMap(asset), portfolio, assetMap(asset)).map(order => {
             Order.process(order, tradingsOps)
             //In order to make the available cash relevent, we update the portfolio with the sell order if any
             portfolio.updateBuyOnly(order, estimatedMarketFee)
@@ -89,7 +90,7 @@ object TradeBotService extends StrictLogging {
   private def runMultipleAndReport(assetWeight: Map[Asset, BigDecimal], priceMap: Map[Asset, PairPrices],
     strategy: Strategy, initialUsdAmount: BigDecimal, feesPercentage: BigDecimal, startDate: ZonedDateTime,
     endDate: ZonedDateTime = ZonedDateTime.now())(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): RunMultipleReport = {
-    val pdList = TradeBotService.runMapT(assetWeight, priceMap, startDate, initialUsdAmount, feesPercentage, strategy, endDate)
+    val pdList = TradeBotService.runMapT(assetWeight, priceMap, startDate, Usd, initialUsdAmount, feesPercentage, strategy, endDate)
     val portfolio = Portfolio.create(priceMap)
     portfolio.assets(Asset.Usd) = Quantity(initialUsdAmount)
     pdList.foreach { tuple => portfolio.update(tuple, BigDecimal(0.1)) }
@@ -102,7 +103,6 @@ object TradeBotService extends StrictLogging {
     logger.info("Search started")
     val eventualPData = Future.sequence(assetWeight.keys.toList.map(asset => PriceService.getPriceData(asset).map(asset -> _)))
     eventualPData.map { priceMap =>
-      logger.info("Search continued")
       val reportList = RuleGenerator.getAll(2).combinations(2).toList.flatMap { buyList =>
         RuleGenerator.getAll(2).combinations(2).toList.par.map { sellList =>
           val strategy = GeneratedStrategy(buyList, sellList)
