@@ -1,6 +1,6 @@
 package com.kobr4.tradebot.api
 
-import java.time.{ ZoneId, ZonedDateTime }
+import java.time.{Instant, ZoneId, ZoneOffset, ZonedDateTime}
 import java.time.format.FormatStyle
 
 import akka.actor.ActorSystem
@@ -16,7 +16,7 @@ import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
 import play.api.libs.json._
 
-import scala.concurrent.{ ExecutionContext, Future }
+import scala.concurrent.{ExecutionContext, Future}
 
 case class PoloOrder(orderNumber: String, rate: BigDecimal, amount: BigDecimal)
 
@@ -96,6 +96,12 @@ class PoloApi(
     (JsPath \ "baseVolume").read[BigDecimal] and
     (JsPath \ "quoteVolume").read[BigDecimal])(Quote.apply _)
 
+  implicit val pairPriceReads: Reads[PairPrice] = (
+    (JsPath \ "date").read[Long].map(t => ZonedDateTime.ofInstant(Instant.ofEpochSecond(t), ZoneOffset.UTC)) and
+      (JsPath \ "close").read[BigDecimal]
+    ) (EthUsd.apply _)
+
+
   override def returnBalances: Future[Map[Asset, Quantity]] =
     PoloApi.httpRequestPost(tradingUrl, PoloApi.ReturnBalances.build(nonce), apiKey, apiSecret).map { message =>
       Json.parse(message).as[JsObject].fields.flatMap {
@@ -161,6 +167,14 @@ class PoloApi(
         }
     }.toList
   }
+
+  def returnChartData(currencyPair: CurrencyPair, period: Int, start: ZonedDateTime, end: ZonedDateTime): Future[PairPrices] =
+    PoloApi.httpRequest(publicUrl, Public.returnChartData+"&"+ReturnChartData.build(currencyPair.toString, period, start.toEpochSecond, end.toEpochSecond).fields.toString).map {
+      message => PairPrices(Json.parse(message).as[JsArray].value.toList.map { item =>
+        item.as[PairPrice]
+      })
+    }
+
 }
 
 object PoloApi extends StrictLogging {
@@ -176,6 +190,8 @@ object PoloApi extends StrictLogging {
   object Public {
 
     val returnTicker = "returnTicker"
+
+    val returnChartData = "returnChartData"
   }
 
   object BuySell {
@@ -230,6 +246,21 @@ object PoloApi extends StrictLogging {
     val ReturnDepositAddresses = "returnDepositAddresses"
 
     def build(nonce: Long): FormData = akka.http.scaladsl.model.FormData(Map(PoloApi.Command -> ReturnDepositAddresses, PoloApi.Nonce -> nonce.toString))
+  }
+
+
+  object ReturnChartData {
+
+    val CurrencyPair = "currencyPair"
+
+    val Period = "period"
+
+    val Start = "start"
+
+    val End = "end"
+
+    def build(currencyPair: String, period: Int, start: Long, end: Long): FormData = akka.http.scaladsl.model.FormData(
+      Map(CurrencyPair -> currencyPair, Period -> period.toString, Start -> start.toString, End -> end.toString))
   }
 
   object CancelOrder {

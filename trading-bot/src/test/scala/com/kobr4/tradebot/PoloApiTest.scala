@@ -1,16 +1,18 @@
 package com.kobr4.tradebot
 
+import java.time.ZonedDateTime
+
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.WireMock._
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration.options
-import com.kobr4.tradebot.api.{ CurrencyPair, PoloApi, PoloOrder }
+import com.kobr4.tradebot.api.{CurrencyPair, PoloApi, PoloOrder}
 import com.kobr4.tradebot.model.Asset.Usd
-import com.kobr4.tradebot.model.{ Asset, Buy, Quantity }
+import com.kobr4.tradebot.model.{Asset, Buy, Quantity}
 import org.scalatest.concurrent.PatienceConfiguration.Timeout
 import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.{ BeforeAndAfterEach, FlatSpec, Matchers }
+import org.scalatest.{BeforeAndAfterEach, FlatSpec, Matchers}
 
 import scala.collection.immutable.Range
 import scala.concurrent.duration._
@@ -171,5 +173,33 @@ class PoloApiTest extends FlatSpec with Matchers with ScalaFutures with BeforeAn
     val signature = PoloApi.generateHMAC512("toto", "command=returnBalances")
 
     signature shouldBe "5e6ec0bd24181eeef34ef1c70eb65e116dcbfabd96f4c5409d64f2f028fffaac14295dd6f86e8876f31eee845913edca53e4052b121739497a19b46f5e49ca75"
+  }
+
+  it should "return chart data" in {
+    wireMockServer.stubFor(get(urlMatching("/public\\?command=returnChartData\\&.*"))
+      .willReturn(aResponse()
+        .withHeader("Content-Type", "text/plain")
+        .withBody(
+          """
+            |[
+            |  {
+            |    "date": 1405699200,
+            |    "high": 0.0045388,
+            |    "low": 0.00403001,
+            |    "open": 0.00404545,
+            |    "close": 0.00427592,
+            |    "volume": 44.11655644,
+            |    "quoteVolume": 10259.29079097,
+            |    "weightedAverage": 0.00430015
+            |  }
+            |]
+          """.stripMargin)))
+
+    val api = new PoloApi(DefaultConfiguration.PoloApi.Key, DefaultConfiguration.PoloApi.Secret, poloUrl)
+    val chartData = api.returnChartData(CurrencyPair(Asset.Btc, Asset.Eth), 300,
+      ZonedDateTime.parse("2017-01-01T01:00:00.000Z"), ZonedDateTime.parse("2017-02-01T01:00:00.000Z")).futureValue(Timeout(10 seconds))
+
+    chartData.prices.length shouldNot be(0)
+
   }
 }
