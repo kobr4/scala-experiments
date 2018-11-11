@@ -96,7 +96,7 @@ class TradingGlobal extends React.Component {
       let storeObj = new Object();
       storeObj[asset]=tradeBotResponse.slice(-1)[0];
       this.setState(storeObj);
-    }, '/trade_bot', [['asset', asset], ['start', moment("2017-01-01").format(moment.defaultFormatUtc)], ['end',moment().format(moment.defaultFormatUtc)], ['initial', 10000], ['fees', 0.1], ['strategy', 'safe']]) ;
+    }, '/trade_bot/run', [['asset', asset], ['start', moment("2017-01-01").format(moment.defaultFormatUtc)], ['end',moment().format(moment.defaultFormatUtc)], ['initial', 10000], ['fees', 0.1], ['strategy', 'safe']]) ;
   }
 
 
