@@ -222,7 +222,7 @@ class KrakenApi(krakenUrl: String = KrakenApi.rootUrl, apiKey: String = DefaultC
       KrakenApi.ReturnTradesHistory.build(reqNonce, start.toEpochSecond, end.toEpochSecond), apiKey, apiSecret).map { message =>
         Json.parse(message).as[JsObject].value("result").as[JsObject].value("trades").as[JsObject].value.toList.map {
           case (txid, order) => order.as[KrakenTrade].toOrder
-        }
+        }.sortBy(_.date.toEpochSecond)
       }
   }
 }

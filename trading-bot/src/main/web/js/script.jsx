@@ -3,7 +3,7 @@
 import React from 'react'
 import ReactDOM from 'react-dom'
 import { BrowserRouter, Route, Switch } from 'react-router-dom'
-import { ResponseTable, FormRow, FormTable, FormTextField, FormButton, FormContainer, FormOption, Panel, PanelTable} from './components/generics'
+import { ResponseTable, FormRow, FormTable, FormTextField, FormPasswordField, FormButton, FormContainer, FormOption, Panel, PanelTable} from './components/generics'
 
 import Helper from './components/helper'
 import RestUtils from './restutils'
@@ -181,6 +181,42 @@ class TradingForm extends React.Component {
       </span>
     )
   }
+}
+
+class LoginForm extends React.Component {
+
+  handleSubmit = (event) => {
+    RestUtils.performRestPostReq((token) => {
+      //alert('token: '+token)
+      document.cookie = 'authtoken='+token+';path=/'
+      window.location.href = '/';
+    }, '/auth/login',[ ['email', this.state.email], ['password', this.state.password] ] )
+    event.preventDefault();  
+  }
+
+  constructor(props) {
+    super(props);
+
+    this.state = { 
+      email: '',
+      password: ''
+    }
+  }
+
+  render() {
+    return (
+      <span>
+      <Panel title='Sign In'>
+      <FormContainer handleSubmit={this.handleSubmit} submit="Login">
+      <FormTable>
+      <FormRow><FormTextField value={this.state.email} name="email" handleTextChange={(event) => this.setState({email: event.target.value})} /></FormRow>
+      <FormRow><FormPasswordField value={this.state.password} name="email" handleTextChange={(event) => this.setState({password: event.target.value})} /></FormRow>
+      </FormTable>
+      </FormContainer>
+      </Panel>
+      </span>
+    )
+  }  
 }
 
 
@@ -457,8 +493,25 @@ ReactDOM.render(
         <Route path='/trading' render={() => ( <TradingForm/>)} />
         <Route path='/inhouse_info_poloniex' render={() => ( <InHouseInfo exchange='poloniex'/>)} />
         <Route path='/inhouse_info_kraken' render={() => ( <InHouseInfo exchange='kraken'/>)} />
+        <Route path='/login' render={() => <LoginForm/>}/>
         <Route path='/' render={() => ( <TradingGlobal />)} />
       </Switch>
     </BrowserRouter>,
   document.getElementById('toto')
 );
+
+ReactDOM.render(
+  <ul id="side-menu" class="nav in">
+  <li><a href="btc_price">BTC backtest</a></li>
+  <li><a href="eth_price">ETH backtest</a></li>
+  <li><a href="xmr_price">XMR backtest</a></li>
+  <li><a href="crypto_price">Crypto backtest</a></li>
+  <li><a href="stock_price">Stock backtest</a></li>
+  { document.cookie.indexOf('authtoken=') != -1 &&
+    <li><a href="trading">Trading</a></li>
+  }
+  <li><a href="inhouse_info_poloniex">In-House @ Poloniex</a></li>
+  <li><a href="inhouse_info_kraken">In-House @ Kraken</a></li>
+  </ul>,
+  document.getElementById('side')
+)

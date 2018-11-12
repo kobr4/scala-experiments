@@ -5,11 +5,11 @@ import java.time.ZonedDateTime
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import com.kobr4.tradebot.api._
-import com.kobr4.tradebot.model.{Asset, EthUsd, PairPrice, PairPrices}
-import scalacache.{Cache, cachingF}
+import com.kobr4.tradebot.model.{ Asset, EthUsd, PairPrice, PairPrices }
+import scalacache.{ Cache, cachingF }
 import scalacache.guava.GuavaCache
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{ ExecutionContext, Future }
 
 object PriceService {
 
@@ -39,7 +39,7 @@ object PriceService {
 
   private def getPricesOrPair(pair: CurrencyPair, startDate: ZonedDateTime, endDate: ZonedDateTime, withCache: Boolean = true)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[PairPrices] = {
     if (pair.left == Asset.Usd && withCache)
-        getPricesWithCache(pair.right)
+      getPricesWithCache(pair.right)
     else if (pair.left == Asset.Usd) {
       getPricesWithoutCache(pair.right)
     } else
@@ -53,7 +53,7 @@ object PriceService {
     import scala.concurrent.duration._
 
     val api = new PoloApi()
-    cachingF(pair.toString+period.toString)(ttl = Some(2 hours)) {
+    cachingF(pair.toString + period.toString)(ttl = Some(2 hours)) {
       api.returnChartData(pair, period, startDate, endDate)
     }
   }

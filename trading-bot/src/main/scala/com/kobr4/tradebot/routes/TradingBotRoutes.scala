@@ -14,7 +14,7 @@ import com.kobr4.tradebot.api._
 import com.kobr4.tradebot.engine.Strategy
 import com.kobr4.tradebot.model.{ Asset, Quantity }
 import com.kobr4.tradebot.scheduler.{ KrakenDailyJob, TradeBotDailyJob }
-import com.kobr4.tradebot.services.{ PriceService, RunMultipleReport, TradeBotService, TradingOps }
+import com.kobr4.tradebot.services._
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 
@@ -24,9 +24,14 @@ case class ExchangeCreds(exchange: String, apiKey: String, apiSecret: String)
 
 object ExchangeCreds {
 
-  implicit val exchangeCredsReads: Reads[ExchangeCreds] = Json.reads[ExchangeCreds]
+  implicit val exchangeCredsFormat: Format[ExchangeCreds] = Json.format[ExchangeCreds]
+}
 
-  implicit val exchangeCredsWrites: Writes[ExchangeCreds] = Json.writes[ExchangeCreds]
+case class LoginPassword(email: String, password: String)
+
+object LoginPassword {
+
+  implicit val loginPasswordFormat: Format[LoginPassword] = Json.format[LoginPassword]
 }
 
 case class ScheduledTradeBot(hour: Int, minutes: Int, asset: Asset, strategy: Strategy) {
@@ -206,6 +211,14 @@ trait TradingBotRoutes extends PlayJsonSupport with PriceApiRoutes {
         parameters('exchange.as(stringToSupportedExchange)) {
           case Poloniex => complete(TradeBotDailyJob.assetMap)
           case Kraken => complete(KrakenDailyJob.assetMap)
+        }
+      }
+    }
+  } ~ pathPrefix("auth") {
+    path("login") {
+      post {
+        entity(as[LoginPassword]) { (loginPassword) =>
+          complete(AuthService.issueToken(loginPassword.email, loginPassword.password))
         }
       }
     }

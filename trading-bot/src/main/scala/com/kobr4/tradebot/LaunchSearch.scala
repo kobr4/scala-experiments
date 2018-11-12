@@ -38,7 +38,7 @@ object LaunchSearch extends StrictLogging {
   }
 
   def runMultipleAndReport(assetWeight: Map[Asset, BigDecimal], priceMap: Map[Asset, PairPrices], strategy: Strategy)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext) = {
-    val pdList = TradeBotService.runMapT(assetWeight, priceMap, date, Asset.Usd,initialAmount, fees, strategy)
+    val pdList = TradeBotService.runMapT(assetWeight, priceMap, date, Asset.Usd, initialAmount, fees, strategy)
     val portfolio = Portfolio.create(priceMap)
     portfolio.assets(Asset.Usd) = Quantity(initialAmount)
     pdList.foreach { tuple => portfolio.update(tuple, BigDecimal(0.1)) }
@@ -62,7 +62,7 @@ object LaunchSearch extends StrictLogging {
       Asset.Xmr -> BigDecimal(0.2), Asset.Dgb -> BigDecimal(0.1), Asset.Xrp -> BigDecimal(0.1), Asset.Xlm -> BigDecimal(0.1), Asset.Doge -> BigDecimal(0.1))
     //val assetWeight: Map[Asset, BigDecimal]
     // = Map(Asset.Custom("GLE.PA") -> BigDecimal(0.2), Asset.Custom("BNP.PA") -> BigDecimal(0.3), Asset.Custom("FP.PA") -> BigDecimal(0.3), Asset.Custom("ENGI.PA") -> BigDecimal(0.2))
-    val eventualPData = Future.sequence(assetWeight.keys.toList.map(asset => PriceService.getPairPrice(CurrencyPair(Asset.Btc,asset), date, ZonedDateTime.now()).map(asset -> _)))
+    val eventualPData = Future.sequence(assetWeight.keys.toList.map(asset => PriceService.getPairPrice(CurrencyPair(Asset.Btc, asset), date, ZonedDateTime.now()).map(asset -> _)))
     eventualPData.map { priceMap =>
 
       val reportList = RuleGenerator.getAll(2).combinations(2).toList.par.flatMap { buyList =>

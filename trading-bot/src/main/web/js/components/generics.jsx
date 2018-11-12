@@ -41,6 +41,10 @@ export function FormTextField(props) {
   return <input type="text" value={props.value} name={props.name} onChange={props.handleTextChange} />;
 }
 
+export function FormPasswordField(props) {
+  return <input type="password" value={props.value} name={props.name} onChange={props.handleTextChange} />;
+}
+
 export function FormInputField(props) {
   return (
     <input type="submit" value={props.submit} />

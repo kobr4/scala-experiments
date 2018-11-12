@@ -5,7 +5,8 @@ libraryDependencies += "com.typesafe.scala-logging" %% "scala-logging" % "3.9.0"
 libraryDependencies += "com.typesafe" % "config" % "1.3.2"
 libraryDependencies += "com.enragedginger" %% "akka-quartz-scheduler" % "1.7.0-akka-2.5.x"
 libraryDependencies += "com.github.cb372" %% "scalacache-guava" % "0.24.3"
-
+libraryDependencies += "com.pauldijou" %% "jwt-play-json" % "0.19.0"
+libraryDependencies += "com.github.daddykotex" %% "courier" % "1.0.0-RC1"
 
 libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.5" % Test
 libraryDependencies += "com.github.tomakehurst" % "wiremock" % "2.16.0" % Test

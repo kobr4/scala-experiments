@@ -9,7 +9,7 @@ import com.kobr4.tradebot.engine._
 import com.kobr4.tradebot.model._
 import com.kobr4.tradebot.services._
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{ ExecutionContext, Future }
 import scala.util.Failure
 import scala.util.control.NonFatal
 
@@ -18,7 +18,8 @@ object LaunchReport {
   val date = ZonedDateTime.parse("2018-01-01T01:00:00.000Z")
   val initialAmount = BigDecimal(10000)
   val fees = BigDecimal(0.1)
-  val strategy = GeneratedStrategy(List(WhenAboveMovingAverage(10), WhenHigh(20)),
+  val strategy = GeneratedStrategy(
+    List(WhenAboveMovingAverage(10), WhenHigh(20)),
     List(WhenAboveMovingAverage(30), WhenBelowMovingAverage(20)))
   //val strategy = SafeStrategy
 

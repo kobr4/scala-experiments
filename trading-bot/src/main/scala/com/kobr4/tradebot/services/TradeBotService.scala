@@ -48,7 +48,7 @@ object TradeBotService extends StrictLogging {
   }
 
   def runMapT(assetMap: Map[Asset, BigDecimal], priceMap: Map[Asset, PairPrices], startDate: ZonedDateTime,
-              baseAsset: Asset, initialAmount: BigDecimal, feesPercentage: BigDecimal, strategy: Strategy, endDate: ZonedDateTime = ZonedDateTime.now())(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): List[Order] = {
+    baseAsset: Asset, initialAmount: BigDecimal, feesPercentage: BigDecimal, strategy: Strategy, endDate: ZonedDateTime = ZonedDateTime.now())(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): List[Order] = {
     val portfolio = Portfolio.create(priceMap)
     portfolio.assets(baseAsset) = Quantity(initialAmount)
     priceMap.keys.toList.flatMap(asset => priceMap(asset).prices.filter(p => p.date.isAfter(startDate) && p.date.isBefore(endDate)).map((asset, _))).sortBy(_._2.date.toEpochSecond).flatMap(assetData =>

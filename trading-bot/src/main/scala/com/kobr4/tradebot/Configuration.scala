@@ -30,6 +30,18 @@ class Configuration(config: Config) {
     import scala.collection.JavaConverters._
     val tasks: List[ScheduledTaskConfiguration] = config.getConfigList("scheduled-tasks").asScala.toList.map(ScheduledTaskConfiguration.fromConfig)
   }
+
+  object Jwt {
+    val Secret = config.getString("jwt.secret")
+
+    val Expiry = config.getDuration("jwt.expiry").toMillis / 1000
+  }
+
+  object Mail {
+    val Admin = config.getString("mail.admin")
+
+    val Sender = config.getString("mail.sender")
+  }
 }
 
 object DefaultConfiguration extends Configuration(ConfigFactory.load())

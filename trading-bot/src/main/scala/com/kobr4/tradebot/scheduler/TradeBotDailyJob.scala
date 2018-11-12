@@ -40,6 +40,7 @@ class TradeBotDailyJob extends SchedulerJobInterface with StrictLogging {
 }
 
 object TradeBotDailyJob {
-  val assetMap: Map[Asset, BigDecimal] = Map(Asset.Eth -> BigDecimal(0.4),
+  val assetMap: Map[Asset, BigDecimal] = Map(
+    Asset.Eth -> BigDecimal(0.4),
     Asset.Xmr -> BigDecimal(0.2), Asset.Xrp -> BigDecimal(0.2), Asset.Xlm -> BigDecimal(0.1), Asset.Doge -> BigDecimal(0.1))
 }

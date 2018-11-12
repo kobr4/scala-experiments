@@ -2,14 +2,14 @@ package com.kobr4.tradebot.scheduler
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
-import com.kobr4.tradebot.api.{ExchangeApi, Poloniex}
+import com.kobr4.tradebot.api.{ ExchangeApi, Poloniex }
 import com.kobr4.tradebot.engine._
 import com.kobr4.tradebot.model.Asset
-import com.kobr4.tradebot.services.{TradeBotService, TradingOps}
+import com.kobr4.tradebot.services.{ TradeBotService, TradingOps }
 import com.typesafe.scalalogging.StrictLogging
 
 import scala.concurrent.ExecutionContext
-import scala.util.{Failure, Success}
+import scala.util.{ Failure, Success }
 
 class PoloniexBtcDailyJob extends SchedulerJobInterface with StrictLogging {
 
@@ -26,7 +26,8 @@ class PoloniexBtcDailyJob extends SchedulerJobInterface with StrictLogging {
 
     val tradingOps = new TradingOps(exchangeApi)
 
-    val strategy = GeneratedStrategy(List(WhenAboveMovingAverage(10), WhenHigh(20)),
+    val strategy = GeneratedStrategy(
+      List(WhenAboveMovingAverage(10), WhenHigh(20)),
       List(WhenAboveMovingAverage(30), WhenBelowMovingAverage(20)))
 
     val eventualResult = TradeBotService.runMapAndTrade(getAssetMap(), strategy, exchangeApi, tradingOps, Asset.Btc).map { orderList =>
