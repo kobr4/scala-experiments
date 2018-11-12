@@ -4,7 +4,6 @@ import java.time.ZonedDateTime
 
 case class User(email: String, password: String, activationDate: Option[ZonedDateTime])
 
-
 object UserService {
 
   def signUp(email: String, password: String): User = {

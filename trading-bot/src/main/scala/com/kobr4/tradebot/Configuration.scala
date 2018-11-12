@@ -41,6 +41,8 @@ class Configuration(config: Config) {
     val Admin = config.getString("mail.admin")
 
     val Sender = config.getString("mail.sender")
+
+    val Host = config.getString("mail.host")
   }
 }
 

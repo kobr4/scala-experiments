@@ -2,7 +2,7 @@ package com.kobr4.tradebot.services
 
 import com.kobr4.tradebot.DefaultConfiguration
 import com.typesafe.scalalogging.StrictLogging
-import courier.{Envelope, Mailer, Text}
+import courier.{ Envelope, Mailer, Text }
 import javax.mail.internet.InternetAddress
 
 import scala.concurrent.ExecutionContext
@@ -10,7 +10,7 @@ import scala.util.Failure
 
 object MailService extends StrictLogging {
 
-  val mailer = Mailer("127.0.0.1", 25).auth(false)()
+  val mailer = Mailer(DefaultConfiguration.Mail.Host, 25).auth(false).startTls(false)()
 
   def sendMail(subject: String, body: String, to: String)(implicit ec: ExecutionContext): Unit = {
 
@@ -18,7 +18,8 @@ object MailService extends StrictLogging {
       .to(new InternetAddress(to))
       .subject(subject)
       .content(Text(body))).onComplete {
-      case Failure(f) => logger.error("sending mail failed with error {}",f.getMessage)
+      case Failure(f) => logger.error("sending mail failed with error {}", f.getMessage)
+        f.printStackTrace()
       case _ => logger.info("message delivered")
     }
 

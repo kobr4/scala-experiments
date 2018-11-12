@@ -7,12 +7,12 @@ import akka.http.scaladsl.server.Route
 import akka.stream.ActorMaterializer
 import com.kobr4.tradebot.routes.TradingBotRoutes
 import com.kobr4.tradebot.scheduler.SchedulerJob
-import com.kobr4.tradebot.services.{MailService, SchedulingService}
+import com.kobr4.tradebot.services.{ MailService, SchedulingService }
 import com.typesafe.scalalogging.StrictLogging
 
 import scala.concurrent.duration.Duration
-import scala.concurrent.{Await, ExecutionContext}
-import scala.util.{Failure, Success}
+import scala.concurrent.{ Await, ExecutionContext }
+import scala.util.{ Failure, Success }
 
 //#main-class
 object QuickstartServer extends App with StrictLogging with TradingBotRoutes {
@@ -40,7 +40,7 @@ object QuickstartServer extends App with StrictLogging with TradingBotRoutes {
   //#http-server
   Http().bindAndHandle(routes, "0.0.0.0", 8080)
 
-  MailService.sendMail("Starting tradebot service","no body", DefaultConfiguration.Mail.Admin)
+  MailService.sendMail("Starting tradebot service", "no body", DefaultConfiguration.Mail.Admin)
 
   println(s"Server online at http://0.0.0.0:8080/")
 
