@@ -14,4 +14,6 @@
 
     <logger name="scalacache.guava.GuavaCache" level="error"/>
     <logger name="org.quartz.core.QuartzSchedulerThread" level="error"/>
+    <logger name="com.zaxxer.hikari" level="error"/>
+    <logger name="slick" level="error"/>
 </configuration>

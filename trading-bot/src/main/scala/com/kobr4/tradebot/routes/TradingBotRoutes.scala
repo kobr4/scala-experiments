@@ -4,6 +4,7 @@ import java.time.ZonedDateTime
 
 import akka.actor.ActorSystem
 import akka.event.Logging
+import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.server.directives.RouteDirectives.complete
@@ -218,8 +219,28 @@ trait TradingBotRoutes extends PlayJsonSupport with PriceApiRoutes {
     path("login") {
       post {
         entity(as[LoginPassword]) { (loginPassword) =>
-          complete(AuthService.issueToken(loginPassword.email, loginPassword.password))
+          val verif = UserService.verify(loginPassword.email, loginPassword.password)
+          onSuccess(verif) {
+            case true => complete(AuthService.issueToken(loginPassword.email, loginPassword.password))
+            case false => complete((StatusCodes.Forbidden, "Not allowed"))
+          }
         }
+      }
+    }
+  } ~ pathPrefix("user") {
+    path("signup") {
+      post {
+        entity(as[LoginPassword]) { (loginPassword) =>
+          val maybeId = UserService.signUp(loginPassword.email, loginPassword.password)
+          onSuccess(maybeId) {
+            case Some(_) => complete("OK")
+            case _ => complete((StatusCodes.Forbidden, "Not allowed"))
+          }
+        }
+      }
+    } ~ path("activation") {
+      get {
+        complete("OK")
       }
     }
   } ~ pathSingleSlash {

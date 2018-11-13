@@ -3,7 +3,7 @@ package com.kobr4.tradebot
 import java.time.ZonedDateTime
 
 import com.kobr4.tradebot.services.AuthService
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.{ FlatSpec, Matchers }
 
 class AuthServiceTest extends FlatSpec with Matchers {
 

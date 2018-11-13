@@ -187,7 +187,6 @@ class LoginForm extends React.Component {
 
   handleSubmit = (event) => {
     RestUtils.performRestPostReq((token) => {
-      //alert('token: '+token)
       document.cookie = 'authtoken='+token+';path=/'
       window.location.href = '/';
     }, '/auth/login',[ ['email', this.state.email], ['password', this.state.password] ] )
@@ -210,10 +209,53 @@ class LoginForm extends React.Component {
       <FormContainer handleSubmit={this.handleSubmit} submit="Login">
       <FormTable>
       <FormRow><FormTextField value={this.state.email} name="email" handleTextChange={(event) => this.setState({email: event.target.value})} /></FormRow>
-      <FormRow><FormPasswordField value={this.state.password} name="email" handleTextChange={(event) => this.setState({password: event.target.value})} /></FormRow>
+      <FormRow><FormPasswordField value={this.state.password} name="password" handleTextChange={(event) => this.setState({password: event.target.value})} /></FormRow>
       </FormTable>
       </FormContainer>
       </Panel>
+      </span>
+    )
+  }  
+}
+
+class SignUpForm extends React.Component {
+
+  handleSubmit = (event) => {
+    RestUtils.performRestPostReq((token) => {
+      this.setState({activation: true})
+    }, '/user/signup',[ ['email', this.state.email], ['password', this.state.password] ] )
+    event.preventDefault();  
+  }
+
+  constructor(props) {
+    super(props);
+
+    this.state = { 
+      email: '',
+      password: '',
+      activation: false
+    }
+  }
+
+  render() {
+    return (
+      
+      <span>
+      { !this.state.activation && 
+      <Panel title='Sign up form'>
+      <FormContainer handleSubmit={this.handleSubmit} submit="Sign up">
+      <FormTable>
+      <FormRow><FormTextField value={this.state.email} name="email" handleTextChange={(event) => this.setState({email: event.target.value})} /></FormRow>
+      <FormRow><FormPasswordField value={this.state.password} name="password" handleTextChange={(event) => this.setState({password: event.target.value})} /></FormRow>
+      </FormTable>
+      </FormContainer>
+      </Panel>
+      } 
+      { this.state.activation &&
+        <Panel title='Sign up form submitted'>
+        An email has been sent to {this.state.email}, follow the included link to activate your account. 
+        </Panel>
+      }
       </span>
     )
   }  
@@ -494,6 +536,7 @@ ReactDOM.render(
         <Route path='/inhouse_info_poloniex' render={() => ( <InHouseInfo exchange='poloniex'/>)} />
         <Route path='/inhouse_info_kraken' render={() => ( <InHouseInfo exchange='kraken'/>)} />
         <Route path='/login' render={() => <LoginForm/>}/>
+        <Route path='/signup' render={() => <SignUpForm/>}/>
         <Route path='/' render={() => ( <TradingGlobal />)} />
       </Switch>
     </BrowserRouter>,
@@ -501,7 +544,7 @@ ReactDOM.render(
 );
 
 ReactDOM.render(
-  <ul id="side-menu" class="nav in">
+  <ul id="side-menu" className="nav in">
   <li><a href="btc_price">BTC backtest</a></li>
   <li><a href="eth_price">ETH backtest</a></li>
   <li><a href="xmr_price">XMR backtest</a></li>

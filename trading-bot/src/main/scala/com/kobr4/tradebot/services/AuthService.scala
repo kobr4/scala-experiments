@@ -3,10 +3,11 @@ package com.kobr4.tradebot.services
 import java.time.ZonedDateTime
 
 import com.kobr4.tradebot.DefaultConfiguration
+import com.typesafe.scalalogging.StrictLogging
 import play.api.libs.json.{ JsObject, Json }
 import pdi.jwt.{ JwtAlgorithm, JwtJson }
 
-import scala.util.Try
+import scala.util.{ Failure, Success, Try }
 
 case class AppToken(userId: Long, timestamp: Long, claims: List[String])
 
@@ -14,14 +15,20 @@ object AppToken {
   implicit val appTokenFormat = Json.format[AppToken]
 }
 
-object AuthService {
+object AuthService extends StrictLogging {
 
   private val algo = JwtAlgorithm.HS256
 
   def issueToken(login: String, password: String, currentTimestamp: Long = ZonedDateTime.now().toEpochSecond): Option[String] = {
     val json = Json.toJsObject(AppToken(1, currentTimestamp, List("USER")))
 
-    Try(JwtJson.encode(json, DefaultConfiguration.Jwt.Secret, algo)).toOption
+    Try(JwtJson.encode(json, DefaultConfiguration.Jwt.Secret, algo)) match {
+      case Failure(f) =>
+        logger.error("Failure to generate jwt token: {} ", f.getMessage)
+        None
+      case o => o.toOption
+
+    }
   }
 
   def verifyToken(token: String): Option[AppToken] = {

@@ -44,6 +44,12 @@ class Configuration(config: Config) {
 
     val Host = config.getString("mail.host")
   }
+
+  object Service {
+    val Name = config.getString("service.name")
+
+    val Url = config.getString("service.url")
+  }
 }
 
 object DefaultConfiguration extends Configuration(ConfigFactory.load())

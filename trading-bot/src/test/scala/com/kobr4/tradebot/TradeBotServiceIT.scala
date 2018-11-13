@@ -2,10 +2,10 @@ package com.kobr4.tradebot
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
-import com.kobr4.tradebot.api.{ExchangeApi, KrakenApi, PoloApi}
+import com.kobr4.tradebot.api.{ ExchangeApi, KrakenApi, PoloApi }
 import com.kobr4.tradebot.engine._
 import com.kobr4.tradebot.model.Asset
-import com.kobr4.tradebot.services.{PriceService, TradeBotService, TradingOps}
+import com.kobr4.tradebot.services.{ PriceService, TradeBotService, TradingOps }
 import org.scalatest.FlatSpec
 import org.scalatest.concurrent.PatienceConfiguration.Timeout
 import org.scalatest.concurrent.ScalaFutures
@@ -92,7 +92,8 @@ class TradeBotServiceIT extends FlatSpec with ScalaFutures with MockitoSugar {
       Asset.Dash -> BigDecimal(0.2),
       Asset.Xem -> BigDecimal(0.2),
       Asset.Zec -> BigDecimal(0.2),
-      Asset.Maid -> BigDecimal(0.2)), GeneratedStrategy(List(WhenAboveMovingAverage(10), WhenHigh(20)),
+      Asset.Maid -> BigDecimal(0.2)), GeneratedStrategy(
+      List(WhenAboveMovingAverage(10), WhenHigh(20)),
       List(WhenAboveMovingAverage(30), WhenBelowMovingAverage(20))), poloApi, tradingOps, Asset.Btc)
 
     val orderList = result.futureValue(Timeout(10 seconds))

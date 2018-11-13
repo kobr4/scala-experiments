@@ -1,12 +1,15 @@
 package com.kobr4.tradebot.services
 
+import java.time.ZonedDateTime
+
 import com.kobr4.tradebot.DefaultConfiguration
 import com.typesafe.scalalogging.StrictLogging
-import courier.{ Envelope, Mailer, Text }
+import courier.{ Envelope, Mailer, Multipart, Text }
 import javax.mail.internet.InternetAddress
 
 import scala.concurrent.ExecutionContext
 import scala.util.Failure
+import scalatags.Text.all._
 
 object MailService extends StrictLogging {
 
@@ -17,11 +20,29 @@ object MailService extends StrictLogging {
     mailer(Envelope.from(new InternetAddress(DefaultConfiguration.Mail.Sender))
       .to(new InternetAddress(to))
       .subject(subject)
-      .content(Text(body))).onComplete {
-      case Failure(f) => logger.error("sending mail failed with error {}", f.getMessage)
+      .content(Multipart().html(body))).onComplete {
+      case Failure(f) =>
+        logger.error("sending mail failed with error {}", f.getMessage)
         f.printStackTrace()
       case _ => logger.info("message delivered")
     }
 
   }
+
+  def sendActivationMail(login: String, password: String)(implicit ec: ExecutionContext): Unit = {
+    AuthService.issueToken(login, password, ZonedDateTime.now().toEpochSecond).foreach(token =>
+      sendMail(
+        s"[${DefaultConfiguration.Service.Name}] Activation mail",
+        activationMail(token), login))
+  }
+
+  private def activationMail(token: String): String = {
+    html(
+      body(
+        p("Dear new user,"),
+        p(s"Welcome to our service ${DefaultConfiguration.Service.Name}"),
+        p(
+          "The last step is to activate your account: ",
+          a(href := s"${DefaultConfiguration.Service.Url}/activation?token=$token")("Follow this link to activate"))))
+  }.render
 }
