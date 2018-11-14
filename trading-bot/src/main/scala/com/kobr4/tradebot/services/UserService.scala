@@ -30,7 +30,9 @@ object UserService extends StrictLogging {
 
   def activate(email: String)(implicit ec: ExecutionContext): Future[Int] = {
     usersRepository.selectUserByEmail(email).flatMap {
-      case Some(user) => usersRepository.updateUser(user)
+      case Some(user) =>
+        val activatedUser = User(user.id, user.email, user.password, Some(ZonedDateTime.now()), user.created)
+        usersRepository.updateUser(activatedUser)
       case _ => Future.successful(0)
     }
   }
