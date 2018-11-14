@@ -240,7 +240,14 @@ trait TradingBotRoutes extends PlayJsonSupport with PriceApiRoutes {
       }
     } ~ path("activation") {
       get {
-        complete("OK")
+        parameters("token") { token =>
+          AuthService.verifyToken(token).map { appToken =>
+            onSuccess(UserService.activate(appToken.login)) {
+              case i if i > 0 => complete("OK")
+              case _ => complete((StatusCodes.BadRequest, "Could not proceed"))
+            }
+          }.getOrElse(complete((StatusCodes.BadRequest, "Could not proceed")))
+        }
       }
     }
   } ~ pathSingleSlash {

@@ -18,6 +18,22 @@ class RestUtils {
         xhttp.send();
     }
 
+    static performGetReqStatus(updateCallback, path, params = []) {
+        var xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function() {
+            if (this.readyState == 4) {
+                updateCallback(this.status);
+            }
+        };
+        var protocol = location.protocol;
+        var slashes = protocol.concat("//");
+        var host = slashes.concat(window.location.hostname+(window.location.port==8080?":8080":""));
+        var paramsString = params.map(field => field[0]+"="+field[1]+"&").join('')
+        xhttp.open("GET", host+path+"?"+paramsString, true);
+        xhttp.setRequestHeader("Content-type", "application/json");
+        xhttp.send();       
+    }
+
     static performRestReqWithPromise(path, params = []) {
         return new Promise((resolve, reject) => {
             RestUtils.performRestReq( (jsonResponse) => resolve(jsonResponse), path, params);

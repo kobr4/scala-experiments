@@ -17,6 +17,8 @@ class AuthServiceTest extends FlatSpec with Matchers {
 
     println(appToken)
 
+    appToken.login should be("login")
+
   }
 
   it should "not verify a token when timestamp is expired" in {

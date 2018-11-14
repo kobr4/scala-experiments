@@ -431,6 +431,44 @@ class GraphResult extends React.Component {
    }
 }
 
+class ActivationResult extends React.Component {
+
+  performActivation = () => {
+    RestUtils.performGetReqStatus((status) => { 
+      if (status === 200) 
+        this.setState({status:true})
+      else 
+        this.setState({status:false})
+    },
+    '/user/activation',
+    [['token', (new URLSearchParams(window.location.search)).get('token') ]])
+  }
+
+  componentDidMount() {
+    this.performActivation();
+  }
+
+  constructor(props) {
+    super(props);
+    this.state = {status: undefined}
+  }
+
+  render() {
+    return (
+      <span>
+      <Panel title='Activation'>
+        { this.state.status === true &&
+          <p>Activation successful, you can now sign in to the website</p>
+        } 
+        { this.state.status === false &&
+          <p>Activation failed, please verify your paramater or contact support</p>
+        }
+      </Panel>
+      </span>
+    );
+  }
+}
+
 class InHouseInfo extends React.Component {
 
   rowsFromObjets(jsArr) {
@@ -537,6 +575,7 @@ ReactDOM.render(
         <Route path='/inhouse_info_kraken' render={() => ( <InHouseInfo exchange='kraken'/>)} />
         <Route path='/login' render={() => <LoginForm/>}/>
         <Route path='/signup' render={() => <SignUpForm/>}/>
+        <Route path='/activation' render= {() => <ActivationResult/>}/>
         <Route path='/' render={() => ( <TradingGlobal />)} />
       </Switch>
     </BrowserRouter>,
