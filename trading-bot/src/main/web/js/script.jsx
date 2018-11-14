@@ -22,7 +22,7 @@ const openOrdersEndpoint = '/trading_api/open_orders';
 
 class CommonUtils {
   static isUser() {
-    return document.cookie.indexOf('authtoken=') > 0;
+    return document.cookie.indexOf('authtoken=') >= 0;
   }
 }
 
