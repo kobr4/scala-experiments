@@ -4,7 +4,7 @@ import java.time.ZonedDateTime
 
 import com.kobr4.tradebot.db.UsersRepository
 import com.typesafe.scalalogging.StrictLogging
-
+import com.github.t3hnar.bcrypt._
 import scala.concurrent.{ ExecutionContext, Future }
 
 case class User(id: Option[Int], email: String, password: String, activationDate: Option[ZonedDateTime], created: ZonedDateTime)
@@ -20,9 +20,9 @@ object UserService extends StrictLogging {
         Future.successful(None)
       case _ =>
         logger.info("Will insert new user {} in DB", email)
-        usersRepository.insertUser(User(None, email, password, None, ZonedDateTime.now())).map { i =>
+        usersRepository.insertUser(User(None, email, password.bcrypt, None, ZonedDateTime.now())).map { i =>
           logger.info("Sending mail to user {}", email)
-          MailService.sendActivationMail(email, password)
+          MailService.sendActivationMail(email)
           i
         }
     }
@@ -43,7 +43,7 @@ object UserService extends StrictLogging {
 
   def verify(email: String, password: String)(implicit ec: ExecutionContext): Future[Boolean] = {
     get(email).map {
-      case Some(s) => s.password == password
+      case Some(s) => password.isBcryptedSafe(s.password).getOrElse(false)
       case _ => false
     }
   }

@@ -17,6 +17,7 @@ libraryDependencies += ("com.pauldijou" %% "jwt-play-json" % "0.19.0")
   .exclude("org.bouncycastle", "bcpkix-jdk15on")
   .exclude("org.bouncycastle", "bcprov-jdk15on")
 libraryDependencies +=  "org.bouncycastle"  %  "bcpkix-jdk15on" % "1.60" % Provided
+libraryDependencies += "com.github.t3hnar" %% "scala-bcrypt" % "3.1"
 libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.5" % Test
 libraryDependencies += "com.github.tomakehurst" % "wiremock" % "2.16.0" % Test
 libraryDependencies += "org.mockito" % "mockito-all" % "1.9.5" % Test

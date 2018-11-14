@@ -29,8 +29,8 @@ object MailService extends StrictLogging {
 
   }
 
-  def sendActivationMail(login: String, password: String)(implicit ec: ExecutionContext): Unit = {
-    AuthService.issueToken(login, password, ZonedDateTime.now().toEpochSecond).foreach(token =>
+  def sendActivationMail(login: String)(implicit ec: ExecutionContext): Unit = {
+    AuthService.issueToken(login, ZonedDateTime.now().toEpochSecond).foreach(token =>
       sendMail(
         s"[${DefaultConfiguration.Service.Name}] Activation mail",
         activationMail(token), login))

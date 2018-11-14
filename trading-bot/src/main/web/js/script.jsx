@@ -20,10 +20,12 @@ const movingEndpoint = '/price_api/moving';
 const balanceEndpoint = '/trading_api/balances';
 const openOrdersEndpoint = '/trading_api/open_orders';
 
-
-function HelloWorld(props) {
-    return <div>Hello World !</div>;
+class CommonUtils {
+  static isUser() {
+    return document.cookie.indexOf('authtoken=') > 0;
+  }
 }
+
 
 function GraphResultBase(props) {
   const datas = props.datas.map(data => 
@@ -179,6 +181,24 @@ class TradingForm extends React.Component {
         </Panel>
       }
       </span>
+    )
+  }
+}
+
+class SignOut extends React.Component {
+  signout = () => {
+    document.cookie = ';path=/'
+    window.location.href = '/';
+  }
+
+  componentDidMount() {
+    this.signout()
+  }
+
+  render() {
+    return (
+      <Panel title='Signing Out'>
+      </Panel>
     )
   }
 }
@@ -574,6 +594,7 @@ ReactDOM.render(
         <Route path='/inhouse_info_poloniex' render={() => ( <InHouseInfo exchange='poloniex'/>)} />
         <Route path='/inhouse_info_kraken' render={() => ( <InHouseInfo exchange='kraken'/>)} />
         <Route path='/login' render={() => <LoginForm/>}/>
+        <Route path='/logout' render={() => <SignOut/>}/>
         <Route path='/signup' render={() => <SignUpForm/>}/>
         <Route path='/activation' render= {() => <ActivationResult/>}/>
         <Route path='/' render={() => ( <TradingGlobal />)} />
@@ -589,11 +610,24 @@ ReactDOM.render(
   <li><a href="xmr_price">XMR backtest</a></li>
   <li><a href="crypto_price">Crypto backtest</a></li>
   <li><a href="stock_price">Stock backtest</a></li>
-  { document.cookie.indexOf('authtoken=') != -1 &&
+  { CommonUtils.isUser() &&
     <li><a href="trading">Trading</a></li>
   }
   <li><a href="inhouse_info_poloniex">In-House @ Poloniex</a></li>
   <li><a href="inhouse_info_kraken">In-House @ Kraken</a></li>
   </ul>,
   document.getElementById('side')
+)
+
+ReactDOM.render(
+  <span>
+  { !CommonUtils.isUser() &&
+    <span><a href="/login">Sign In</a> or <a href="/signup">Create an account</a></span>
+  }
+  { CommonUtils.isUser() &&
+    <span><a href="/logout">Sign Out</a></span>
+  }
+  </span>
+  ,
+  document.getElementById('top-right')
 )

@@ -9,7 +9,6 @@ import com.kobr4.tradebot.routes.TradingBotRoutes
 import com.kobr4.tradebot.scheduler.SchedulerJob
 import com.kobr4.tradebot.services.{ MailService, SchedulingService }
 import com.typesafe.scalalogging.StrictLogging
-import javax.activation.{ CommandMap, MailcapCommandMap }
 
 import scala.concurrent.duration.Duration
 import scala.concurrent.{ Await, ExecutionContext }

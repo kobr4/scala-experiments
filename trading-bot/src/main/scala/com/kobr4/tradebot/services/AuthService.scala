@@ -19,7 +19,7 @@ object AuthService extends StrictLogging {
 
   private val algo = JwtAlgorithm.HS256
 
-  def issueToken(login: String, password: String, currentTimestamp: Long = ZonedDateTime.now().toEpochSecond): Option[String] = {
+  def issueToken(login: String, currentTimestamp: Long = ZonedDateTime.now().toEpochSecond): Option[String] = {
     val json = Json.toJsObject(AppToken(login, currentTimestamp, List("USER")))
 
     Try(JwtJson.encode(json, DefaultConfiguration.Jwt.Secret, algo)) match {

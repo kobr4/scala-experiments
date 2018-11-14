@@ -221,7 +221,7 @@ trait TradingBotRoutes extends PlayJsonSupport with PriceApiRoutes {
         entity(as[LoginPassword]) { (loginPassword) =>
           val verif = UserService.verify(loginPassword.email, loginPassword.password)
           onSuccess(verif) {
-            case true => complete(AuthService.issueToken(loginPassword.email, loginPassword.password))
+            case true => complete(AuthService.issueToken(loginPassword.email))
             case false => complete((StatusCodes.Forbidden, "Not allowed"))
           }
         }

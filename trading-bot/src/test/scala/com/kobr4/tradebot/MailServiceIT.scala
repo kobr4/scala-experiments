@@ -19,7 +19,7 @@ class MailServiceIT extends FlatSpec with Matchers with ScalaFutures {
   it should "send an activation mail" in {
     implicit val ec = ExecutionContext.global
 
-    MailService.sendActivationMail(DefaultConfiguration.Mail.Admin, "dummy")
+    MailService.sendActivationMail(DefaultConfiguration.Mail.Admin)
 
     Thread.sleep(1000)
   }
