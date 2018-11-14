@@ -209,7 +209,9 @@ class LoginForm extends React.Component {
     RestUtils.performRestPostReq((token) => {
       document.cookie = 'authtoken='+token+';path=/'
       window.location.href = '/';
-    }, '/auth/login',[ ['email', this.state.email], ['password', this.state.password] ] )
+    }, '/auth/login',[ ['email', this.state.email], ['password', this.state.password] ],
+    (status) => this.setState({error: true})
+  )
     event.preventDefault();  
   }
 
@@ -218,7 +220,8 @@ class LoginForm extends React.Component {
 
     this.state = { 
       email: '',
-      password: ''
+      password: '',
+      error: false
     }
   }
 
@@ -226,10 +229,13 @@ class LoginForm extends React.Component {
     return (
       <span>
       <Panel title='Sign In'>
+      { this.state.error &&
+      <div className="alert alert-danger">Failed to log-in. Check your parameters or contact support</div>
+      }      
       <FormContainer handleSubmit={this.handleSubmit} submit="Login">
       <FormTable>
-      <FormRow><FormTextField value={this.state.email} name="email" handleTextChange={(event) => this.setState({email: event.target.value})} /></FormRow>
-      <FormRow><FormPasswordField value={this.state.password} name="password" handleTextChange={(event) => this.setState({password: event.target.value})} /></FormRow>
+      <FormRow label="Email"><FormTextField value={this.state.email} name="email" handleTextChange={(event) => this.setState({email: event.target.value})} /></FormRow>
+      <FormRow label="Password"><FormPasswordField value={this.state.password} name="password" handleTextChange={(event) => this.setState({password: event.target.value})} /></FormRow>
       </FormTable>
       </FormContainer>
       </Panel>
@@ -265,8 +271,8 @@ class SignUpForm extends React.Component {
       <Panel title='Sign up form'>
       <FormContainer handleSubmit={this.handleSubmit} submit="Sign up">
       <FormTable>
-      <FormRow><FormTextField value={this.state.email} name="email" handleTextChange={(event) => this.setState({email: event.target.value})} /></FormRow>
-      <FormRow><FormPasswordField value={this.state.password} name="password" handleTextChange={(event) => this.setState({password: event.target.value})} /></FormRow>
+      <FormRow label="Email"><FormTextField value={this.state.email} name="email" handleTextChange={(event) => this.setState({email: event.target.value})} /></FormRow>
+      <FormRow label="Password"><FormPasswordField value={this.state.password} name="password" handleTextChange={(event) => this.setState({password: event.target.value})} /></FormRow>
       </FormTable>
       </FormContainer>
       </Panel>

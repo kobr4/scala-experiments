@@ -40,12 +40,16 @@ class RestUtils {
         })
     }
 
-    static performRestPostReq(updateCallback, path, params = []) {
+    static performRestPostReq(updateCallback, path, params = [], errorCallback=(status)=>{}) {
         var xhttp = new XMLHttpRequest();
         xhttp.onreadystatechange = function() {
             if (this.readyState == 4 && this.status == 200) {
                 var jsonResponse = JSON.parse(this.responseText)
                 updateCallback(jsonResponse);
+            }
+
+            if (this.readyState == 4 && this.status != 200) {
+                errorCallback(this.status)
             }
         };
         let protocol = location.protocol;
@@ -58,6 +62,8 @@ class RestUtils {
         xhttp.setRequestHeader("Content-type", "application/json");
         xhttp.send(paramsString);
     }   
+
+    
   
   static performRestPriceReq(updateCallback, path, params = []) {
     var xhttp = new XMLHttpRequest();
