@@ -2,16 +2,21 @@ package com.kobr4.tradebot.services
 
 import java.time.ZonedDateTime
 
-import com.kobr4.tradebot.db.UsersRepository
-import com.typesafe.scalalogging.StrictLogging
 import com.github.t3hnar.bcrypt._
-import scala.concurrent.{ ExecutionContext, Future }
+import com.kobr4.tradebot.db._
+import com.typesafe.scalalogging.StrictLogging
 
-case class User(id: Option[Int], email: String, password: String, activationDate: Option[ZonedDateTime], created: ZonedDateTime)
+import scala.concurrent.{ExecutionContext, Future}
+
+case class User(id: Int, email: String, password: String, activationDate: Option[ZonedDateTime], created: ZonedDateTime)
 
 object UserService extends StrictLogging {
 
-  val usersRepository = new UsersRepository("mysql")
+  private val usersRepository = new UsersRepository("mysql")
+
+  private val apiKeysRepository = new ApiKeysRepository("mysql")
+
+  private val tradingJobsRepository = new TradingJobsRepository("mysql")
 
   def signUp(email: String, password: String)(implicit ec: ExecutionContext): Future[Option[Int]] = {
     usersRepository.selectUserByEmail(email).flatMap {
@@ -20,7 +25,7 @@ object UserService extends StrictLogging {
         Future.successful(None)
       case _ =>
         logger.info("Will insert new user {} in DB", email)
-        usersRepository.insertUser(User(None, email, password.bcrypt, None, ZonedDateTime.now())).map { i =>
+        usersRepository.insertUser(User(0, email, password.bcrypt, None, ZonedDateTime.now())).map { i =>
           logger.info("Sending mail to user {}", email)
           MailService.sendActivationMail(email)
           i
@@ -41,11 +46,37 @@ object UserService extends StrictLogging {
     usersRepository.selectUserByEmail(email)
   }
 
-  def verify(email: String, password: String)(implicit ec: ExecutionContext): Future[Boolean] = {
+  def verify(email: String, password: String)(implicit ec: ExecutionContext): Future[Option[Int]] = {
     get(email).map {
-      case Some(s) => password.isBcryptedSafe(s.password).getOrElse(false)
-      case _ => false
+      case Some(s) => password.isBcryptedSafe(s.password).toOption.flatMap {
+        case true => Some(s.id)
+        case _ => None
+      }
+      case _ => None
     }
   }
 
+  def addApiKeys(apiKey: ApiKey)(implicit ec: ExecutionContext): Future[Option[Int]] = {
+    apiKeysRepository.insertApiKey(apiKey)
+  }
+
+  def getApiKeys(userId: Int)(implicit ec: ExecutionContext): Future[Seq[ApiKey]] = {
+    apiKeysRepository.selectApiLKeyByUserId(userId)
+  }
+
+  def updateApiKey(apiKey: ApiKey)(implicit ec: ExecutionContext): Future[Int] = {
+    apiKeysRepository.updateApiKey(apiKey)
+  }
+
+  def addTradingJob(tradingJob: TradingJob)(implicit ec: ExecutionContext): Future[Option[Int]] = {
+    tradingJobsRepository.insertTradingJob(tradingJob)
+  }
+
+  def getTradingJobs(userId: Int)(implicit ec: ExecutionContext): Future[Seq[TradingJob]] = {
+    tradingJobsRepository.selectTradingJobByUserId(userId)
+  }
+
+  def updateTradingJob(tradingJob: TradingJob)(implicit ec: ExecutionContext): Future[Int] = {
+    tradingJobsRepository.updateTradingJob(tradingJob)
+  }
 }

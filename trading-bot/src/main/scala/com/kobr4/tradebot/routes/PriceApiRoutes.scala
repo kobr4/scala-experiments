@@ -8,7 +8,7 @@ import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.server.directives.RouteDirectives.complete
 import akka.http.scaladsl.unmarshalling.Unmarshaller
 import akka.stream.ActorMaterializer
-import com.kobr4.tradebot.api.{ CurrencyPair, Quote, SupportedExchange }
+import com.kobr4.tradebot.api.{CurrencyPair, SupportedExchange}
 import com.kobr4.tradebot.model.Asset
 import com.kobr4.tradebot.services.PriceService
 

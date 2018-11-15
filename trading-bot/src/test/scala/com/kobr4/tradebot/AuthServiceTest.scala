@@ -9,7 +9,7 @@ class AuthServiceTest extends FlatSpec with Matchers {
 
   it should "issue a token and decode it" in {
 
-    val token = AuthService.issueToken("login").get
+    val token = AuthService.issueToken(0, "login").get
 
     println(token)
 
@@ -23,7 +23,7 @@ class AuthServiceTest extends FlatSpec with Matchers {
 
   it should "not verify a token when timestamp is expired" in {
 
-    val token = AuthService.issueToken("login", ZonedDateTime.now().toEpochSecond - DefaultConfiguration.Jwt.Expiry - 10).get
+    val token = AuthService.issueToken(0,"login", ZonedDateTime.now().toEpochSecond - DefaultConfiguration.Jwt.Expiry - 10).get
 
     AuthService.verifyToken(token) should be(None)
   }

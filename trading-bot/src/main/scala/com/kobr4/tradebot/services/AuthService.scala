@@ -9,7 +9,7 @@ import pdi.jwt.{ JwtAlgorithm, JwtJson }
 
 import scala.util.{ Failure, Success, Try }
 
-case class AppToken(login: String, timestamp: Long, claims: List[String])
+case class AppToken(id: Int, login: String, timestamp: Long, claims: List[String])
 
 object AppToken {
   implicit val appTokenFormat = Json.format[AppToken]
@@ -19,8 +19,8 @@ object AuthService extends StrictLogging {
 
   private val algo = JwtAlgorithm.HS256
 
-  def issueToken(login: String, currentTimestamp: Long = ZonedDateTime.now().toEpochSecond): Option[String] = {
-    val json = Json.toJsObject(AppToken(login, currentTimestamp, List("USER")))
+  def issueToken(userId: Int, login: String, currentTimestamp: Long = ZonedDateTime.now().toEpochSecond): Option[String] = {
+    val json = Json.toJsObject(AppToken(userId, login, currentTimestamp, List("USER")))
 
     Try(JwtJson.encode(json, DefaultConfiguration.Jwt.Secret, algo)) match {
       case Failure(f) =>

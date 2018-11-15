@@ -38,7 +38,7 @@ object UsersRepository {
     def password = column[String]("password")
     def activation = column[Option[ZonedDateTime]]("activation")
     def created = column[ZonedDateTime]("created")
-    def * = (id.?, email, password, activation, created) <> (User.tupled, User.unapply)
+    def * = (id, email, password, activation, created) <> (User.tupled, User.unapply)
   }
 
   val users = TableQuery[Users]

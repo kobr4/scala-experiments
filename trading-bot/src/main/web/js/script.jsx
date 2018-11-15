@@ -24,6 +24,13 @@ class CommonUtils {
   static isUser() {
     return document.cookie.indexOf('authtoken=') >= 0;
   }
+
+  static deleteCookie(cname) {
+    var d = new Date(); //Create an date object
+    d.setTime(d.getTime() - (1000*60*60*24)); //Set the time to the past. 1000 milliseonds = 1 second
+    var expires = "expires=" + d.toGMTString(); //Compose the expirartion date
+    window.document.cookie = cname+"="+"; "+expires;//Set the cookie with name and the expiration date
+  }
 }
 
 
@@ -187,7 +194,7 @@ class TradingForm extends React.Component {
 
 class SignOut extends React.Component {
   signout = () => {
-    document.cookie = ';path=/'
+    CommonUtils.deleteCookie('authtoken');
     window.location.href = '/';
   }
 
