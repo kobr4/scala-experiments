@@ -1,6 +1,23 @@
 'use strict';
 
 class RestUtils {
+
+    static getCookie(cname) {
+        var name = cname + "=";
+        var decodedCookie = decodeURIComponent(document.cookie);
+        var ca = decodedCookie.split(';');
+        for(var i = 0; i <ca.length; i++) {
+            var c = ca[i];
+            while (c.charAt(0) == ' ') {
+                c = c.substring(1);
+            }
+            if (c.indexOf(name) == 0) {
+                return c.substring(name.length, c.length);
+            }
+        }
+        return "";
+    }
+
     static performRestReq(updateCallback, path, params = []) {
         var xhttp = new XMLHttpRequest();
         xhttp.onreadystatechange = function() {
@@ -62,6 +79,30 @@ class RestUtils {
         xhttp.setRequestHeader("Content-type", "application/json");
         xhttp.send(paramsString);
     }   
+
+    static performRestPostReqWithCreds(updateCallback, path, params = [], errorCallback=(status)=>{}) {
+        var xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function() {
+            if (this.readyState == 4 && this.status == 200) {
+                var jsonResponse = JSON.parse(this.responseText)
+                updateCallback(jsonResponse);
+            }
+
+            if (this.readyState == 4 && this.status != 200) {
+                errorCallback(this.status)
+            }
+        };
+        let protocol = location.protocol;
+        let slashes = protocol.concat("//");
+        let host = slashes.concat(window.location.hostname+(window.location.port==8080?":8080":""));
+        let paramObject = new Object();
+        params.map(field => paramObject[field[0]] = field[1]);
+        let paramsString = JSON.stringify(paramObject);
+        xhttp.open("POST", host+path, true);
+        xhttp.setRequestHeader("Content-type", "application/json");
+        xhttp.setRequestHeader("Authorization", RestUtils.getCookie("authtoken"));
+        xhttp.send(paramsString);
+    }    
 
     
   

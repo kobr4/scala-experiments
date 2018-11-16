@@ -1,9 +1,9 @@
 package com.kobr4.tradebot.db
 
 import slick.jdbc.MySQLProfile.api._
-import slick.lifted.{TableQuery, Tag}
+import slick.lifted.{ TableQuery, Tag }
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{ ExecutionContext, Future }
 
 case class TradingJob(id: Int, userId: Int, cron: String, apiKeyId: Int, strategy: String)
 
@@ -19,12 +19,16 @@ class TradingJobsRepository(dbConfigPath: String) {
     db.run(TradingJobsRepository.tradingJobs.filter(_.userId === userId).result)
   }
 
+  def selectTradingJobById(id: Int)(implicit ec: ExecutionContext): Future[Option[TradingJob]] = {
+    db.run(TradingJobsRepository.tradingJobs.filter(_.id === id).result).map(_.headOption)
+  }
+
   def updateTradingJob(tradingJob: TradingJob): Future[Int] = {
     db.run((for { a <- TradingJobsRepository.tradingJobs if a.id === tradingJob.id } yield a).update(tradingJob))
   }
 
-  def deleteTradingJob(tradingJob: TradingJob): Future[Int] = {
-    db.run((for { a <- TradingJobsRepository.tradingJobs if a.id === tradingJob.id } yield a).delete)
+  def deleteTradingJob(id: Int): Future[Int] = {
+    db.run((for { a <- TradingJobsRepository.tradingJobs if a.id === id } yield a).delete)
   }
 }
 

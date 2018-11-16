@@ -6,7 +6,7 @@ import com.github.t3hnar.bcrypt._
 import com.kobr4.tradebot.db._
 import com.typesafe.scalalogging.StrictLogging
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{ ExecutionContext, Future }
 
 case class User(id: Int, email: String, password: String, activationDate: Option[ZonedDateTime], created: ZonedDateTime)
 
@@ -64,6 +64,14 @@ object UserService extends StrictLogging {
     apiKeysRepository.selectApiLKeyByUserId(userId)
   }
 
+  def getApiKey(id: Int)(implicit ec: ExecutionContext): Future[Option[ApiKey]] = {
+    apiKeysRepository.selectApiLKeyById(id)
+  }
+
+  def deleteApiKey(id: Int)(implicit ec: ExecutionContext): Future[Int] = {
+    apiKeysRepository.deleteApiKey(id)
+  }
+
   def updateApiKey(apiKey: ApiKey)(implicit ec: ExecutionContext): Future[Int] = {
     apiKeysRepository.updateApiKey(apiKey)
   }
@@ -74,6 +82,14 @@ object UserService extends StrictLogging {
 
   def getTradingJobs(userId: Int)(implicit ec: ExecutionContext): Future[Seq[TradingJob]] = {
     tradingJobsRepository.selectTradingJobByUserId(userId)
+  }
+
+  def getTradingJob(id: Int)(implicit ec: ExecutionContext): Future[Option[TradingJob]] = {
+    tradingJobsRepository.selectTradingJobById(id)
+  }
+
+  def deleteTradingJob(id: Int)(implicit ec: ExecutionContext): Future[Int] = {
+    tradingJobsRepository.deleteTradingJob(id)
   }
 
   def updateTradingJob(tradingJob: TradingJob)(implicit ec: ExecutionContext): Future[Int] = {

@@ -139,7 +139,55 @@ class TradingGlobal extends React.Component {
       )}
 }
 
+function TradingJobsField(props) {
+  return <tr key={props.id}><td>{props.exchange}</td><td>{props.key}</td><td><FormButton text='Delete' handleClick={ (event) => props.handleClick(event) }/></td></tr>;
+}
+
 class TradingForm extends React.Component {
+
+  deleteTradingJob = (id) => { return ((event) =>{
+    RestUtils.performRestPostReqWithCreds(() => this.getTradingJobs(), '/trading_job/trade_job_delete',
+    [ [ 'cron', '' ], ['apiKeyId', 0], ['strategy', ''], [ 'exchange', ''], [ 'userId',  0], [ 'id', id]], (status) => {});
+  })  }
+
+  getTradingJobs = () => {
+    RestUtils.performRestPostReqWithCreds((tradingJobs) => this.setState({tradingJobs:tradingJobs}), '/trading_job/trade_job_get_all',[], (status) => {});
+  }
+
+  getApiKeys = () => {
+    RestUtils.performRestPostReqWithCreds((apiKeys) => {
+      if (apiKeys.length > 0) this.setState({new_trading_apiKeyId : apiKeys[0].id});
+      this.setState({apiKeys:apiKeys});
+      this.getTradingJobs();
+    }, '/trading_job/api_key_get_all',[], (status) => {});
+  }
+
+  getComp = () => {
+    var fields = [];
+    this.state.tradingJobs.forEach(
+      (item) => {
+        item.handleClick = this.deleteTradingJob(item.id);
+        var apiKey = this.state.apiKeys.filter((apiKey) => apiKey.id === item.apiKeyId)[0];
+        item.exchange = apiKey.exchange;
+        item.key = apiKey.key;
+        fields.push(TradingJobsField(item));
+      }
+    )
+    return fields;
+  }  
+
+  addTradingJob = (event) => {
+    RestUtils.performRestPostReqWithCreds(() => this.getApiKeys(), '/trading_job/trade_job_add',
+    [ [ 'cron', this.state.new_trading_cron ], ['apiKeyId', this.state.new_trading_apiKeyId], [ 'strategy', this.state.new_trading_strategy],
+      [ 'userId',  0], [ 'id', 0] ], (status) => {});
+    event.preventDefault();
+  }
+
+
+  componentDidMount() {
+   
+    this.getApiKeys();
+  }
 
   requestBalance = () => RestUtils.performRestPostReq(
     (balanceList)=> { this.setState({balanceFields: Helper.rowsFromObjet(balanceList)})},
@@ -153,15 +201,29 @@ class TradingForm extends React.Component {
     [['apikey', this.state.apikey],['apisecret',this.state.apisecret]]
   )  
 
+  getApiKeyOptions = () => {
+    return this.state.apiKeys.map( (item) => [ item.id, item.key] );
+  }
+
   constructor(props) {
     super(props);
 
-    this.state = {apikey :'', apisecret : '', balanceFields : null} 
+    this.state = {apikey :'', apisecret : '', balanceFields : null, tradingJobs : [], apiKeys: [], new_trading_apiKeyId : 0, new_trading_cron : '', new_trading_strategy : ''} 
   }
 
   render() {
     return (
       <span>
+      <Panel title='Schedule trading'>
+      <ResponseTable first='Exchange' second='Key' responseFields={this.getComp() }/>
+        <FormContainer handleSubmit={this.addTradingJob} submit="Add">
+          <FormTable>
+              <FormRow label='API Key'>
+                <FormOption name='apikeyId' values={ this.getApiKeyOptions() } onChange={(event) => this.setState({new_trading_apiKeyId: event.target.value})}/> 
+              </FormRow>                           
+            </FormTable>          
+        </FormContainer>
+      </Panel>
       <Panel title='Trading operations'>
         <FormContainer handleSubmit={this.handleSubmit} submit="Run trade-bot">  
           <FormTable>
@@ -593,7 +655,85 @@ class InHouseInfo extends React.Component {
   }
 }
 
+function ApiKeysField(props) {
+  return <tr key={props.id}><td>{props.exchange}</td><td>{props.key}</td><td><FormButton text='Delete' handleClick={ (event) => props.handleClick(event) }/></td></tr>;
+}
 
+class ApiKeysPanel extends React.Component {
+
+  deleteApiKey = (id) => { return ((event) =>{
+      RestUtils.performRestPostReqWithCreds(() => this.getApiKeys(), '/trading_job/api_key_delete',
+      [ [ 'key', '' ], ['secret', ''], 
+        [ 'exchange', ''],
+        [ 'userId',  0],
+        [ 'id', id]
+      ], (status) => {});
+    })  
+  }  
+
+  getComp = () => {
+    var fields = [];
+    this.state.apiKeys.forEach(
+      (item) => {
+        item.handleClick = this.deleteApiKey(item.id);
+        fields.push(ApiKeysField(item))
+      }
+    )
+    return fields;
+  }
+
+  getApiKeys = () => {
+    RestUtils.performRestPostReqWithCreds((apiKeys) => this.setState({apiKeys:apiKeys}), '/trading_job/api_key_get_all',[], (status) => {});
+  }
+
+  addApiKey = (event) => {
+    RestUtils.performRestPostReqWithCreds(() => this.getApiKeys(), '/trading_job/api_key_add',
+    [ [ 'key', this.state.new_api_key ], ['secret', this.state.new_api_secret], 
+      [ 'exchange', this.state.new_api_exchange],
+      [ 'userId',  0],
+      [ 'id', 0]
+    ], (status) => {});
+    event.preventDefault();
+  }
+
+  componentDidMount() {
+    this.getApiKeys();
+  }
+
+  constructor(props) {
+    super(props);
+
+    this.state = { 
+      apiKeys : [],
+      new_api_exchange : 'POLONIEX',
+      new_api_key : '',
+      new_api_secret : ''
+    }
+  }
+
+  render() {
+    return (
+      <span>
+      <Panel title='API Keys'>
+      <ResponseTable first='Exchange' second='Key' responseFields={this.getComp() }/>
+      <FormContainer handleSubmit={this.addApiKey} submit="Add">  
+      <FormTable>
+        <FormRow label='Key'>
+          <FormTextField value={this.state.new_api_key} name="key" handleTextChange={(event) => this.setState({new_api_key: event.target.value})} />
+        </FormRow>
+        <FormRow label='Secret'>
+          <FormTextField value={this.state.new_api_secret} name="secret" handleTextChange={(event) => this.setState({new_api_secret: event.target.value})} />
+        </FormRow>
+        <FormRow label='Exchange'>
+          <FormOption name='exchange' values={[ ['POLONIEX','Poloniex'], ['KRAKEN','Kraken'] ]} onChange={(event) => this.setState({new_api_exchange: event.target.value})}/>
+        </FormRow>
+      </FormTable>
+      </FormContainer>      
+      </Panel>
+      </span>
+    )
+  } 
+} 
 
 ReactDOM.render(
     <BrowserRouter>
@@ -604,6 +744,7 @@ ReactDOM.render(
         <Route path='/crypto_price' render={() => ( <GraphResult endpoint={priceEndpoint} title='Crypto backtest' asset='BTC' pairChoice/>)} />
         <Route path='/stock_price' render={() => ( <GraphResult endpoint={priceEndpoint} title='Stock backtest' asset='GOOG' stockChoice/>)} />
         <Route path='/trading' render={() => ( <TradingForm/>)} />
+        <Route path='/api_keys' render={() => ( <ApiKeysPanel/>)} />
         <Route path='/inhouse_info_poloniex' render={() => ( <InHouseInfo exchange='poloniex'/>)} />
         <Route path='/inhouse_info_kraken' render={() => ( <InHouseInfo exchange='kraken'/>)} />
         <Route path='/login' render={() => <LoginForm/>}/>
@@ -625,7 +766,12 @@ ReactDOM.render(
   <li><a href="stock_price">Stock backtest</a></li>
   { CommonUtils.isUser() &&
     <li><a href="trading">Trading</a></li>
+
   }
+  { CommonUtils.isUser() &&
+    <li><a href="api_keys">API Keys</a></li>
+  }
+
   <li><a href="inhouse_info_poloniex">In-House @ Poloniex</a></li>
   <li><a href="inhouse_info_kraken">In-House @ Kraken</a></li>
   </ul>,

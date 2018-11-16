@@ -13,8 +13,8 @@ import akka.stream.ActorMaterializer
 import com.kobr4.tradebot.QuickstartServer
 import com.kobr4.tradebot.api._
 import com.kobr4.tradebot.engine.Strategy
-import com.kobr4.tradebot.model.{Asset, Quantity}
-import com.kobr4.tradebot.scheduler.{KrakenDailyJob, TradeBotDailyJob}
+import com.kobr4.tradebot.model.{ Asset, Quantity }
+import com.kobr4.tradebot.scheduler.{ KrakenDailyJob, TradeBotDailyJob }
 import com.kobr4.tradebot.services._
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
@@ -45,9 +45,9 @@ object ScheduledTradeBot {
 
   implicit val scheduledTradeBotReads: Reads[ScheduledTradeBot] = (
     (JsPath \ "hour").read[Int] and
-      (JsPath \ "minutes").read[Int] and
-      (JsPath \ "asset").read[Asset] and
-      (JsPath \ "strategy").read[Strategy]) (ScheduledTradeBot.apply _)
+    (JsPath \ "minutes").read[Int] and
+    (JsPath \ "asset").read[Asset] and
+    (JsPath \ "strategy").read[Strategy])(ScheduledTradeBot.apply _)
 }
 
 case object UnsupportedStrategyException extends RuntimeException
@@ -81,14 +81,14 @@ trait TradingBotRoutes extends PlayJsonSupport with PriceApiRoutes with TradeJob
 
   implicit val assetQuantityWrites: Writes[(Asset, Quantity)] = (
     (JsPath \ "asset").write[Asset] and
-      (JsPath \ "quantity").write[BigDecimal]) { a: (Asset, Quantity) => (a._1, a._2.quantity) }
+    (JsPath \ "quantity").write[BigDecimal]) { a: (Asset, Quantity) => (a._1, a._2.quantity) }
 
   implicit val balancesWrites: Writes[Balances] = Json.writes[Balances]
 
   implicit val poloOrderWrites: Writes[PoloOrder] = (
     (JsPath \ "orderNumber").write[String] and
-      (JsPath \ "rate").write[BigDecimal] and
-      (JsPath \ "amount").write[BigDecimal]) (unlift(PoloOrder.unapply))
+    (JsPath \ "rate").write[BigDecimal] and
+    (JsPath \ "amount").write[BigDecimal])(unlift(PoloOrder.unapply))
 
   implicit val strategyyWrites: Writes[Strategy] = (o: Strategy) => {
     JsString(o.toString)
@@ -107,21 +107,22 @@ trait TradingBotRoutes extends PlayJsonSupport with PriceApiRoutes with TradeJob
       get {
         parameters('asset.as(stringToAsset), 'start.as(stringToZonedDateTime), 'end.as(stringToZonedDateTime),
           'initial.as(stringToBigDecimal), 'fees.as(stringToBigDecimal), 'strategy.as(stringToStrategy), 'pair.as(stringToCurrencyPair).?) { (asset, start, end, initial, fees, strategy, maybePair) =>
-          onSuccess(PriceService.getPriceData(maybePair.getOrElse(CurrencyPair(Asset.Usd, asset)), start, end).map(pdata => TradeBotService.runPair(maybePair.getOrElse(CurrencyPair(Asset.Usd, asset)), start, initial, pdata, fees, strategy))) { orderList =>
-            complete(orderList)
+            onSuccess(PriceService.getPriceData(maybePair.getOrElse(CurrencyPair(Asset.Usd, asset)), start, end).map(pdata => TradeBotService.runPair(maybePair.getOrElse(CurrencyPair(Asset.Usd, asset)), start, initial, pdata, fees, strategy))) { orderList =>
+              complete(orderList)
+            }
           }
-        }
       }
     } ~ path("search") {
       get {
         parameters('asset.as(stringToAsset), 'start.as(stringToZonedDateTime), 'end.as(stringToZonedDateTime),
-          'initial.as(stringToBigDecimal), 'fees.as(stringToBigDecimal), 'strategy.as(stringToStrategy), 'pair.as(stringToCurrencyPair).?) { (asset, start, end, initial, fees, strategy, maybePair) => {
-          val assetWeight: Map[Asset, BigDecimal] = Map(maybePair.getOrElse(CurrencyPair(Asset.Usd, asset)).right -> BigDecimal(1.0))
-          onSuccess(TradeBotService.bestRun(assetWeight, initial, fees, start, end)) { runReport =>
-            complete(runReport)
+          'initial.as(stringToBigDecimal), 'fees.as(stringToBigDecimal), 'strategy.as(stringToStrategy), 'pair.as(stringToCurrencyPair).?) { (asset, start, end, initial, fees, strategy, maybePair) =>
+            {
+              val assetWeight: Map[Asset, BigDecimal] = Map(maybePair.getOrElse(CurrencyPair(Asset.Usd, asset)).right -> BigDecimal(1.0))
+              onSuccess(TradeBotService.bestRun(assetWeight, initial, fees, start, end)) { runReport =>
+                complete(runReport)
+              }
+            }
           }
-        }
-        }
       }
     }
   } ~ pathPrefix("trading_api") {
@@ -146,23 +147,24 @@ trait TradingBotRoutes extends PlayJsonSupport with PriceApiRoutes with TradeJob
     } ~ path("schedule_daily") {
       post {
         entity(as[ExchangeCreds]) { creds =>
-          entity(as[ScheduledTradeBot]) { scheduled => {
-            val poloApi = new PoloApi(creds.apiKey, creds.apiSecret)
-            val tradingOps = new TradingOps(poloApi)
-            val zd = ZonedDateTime.parse("2017-01-01T00:00:00-00:00")
-            onSuccess(
-              PriceService.getPriceData(CurrencyPair(Asset.Usd, scheduled.asset), zd).map { pData =>
-                QuickstartServer.schedulingService.schedule(
-                  "toto",
-                  scheduled.toCronExpression,
-                  () => TradeBotService.runAndTrade(
-                    scheduled.asset,
-                    pData,
-                    scheduled.strategy, poloApi, tradingOps))
-              }) { result =>
-              complete("OK")
+          entity(as[ScheduledTradeBot]) { scheduled =>
+            {
+              val poloApi = new PoloApi(creds.apiKey, creds.apiSecret)
+              val tradingOps = new TradingOps(poloApi)
+              val zd = ZonedDateTime.parse("2017-01-01T00:00:00-00:00")
+              onSuccess(
+                PriceService.getPriceData(CurrencyPair(Asset.Usd, scheduled.asset), zd).map { pData =>
+                  QuickstartServer.schedulingService.schedule(
+                    "toto",
+                    scheduled.toCronExpression,
+                    () => TradeBotService.runAndTrade(
+                      scheduled.asset,
+                      pData,
+                      scheduled.strategy, poloApi, tradingOps))
+                }) { result =>
+                  complete("OK")
+                }
             }
-          }
 
           }
         }

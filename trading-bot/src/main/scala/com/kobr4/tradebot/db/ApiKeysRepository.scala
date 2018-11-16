@@ -3,8 +3,7 @@ package com.kobr4.tradebot.db
 import slick.jdbc.MySQLProfile.api._
 import slick.lifted.Tag
 
-import scala.concurrent.{ExecutionContext, Future}
-
+import scala.concurrent.{ ExecutionContext, Future }
 
 case class ApiKey(id: Int, userId: Int, exchange: String, key: String, secret: String)
 
@@ -20,15 +19,18 @@ class ApiKeysRepository(dbConfigPath: String) {
     db.run(ApiKeysRepository.apiKeys.filter(_.userId === userId).result)
   }
 
+  def selectApiLKeyById(id: Int)(implicit ec: ExecutionContext): Future[Option[ApiKey]] = {
+    db.run(ApiKeysRepository.apiKeys.filter(_.id === id).result).map(_.headOption)
+  }
+
   def updateApiKey(apiKey: ApiKey): Future[Int] = {
     db.run((for { a <- ApiKeysRepository.apiKeys if a.id === apiKey.id } yield a).update(apiKey))
   }
 
-  def deleteApiKey(apiKey: ApiKey): Future[Int] = {
-    db.run((for { a <- ApiKeysRepository.apiKeys if a.id === apiKey.id } yield a).delete)
+  def deleteApiKey(id: Int): Future[Int] = {
+    db.run((for { a <- ApiKeysRepository.apiKeys if a.id === id } yield a).delete)
   }
 }
-
 
 object ApiKeysRepository {
 
