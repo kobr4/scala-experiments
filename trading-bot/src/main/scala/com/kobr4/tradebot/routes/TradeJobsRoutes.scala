@@ -4,9 +4,9 @@ import akka.actor.ActorSystem
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server._
 import akka.stream.ActorMaterializer
-import com.kobr4.tradebot.db.{ApiKey, TradingJob}
-import com.kobr4.tradebot.services.{AppToken, AuthService, SchedulingService, UserService}
-import play.api.libs.json.{Format, Json}
+import com.kobr4.tradebot.db.{ ApiKey, TradingJob }
+import com.kobr4.tradebot.services.{ AppToken, AuthService, SchedulingService, UserService }
+import play.api.libs.json.{ Format, Json }
 
 import scala.concurrent.ExecutionContext
 
