@@ -4,9 +4,9 @@ import akka.actor.ActorSystem
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server._
 import akka.stream.ActorMaterializer
-import com.kobr4.tradebot.db.{ ApiKey, TradingJob }
-import com.kobr4.tradebot.services.{ AppToken, AuthService, UserService }
-import play.api.libs.json.{ Format, Json }
+import com.kobr4.tradebot.db.{ApiKey, TradingJob}
+import com.kobr4.tradebot.services.{AppToken, AuthService, SchedulingService, UserService}
+import play.api.libs.json.{Format, Json}
 
 import scala.concurrent.ExecutionContext
 
@@ -31,6 +31,8 @@ trait TradeJobsRoutes extends PlayJsonSupport {
   implicit val tradingJobFormat: Format[TradingJob] = Json.format[TradingJob]
 
   implicit val apKeyFormat: Format[ApiKey] = Json.format[ApiKey]
+
+  val schedulingService: SchedulingService
 
   lazy val tradeJobsRoutes: Route = pathPrefix("trading_job") {
     AuthenticationToken { token =>
@@ -80,7 +82,7 @@ trait TradeJobsRoutes extends PlayJsonSupport {
           entity(as[TradingJob]) { tradingJob =>
             authorizeAsync(UserService.getApiKey(tradingJob.apiKeyId).map(dbApiK => dbApiK.exists(_.userId == token.id))) {
               val newTradingJob = TradingJob(0, token.id, tradingJob.cron, tradingJob.apiKeyId, tradingJob.strategy)
-              onSuccess(UserService.addTradingJob(newTradingJob)) { result =>
+              onSuccess(UserService.addTradingJob(newTradingJob, schedulingService)) { result =>
                 complete(result)
               }
             }
@@ -90,7 +92,7 @@ trait TradeJobsRoutes extends PlayJsonSupport {
         post {
           entity(as[TradingJob]) { tradeJob =>
             authorizeAsync(UserService.getTradingJob(tradeJob.id).map(dbApiK => dbApiK.exists(_.userId == token.id))) {
-              onSuccess(UserService.deleteTradingJob(tradeJob.id)) { result =>
+              onSuccess(UserService.deleteTradingJob(tradeJob.id, schedulingService)) { result =>
                 complete(result)
               }
             }

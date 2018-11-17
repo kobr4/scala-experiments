@@ -36,6 +36,8 @@ object QuickstartServer extends App with StrictLogging with TradingBotRoutes {
     case Success(v) =>
   }
 
+  SchedulerJob.fromDB(schedulingService)
+
   //schedulingService.schedule("toto", "*/30 * * * * ?", () => println("Hello"))
   //#http-server
   Http().bindAndHandle(routes, "0.0.0.0", 8080)

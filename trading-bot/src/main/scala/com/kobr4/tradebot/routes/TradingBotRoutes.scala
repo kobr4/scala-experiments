@@ -63,7 +63,7 @@ trait TradingBotRoutes extends PlayJsonSupport with PriceApiRoutes with TradeJob
 
   implicit def ec: ExecutionContext
 
-  private lazy val log = Logging(system, classOf[TradingBotRoutes])
+  //private lazy val log = Logging(system, classOf[TradingBotRoutes])
 
   private val stringToZonedDateTime = Unmarshaller.strict[String, ZonedDateTime](ZonedDateTime.parse)
 

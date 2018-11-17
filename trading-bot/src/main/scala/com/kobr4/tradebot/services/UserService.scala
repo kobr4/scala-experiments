@@ -2,11 +2,14 @@ package com.kobr4.tradebot.services
 
 import java.time.ZonedDateTime
 
+import akka.actor.ActorSystem
+import akka.stream.ActorMaterializer
 import com.github.t3hnar.bcrypt._
 import com.kobr4.tradebot.db._
+import com.kobr4.tradebot.scheduler.{SchedulerJob, TradeBotDailyJob}
 import com.typesafe.scalalogging.StrictLogging
 
-import scala.concurrent.{ ExecutionContext, Future }
+import scala.concurrent.{ExecutionContext, Future}
 
 case class User(id: Int, email: String, password: String, activationDate: Option[ZonedDateTime], created: ZonedDateTime)
 
@@ -76,8 +79,12 @@ object UserService extends StrictLogging {
     apiKeysRepository.updateApiKey(apiKey)
   }
 
-  def addTradingJob(tradingJob: TradingJob)(implicit ec: ExecutionContext): Future[Option[Int]] = {
-    tradingJobsRepository.insertTradingJob(tradingJob)
+  def addTradingJob(tradingJob: TradingJob, schedulingService: SchedulingService)
+                   (implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[Option[Int]] = {
+    tradingJobsRepository.insertTradingJob(tradingJob).map { result =>
+      SchedulerJob.schedule(tradingJob, schedulingService)
+      result
+    }
   }
 
   def getTradingJobs(userId: Int)(implicit ec: ExecutionContext): Future[Seq[TradingJob]] = {
@@ -88,11 +95,18 @@ object UserService extends StrictLogging {
     tradingJobsRepository.selectTradingJobById(id)
   }
 
-  def deleteTradingJob(id: Int)(implicit ec: ExecutionContext): Future[Int] = {
-    tradingJobsRepository.deleteTradingJob(id)
+  def deleteTradingJob(id: Int, schedulingService: SchedulingService)(implicit ec: ExecutionContext): Future[Int] = {
+    tradingJobsRepository.deleteTradingJob(id).map { result =>
+      SchedulerJob
+      result
+    }
   }
 
   def updateTradingJob(tradingJob: TradingJob)(implicit ec: ExecutionContext): Future[Int] = {
     tradingJobsRepository.updateTradingJob(tradingJob)
+  }
+
+  def getAllTradingJobs() (implicit ec: ExecutionContext): Future[Seq[TradingJob]] = {
+    tradingJobsRepository.selectTradingJobs()
   }
 }
