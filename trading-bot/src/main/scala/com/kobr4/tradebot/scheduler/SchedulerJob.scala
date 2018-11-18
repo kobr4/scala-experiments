@@ -2,12 +2,12 @@ package com.kobr4.tradebot.scheduler
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
-import com.kobr4.tradebot.api.{ExchangeApi, SupportedExchange}
+import com.kobr4.tradebot.api.{ ExchangeApi, SupportedExchange }
 import com.kobr4.tradebot.db.TradingJob
-import com.kobr4.tradebot.services.{SchedulingService, UserService}
-import com.kobr4.tradebot.{Configuration, ScheduledTaskConfiguration}
+import com.kobr4.tradebot.services.{ SchedulingService, UserService }
+import com.kobr4.tradebot.{ Configuration, ScheduledTaskConfiguration }
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{ ExecutionContext, Future }
 import scala.util.Try
 
 trait SchedulerJobInterface {

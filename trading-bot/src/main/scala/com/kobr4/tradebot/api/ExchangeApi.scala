@@ -36,8 +36,7 @@ object ExchangeApi {
     case Poloniex => new PoloApi()
   }
 
-  def apply(supportedExchange: SupportedExchange, apiKey: String, apiSecret: String)
-           (implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): ExchangeApi = supportedExchange match {
+  def apply(supportedExchange: SupportedExchange, apiKey: String, apiSecret: String)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): ExchangeApi = supportedExchange match {
     case Kraken => new KrakenApi(apiKey, apiSecret)
     case Poloniex => new PoloApi(apiKey, apiSecret)
   }

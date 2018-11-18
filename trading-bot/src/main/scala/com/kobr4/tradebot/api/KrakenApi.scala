@@ -29,7 +29,7 @@ object UnsupportedExchangeException extends RuntimeException
 
 object SupportedExchange {
 
-  def fromString(input: String): SupportedExchange = input match {
+  def fromString(input: String): SupportedExchange = input.toLowerCase match {
     case "kraken" => Kraken
     case "poloniex" => Poloniex
     case _ => throw UnsupportedExchangeException

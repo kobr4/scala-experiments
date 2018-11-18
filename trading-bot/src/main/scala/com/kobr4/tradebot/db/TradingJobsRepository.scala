@@ -27,7 +27,6 @@ class TradingJobsRepository(dbConfigPath: String) {
     db.run(TradingJobsRepository.tradingJobs.result)
   }
 
-
   def updateTradingJob(tradingJob: TradingJob): Future[Int] = {
     db.run((for { a <- TradingJobsRepository.tradingJobs if a.id === tradingJob.id } yield a).update(tradingJob))
   }
