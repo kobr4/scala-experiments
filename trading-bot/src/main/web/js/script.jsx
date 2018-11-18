@@ -3,7 +3,7 @@
 import React from 'react'
 import ReactDOM from 'react-dom'
 import { BrowserRouter, Route, Switch } from 'react-router-dom'
-import { ResponseTable, FormRow, FormTable, FormTextField, FormPasswordField, FormButton, FormContainer, FormOption, Panel, PanelTable} from './components/generics'
+import { ResponseTable, FormRow, FormTable, FormTextField, FormPasswordField, FormButton, FormContainer, FormOption, Panel, PanelTable, FormInputField} from './components/generics'
 
 import Helper from './components/helper'
 import RestUtils from './restutils'
@@ -205,10 +205,27 @@ class TradingForm extends React.Component {
     return this.state.apiKeys.map( (item) => [ item.id, item.key] );
   }
 
+  addWeight = () => {
+    var weights = this.state.tradeWeight;
+    weights[this.state.new_asset_weight] = this.state.new_weight;
+    this.setState({tradeWeight: weights})
+  }
+
+  getTradeWeightComp = () => {
+    var weightList = [];
+    this.state.tradeWeight.keys.forEach((key) =>{ 
+      weightList.push(<FormRow label={key}>{this.state.tradeWeight[key]}</FormRow>)
+    })
+    return weightList;
+  }
+
   constructor(props) {
     super(props);
 
-    this.state = {apikey :'', apisecret : '', balanceFields : null, tradingJobs : [], apiKeys: [], new_trading_apiKeyId : 0, new_trading_cron : '', new_trading_strategy : ''} 
+    this.state = {
+      apikey :'', apisecret : '', balanceFields : null, tradingJobs : [], apiKeys: [], 
+      new_trading_apiKeyId : 0, new_trading_cron : '', new_trading_strategy : '', 
+      new_asset_weight : 'BTC', new_weight: 1.0, tradeWeight : {}} 
   }
 
   render() {
@@ -220,6 +237,14 @@ class TradingForm extends React.Component {
           <FormTable>
               <FormRow label='API Key'>
                 <FormOption name='apikeyId' values={ this.getApiKeyOptions() } onChange={(event) => this.setState({new_trading_apiKeyId: event.target.value})}/> 
+              </FormRow>
+              <FormTable>
+                { this.getTradeWeightComp() }
+              </FormTable>
+              <FormRow>
+                <FormOption name='asset' values={[ ['BTC','BTC'], ['ETH', 'ETH'] ]} onChange={(event) => this.setState({new_asset_weight: event.target.value}) }/>
+                <FormTextField value={this.state.new_weight} name='weight' handleTextChange={(event) => this.setState({new_weight: event.target.value})} />  
+                <FormButton text='Add' handleClick={ (event) => { this.addWeight() } }/>
               </FormRow>                           
             </FormTable>          
         </FormContainer>
