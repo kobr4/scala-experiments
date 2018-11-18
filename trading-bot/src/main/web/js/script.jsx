@@ -20,6 +20,10 @@ const movingEndpoint = '/price_api/moving';
 const balanceEndpoint = '/trading_api/balances';
 const openOrdersEndpoint = '/trading_api/open_orders';
 
+function allAssets() {
+  return [['BTC','BTC'],['ETH','ETH'],['XMR','XMR'],['XRP','XRP'],['XLM','XLM'],['DOGE','DOGE']];
+}
+
 class CommonUtils {
   static isUser() {
     return document.cookie.indexOf('authtoken=') >= 0;
@@ -179,7 +183,7 @@ class TradingForm extends React.Component {
   addTradingJob = (event) => {
     RestUtils.performRestPostReqWithCreds(() => this.getApiKeys(), '/trading_job/trade_job_add',
     [ [ 'cron', this.state.new_trading_cron ], ['apiKeyId', this.state.new_trading_apiKeyId], [ 'strategy', this.state.new_trading_strategy],
-      [ 'userId',  0], [ 'id', 0] ], (status) => {});
+      [ 'userId',  0], [ 'id', 0], ['weights', this.state.tradeWeight] ], (status) => {});
     event.preventDefault();
   }
 
@@ -213,7 +217,7 @@ class TradingForm extends React.Component {
 
   getTradeWeightComp = () => {
     var weightList = [];
-    this.state.tradeWeight.keys.forEach((key) =>{ 
+    Object.keys(this.state.tradeWeight).forEach((key) =>{ 
       weightList.push(<FormRow label={key}>{this.state.tradeWeight[key]}</FormRow>)
     })
     return weightList;
@@ -231,21 +235,28 @@ class TradingForm extends React.Component {
   render() {
     return (
       <span>
-      <Panel title='Schedule trading'>
-      <ResponseTable first='Exchange' second='Key' responseFields={this.getComp() }/>
+      <Panel title='Scheduled Trading'>
+        <ResponseTable first='Exchange' second='Key' responseFields={this.getComp() }/>
+      </Panel>        
+      <Panel title='New Scheduled Trading'>
+        <table className="table table-bordered table-hover table-striped">
+        <thead>
+          <tr><th>Asset</th><th>Weight</th></tr>
+        </thead>
+        <tbody>
+        { this.getTradeWeightComp() }
+        </tbody>
+        </table>
         <FormContainer handleSubmit={this.addTradingJob} submit="Add">
           <FormTable>
+              <FormRow>
+                <FormOption name='asset' values={ allAssets() } onChange={(event) => this.setState({new_asset_weight: event.target.value}) }/>
+                <FormTextField value={this.state.new_weight} name='weight' handleTextChange={(event) => this.setState({new_weight: event.target.value})} />  
+                <FormButton text='Add Weight' handleClick={ (event) => { this.addWeight() } }/>
+              </FormRow>  
               <FormRow label='API Key'>
                 <FormOption name='apikeyId' values={ this.getApiKeyOptions() } onChange={(event) => this.setState({new_trading_apiKeyId: event.target.value})}/> 
-              </FormRow>
-              <FormTable>
-                { this.getTradeWeightComp() }
-              </FormTable>
-              <FormRow>
-                <FormOption name='asset' values={[ ['BTC','BTC'], ['ETH', 'ETH'] ]} onChange={(event) => this.setState({new_asset_weight: event.target.value}) }/>
-                <FormTextField value={this.state.new_weight} name='weight' handleTextChange={(event) => this.setState({new_weight: event.target.value})} />  
-                <FormButton text='Add' handleClick={ (event) => { this.addWeight() } }/>
-              </FormRow>                           
+              </FormRow>           
             </FormTable>          
         </FormContainer>
       </Panel>
@@ -499,7 +510,7 @@ class GraphResult extends React.Component {
                 this.props.pairChoice &&                
                 <FormRow label='Pair'>
                   <FormOption name='left' values={[ ['USD','USD'], ['BTC','BTC'] ]} onChange={(event) => this.setState({currency_left: event.target.value})}/>    
-                  <FormOption name='right' values={[ ['BTC','BTC'], ['ETH','ETH'], ['XMR','XMR'], ['XRP','XRP'], ['XLM','XLM'] ]} onChange={(event) => this.setState({currency_right: event.target.value})}/>    
+                  <FormOption name='right' values={ allAssets() } onChange={(event) => this.setState({currency_right: event.target.value})}/>    
                 </FormRow>
               }          
               {

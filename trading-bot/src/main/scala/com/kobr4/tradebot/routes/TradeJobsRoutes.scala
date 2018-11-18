@@ -28,6 +28,8 @@ trait TradeJobsRoutes extends PlayJsonSupport {
 
   implicit def ec: ExecutionContext
 
+  import TradingJob._
+
   implicit val tradingJobFormat: Format[TradingJob] = Json.format[TradingJob]
 
   implicit val apKeyFormat: Format[ApiKey] = Json.format[ApiKey]
@@ -81,7 +83,7 @@ trait TradeJobsRoutes extends PlayJsonSupport {
         post {
           entity(as[TradingJob]) { tradingJob =>
             authorizeAsync(UserService.getApiKey(tradingJob.apiKeyId).map(dbApiK => dbApiK.exists(_.userId == token.id))) {
-              val newTradingJob = TradingJob(0, token.id, tradingJob.cron, tradingJob.apiKeyId, tradingJob.strategy)
+              val newTradingJob = TradingJob(0, token.id, tradingJob.cron, tradingJob.apiKeyId, tradingJob.strategy, tradingJob.weights)
               onSuccess(UserService.addTradingJob(newTradingJob, schedulingService)) { result =>
                 complete(result)
               }

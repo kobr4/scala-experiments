@@ -1,11 +1,37 @@
 package com.kobr4.tradebot.db
 
+import com.kobr4.tradebot.model.Asset
+import play.api.libs.json.Json.JsValueWrapper
+import play.api.libs.json._
 import slick.jdbc.MySQLProfile.api._
 import slick.lifted.{ TableQuery, Tag }
 
 import scala.concurrent.{ ExecutionContext, Future }
 
-case class TradingJob(id: Int, userId: Int, cron: String, apiKeyId: Int, strategy: String)
+case class TradingJob(id: Int, userId: Int, cron: String, apiKeyId: Int, strategy: String, weights: Map[Asset, BigDecimal]) {
+
+}
+
+object TradingJob {
+
+  implicit val mapReads: Reads[Map[Asset, BigDecimal]] = (jv: JsValue) => JsSuccess(jv.as[Map[String, BigDecimal]].map {
+    case (k, v) =>
+      Asset.fromString(k).getOrElse(throw new RuntimeException("Invalid asset")) -> v
+  })
+
+  implicit val mapWrites: Writes[Map[Asset, BigDecimal]] = (map: Map[Asset, BigDecimal]) => Json.obj(map.map {
+    case (s, o) =>
+      val ret: (String, JsValueWrapper) = s.toString -> JsNumber(o)
+      ret
+  }.toSeq: _*)
+
+  def customTupled(a: (Int, Int, String, Int, String, String)): TradingJob = {
+    TradingJob(a._1, a._2, a._3, a._4, a._5, Json.parse(a._6).as[Map[Asset, BigDecimal]])
+  }
+
+  def customUnapply(job: TradingJob): Option[(Int, Int, String, Int, String, String)] =
+    Option((job.id, job.userId, job.cron, job.apiKeyId, job.strategy, Json.toJson(job.weights).toString()))
+}
 
 class TradingJobsRepository(dbConfigPath: String) {
 
@@ -40,12 +66,18 @@ object TradingJobsRepository {
 
   class TradingJobs(tag: Tag) extends Table[TradingJob](tag, "trading_jobs") {
     def id = column[Int]("id", O.PrimaryKey, O.AutoInc)
+
     def userId = column[Int]("user_id")
+
     def cron = column[String]("cron")
+
     def apiKeyId = column[Int]("api_key_id")
+
     def strategy = column[String]("strategy")
 
-    def * = (id, userId, cron, apiKeyId, strategy) <> (TradingJob.tupled, TradingJob.unapply)
+    def weights = column[String]("weights")
+
+    def * = (id, userId, cron, apiKeyId, strategy, weights) <> (TradingJob.customTupled, TradingJob.customUnapply)
   }
 
   val tradingJobs = TableQuery[TradingJobs]
