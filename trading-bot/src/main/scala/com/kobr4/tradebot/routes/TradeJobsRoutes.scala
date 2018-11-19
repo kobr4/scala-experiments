@@ -20,6 +20,8 @@ object AuthenticationToken extends Directive1[AppToken] {
   }
 }
 
+case class Id(id: Int)
+
 trait TradeJobsRoutes extends PlayJsonSupport {
 
   implicit def system: ActorSystem
@@ -28,8 +30,9 @@ trait TradeJobsRoutes extends PlayJsonSupport {
 
   implicit def ec: ExecutionContext
 
-  import TradingJob._
+  implicit val idFormat: Format[Id] = Json.format[Id]
 
+  import TradingJob._
   implicit val tradingJobFormat: Format[TradingJob] = Json.format[TradingJob]
 
   implicit val apKeyFormat: Format[ApiKey] = Json.format[ApiKey]
@@ -65,9 +68,9 @@ trait TradeJobsRoutes extends PlayJsonSupport {
         }
       } ~ path("api_key_delete") {
         post {
-          entity(as[ApiKey]) { apiKey =>
-            authorizeAsync(UserService.getApiKey(apiKey.id).map(dbApiK => dbApiK.exists(_.userId == token.id))) {
-              onSuccess(UserService.deleteApiKey(apiKey.id)) { result =>
+          entity(as[Id]) { id =>
+            authorizeAsync(UserService.getApiKey(id.id).map(dbApiK => dbApiK.exists(_.userId == token.id))) {
+              onSuccess(UserService.deleteApiKey(id.id)) { result =>
                 complete(result)
               }
             }
@@ -92,9 +95,9 @@ trait TradeJobsRoutes extends PlayJsonSupport {
         }
       } ~ path("trade_job_delete") {
         post {
-          entity(as[TradingJob]) { tradeJob =>
-            authorizeAsync(UserService.getTradingJob(tradeJob.id).map(dbApiK => dbApiK.exists(_.userId == token.id))) {
-              onSuccess(UserService.deleteTradingJob(tradeJob.id, schedulingService)) { result =>
+          entity(as[Id]) { id =>
+            authorizeAsync(UserService.getTradingJob(id.id).map(dbApiK => dbApiK.exists(_.userId == token.id))) {
+              onSuccess(UserService.deleteTradingJob(id.id, schedulingService)) { result =>
                 complete(result)
               }
             }

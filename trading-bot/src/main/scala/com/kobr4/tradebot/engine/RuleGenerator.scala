@@ -2,10 +2,42 @@ package com.kobr4.tradebot.engine
 import java.time.ZonedDateTime
 
 import com.kobr4.tradebot.api.CurrencyPair
-import com.kobr4.tradebot.model._
 import com.kobr4.tradebot.engine.Rule.Condition._
+import com.kobr4.tradebot.model._
+import play.api.libs.json._
+
 trait ConditionObject {
   def when[T <: Order](in: Option[T], asset: Asset, current: ZonedDateTime, assetPrice: BigDecimal, priceData: PairPrices)(implicit portfolio: Portfolio): Option[T]
+}
+
+object ConditionObject {
+
+  import play.api.libs.functional.syntax._
+
+  implicit val conditionObjectReads: Reads[ConditionObject] =
+    (JsPath \ "method").read[String].flatMap {
+      case "whenAboveMovingAverage" => (JsPath \ "days").read[Int].map(WhenAboveMovingAverage)
+      case "whenBelowMovingAverage" => (JsPath \ "days").read[Int].map(WhenBelowMovingAverage)
+      case "whenStops" => ((JsPath \ "high").read[Int] and (JsPath \ "low").read[Int]).tupled.map(t => WhenStops(t._1, t._2))
+      case "whenHigh" => (JsPath \ "days").read[Int].map(WhenHigh)
+      case "whenLow" => (JsPath \ "days").read[Int].map(WhenLow)
+      case "whenNoOp" => Reads.pure(WhenNoOp())
+    }
+
+  implicit val conditionObjectWrites: Writes[ConditionObject] = {
+    case WhenAboveMovingAverage(days: Int) =>
+      (JsPath \ "method").write[String].writes("whenAboveMovingAverage") ++ (JsPath \ "days").write[Int].writes(days)
+    case WhenBelowMovingAverage(days: Int) =>
+      (JsPath \ "method").write[String].writes("whenBelowMovingAverage") ++ (JsPath \ "days").write[Int].writes(days)
+    case WhenStops(high: Int, low: Int) =>
+      (JsPath \ "method").write[String].writes("whenStops") ++ (JsPath \ "high").write[Int].writes(high) ++ (JsPath \ "low").write[Int].writes(low)
+    case WhenHigh(days: Int) =>
+      (JsPath \ "method").write[String].writes("whenHigh") ++ (JsPath \ "days").write[Int].writes(days)
+    case WhenLow(days: Int) =>
+      (JsPath \ "method").write[String].writes("whenLow") ++ (JsPath \ "days").write[Int].writes(days)
+    case WhenNoOp() =>
+      (JsPath \ "method").write[String].writes("whenNoOp")
+  }
 }
 
 case class WhenAboveMovingAverage(days: Int) extends ConditionObject {
@@ -106,6 +138,11 @@ case class GeneratedStrategy(buyList: List[ConditionObject], sellList: List[Cond
   }
 }
 
+object GeneratedStrategy {
+
+  implicit val generatedStrategyFormat: Format[GeneratedStrategy] = Json.format[GeneratedStrategy]
+}
+
 case class AggregatedStrategy(strategyList: List[GeneratedStrategy]) extends Strategy {
 
   def buyStrategy(pair: CurrencyPair, portfolio: Portfolio, current: ZonedDateTime, priceData: PairPrices, weight: BigDecimal = BigDecimal(1)): Option[Buy] = {
@@ -123,4 +160,9 @@ case class AggregatedStrategy(strategyList: List[GeneratedStrategy]) extends Str
       sellStrategy(pair, portfolio, current, priceData))
   }
 
+}
+
+object AggregatedStrategy {
+
+  implicit val aggregatedStrategyFormat: Format[AggregatedStrategy] = Json.format[AggregatedStrategy]
 }

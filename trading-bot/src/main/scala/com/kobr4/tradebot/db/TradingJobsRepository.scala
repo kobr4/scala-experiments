@@ -1,5 +1,6 @@
 package com.kobr4.tradebot.db
 
+import com.kobr4.tradebot.engine.AggregatedStrategy
 import com.kobr4.tradebot.model.Asset
 import play.api.libs.json.Json.JsValueWrapper
 import play.api.libs.json._
@@ -8,9 +9,7 @@ import slick.lifted.{ TableQuery, Tag }
 
 import scala.concurrent.{ ExecutionContext, Future }
 
-case class TradingJob(id: Int, userId: Int, cron: String, apiKeyId: Int, strategy: String, weights: Map[Asset, BigDecimal]) {
-
-}
+case class TradingJob(id: Int, userId: Int, cron: String, apiKeyId: Int, strategy: AggregatedStrategy, weights: Map[Asset, BigDecimal])
 
 object TradingJob {
 
@@ -26,11 +25,11 @@ object TradingJob {
   }.toSeq: _*)
 
   def customTupled(a: (Int, Int, String, Int, String, String)): TradingJob = {
-    TradingJob(a._1, a._2, a._3, a._4, a._5, Json.parse(a._6).as[Map[Asset, BigDecimal]])
+    TradingJob(a._1, a._2, a._3, a._4, Json.parse(a._5).as[AggregatedStrategy], Json.parse(a._6).as[Map[Asset, BigDecimal]])
   }
 
   def customUnapply(job: TradingJob): Option[(Int, Int, String, Int, String, String)] =
-    Option((job.id, job.userId, job.cron, job.apiKeyId, job.strategy, Json.toJson(job.weights).toString()))
+    Option((job.id, job.userId, job.cron, job.apiKeyId, Json.toJson(job.strategy).toString(), Json.toJson(job.weights).toString()))
 }
 
 class TradingJobsRepository(dbConfigPath: String) {

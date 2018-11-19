@@ -24,6 +24,27 @@ function allAssets() {
   return [['BTC','BTC'],['ETH','ETH'],['XMR','XMR'],['XRP','XRP'],['XLM','XLM'],['DOGE','DOGE']];
 }
 
+function defaultStrategy() {
+  return {
+    strategyList : [
+      {
+        buyList: [ 
+          {
+            method : 'whenAboveMovingAverage',
+            days : 20
+          }
+        ],
+        sellList: [
+          {
+            method : 'whenBelowMovingAverage',
+            days : 20
+          }      
+        ]
+      }
+    ]
+  }
+}
+
 class CommonUtils {
   static isUser() {
     return document.cookie.indexOf('authtoken=') >= 0;
@@ -151,7 +172,7 @@ class TradingForm extends React.Component {
 
   deleteTradingJob = (id) => { return ((event) =>{
     RestUtils.performRestPostReqWithCreds(() => this.getTradingJobs(), '/trading_job/trade_job_delete',
-    [ [ 'cron', '' ], ['apiKeyId', 0], ['strategy', ''], [ 'exchange', ''], [ 'userId',  0], [ 'id', id]], (status) => {});
+    [ [ 'id', id]], (status) => {});
   })  }
 
   getTradingJobs = () => {
@@ -228,7 +249,7 @@ class TradingForm extends React.Component {
 
     this.state = {
       apikey :'', apisecret : '', balanceFields : null, tradingJobs : [], apiKeys: [], 
-      new_trading_apiKeyId : 0, new_trading_cron : '', new_trading_strategy : '', 
+      new_trading_apiKeyId : 0, new_trading_cron : '', new_trading_strategy : defaultStrategy(), 
       new_asset_weight : 'BTC', new_weight: 1.0, tradeWeight : {}} 
   }
 
@@ -699,11 +720,7 @@ class ApiKeysPanel extends React.Component {
 
   deleteApiKey = (id) => { return ((event) =>{
       RestUtils.performRestPostReqWithCreds(() => this.getApiKeys(), '/trading_job/api_key_delete',
-      [ [ 'key', '' ], ['secret', ''], 
-        [ 'exchange', ''],
-        [ 'userId',  0],
-        [ 'id', id]
-      ], (status) => {});
+      [ [ 'id', id] ], (status) => {});
     })  
   }  
 
