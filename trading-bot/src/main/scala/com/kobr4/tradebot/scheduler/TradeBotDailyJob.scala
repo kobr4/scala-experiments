@@ -4,12 +4,12 @@ import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import com.kobr4.tradebot.api.{ ExchangeApi, Poloniex }
 import com.kobr4.tradebot.engine.{ SafeStrategy, Strategy }
-import com.kobr4.tradebot.model.Asset
+import com.kobr4.tradebot.model.{ Asset, Order }
 import com.kobr4.tradebot.services.{ TradeBotService, TradingOps }
 import com.typesafe.scalalogging.StrictLogging
 
-import scala.concurrent.ExecutionContext
-import scala.util.{ Failure, Success }
+import scala.concurrent.{ ExecutionContext, Future }
+import scala.util.control.NonFatal
 
 class TradeBotDailyJob extends SchedulerJobInterface with StrictLogging {
 
@@ -20,7 +20,7 @@ class TradeBotDailyJob extends SchedulerJobInterface with StrictLogging {
 
   def getStrategy(): Strategy = SafeStrategy
 
-  override def run()(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Unit = {
+  override def run()(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[List[Order]] = {
 
     logger.info("Running Job: TradeBotDailyJob")
 
@@ -29,15 +29,19 @@ class TradeBotDailyJob extends SchedulerJobInterface with StrictLogging {
     val tradingOps = new TradingOps(exchangeApi)
 
     val eventualResult = TradeBotService.runMapAndTrade(getAssetMap(), getStrategy(), exchangeApi, tradingOps, Asset.Usd).map { orderList =>
-      orderList.foreach(order => logger.info(order.toString))
+      orderList.map(order => {
+        logger.info(order.toString)
+        order
+      })
     }
 
-    eventualResult.onComplete {
-      case Success(v) =>
-        logger.info("Job ran successfully")
-      case Failure(f) =>
-        logger.error("Job failed with error: {}", f.getMessage)
+    eventualResult.recover {
+      case NonFatal(t) =>
+        logger.error("Job failed with error: {}", t.getMessage)
+
     }
+
+    eventualResult
   }
 }
 

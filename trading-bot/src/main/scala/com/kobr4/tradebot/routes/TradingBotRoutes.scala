@@ -144,31 +144,6 @@ trait TradingBotRoutes extends PlayJsonSupport with PriceApiRoutes with TradeJob
           }
         }
       }
-    } ~ path("schedule_daily") {
-      post {
-        entity(as[ExchangeCreds]) { creds =>
-          entity(as[ScheduledTradeBot]) { scheduled =>
-            {
-              val poloApi = new PoloApi(creds.apiKey, creds.apiSecret)
-              val tradingOps = new TradingOps(poloApi)
-              val zd = ZonedDateTime.parse("2017-01-01T00:00:00-00:00")
-              onSuccess(
-                PriceService.getPriceData(CurrencyPair(Asset.Usd, scheduled.asset), zd).map { pData =>
-                  QuickstartServer.schedulingService.schedule(
-                    "toto",
-                    scheduled.toCronExpression,
-                    () => TradeBotService.runAndTrade(
-                      scheduled.asset,
-                      pData,
-                      scheduled.strategy, poloApi, tradingOps))
-                }) { result =>
-                  complete("OK")
-                }
-            }
-
-          }
-        }
-      }
     }
   } ~ pathPrefix("inhouse") {
     path("balances") {

@@ -21,6 +21,10 @@ class UsersRepository(dbConfigPath: String) {
     db.run(UsersRepository.users.filter(_.email === email).result).map(_.headOption)
   }
 
+  def selectUserById(id: Int)(implicit ec: ExecutionContext): Future[Option[User]] = {
+    db.run(UsersRepository.users.filter(_.id === id).result).map(_.headOption)
+  }
+
   def updateUser(user: User): Future[Int] = {
     db.run((for { u <- UsersRepository.users if u.email === user.email } yield u).update(user))
   }

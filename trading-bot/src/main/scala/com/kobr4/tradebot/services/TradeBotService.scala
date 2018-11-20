@@ -66,12 +66,6 @@ object TradeBotService extends StrictLogging {
     }
   }
 
-  def runAndTrade(asset: Asset, priceData: PairPrices, strategy: Strategy, poloApi: ExchangeApi, tradingsOps: TradingOps)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[Option[Order]] = {
-    Portfolio.fromApi(poloApi, Map(asset -> priceData)).map { portfolio =>
-      strategy.runStrategy(CurrencyPair(Asset.Usd, asset), ZonedDateTime.now(), priceData, portfolio).map(order => Order.process(order, tradingsOps))
-    }
-  }
-
   def runMapAndTrade(assetMap: Map[Asset, BigDecimal], strategy: Strategy, poloApi: ExchangeApi, tradingsOps: TradingOps, baseAsset: Asset)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[List[Order]] = {
     val eventualPData = Future.sequence(assetMap.keys.toList.map(asset => PriceService.getPriceDataWithoutCache(asset).map(asset -> _)))
     eventualPData.map(_.toMap).flatMap { pDataMap =>

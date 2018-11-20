@@ -49,6 +49,10 @@ object UserService extends StrictLogging {
     usersRepository.selectUserByEmail(email)
   }
 
+  def get(id: Int)(implicit ec: ExecutionContext): Future[Option[User]] = {
+    usersRepository.selectUserById(id)
+  }
+
   def verify(email: String, password: String)(implicit ec: ExecutionContext): Future[Option[Int]] = {
     get(email).map {
       case Some(s) => password.isBcryptedSafe(s.password).toOption.flatMap {

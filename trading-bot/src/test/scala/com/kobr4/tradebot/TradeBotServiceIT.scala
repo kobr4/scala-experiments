@@ -22,25 +22,6 @@ class TradeBotServiceIT extends FlatSpec with ScalaFutures with MockitoSugar {
   implicit val am = ActorMaterializer()
   implicit val ec = as.dispatcher
 
-  it should "run and trade one asset" in {
-
-    val poloApi = new PoloApi()
-    val apiMock = mock[ExchangeApi]
-    val tradingOps = new TradingOps(apiMock)
-    when(apiMock.returnTicker()).thenReturn(poloApi.returnTicker())
-    when(apiMock.buy(any(), any(), any())).thenReturn(Future.successful("TOTO"))
-
-    val result = for {
-      priceData <- PriceService.getPriceData(Asset.Eth)
-      result <- TradeBotService.runAndTrade(Asset.Eth, priceData, SafeStrategy, poloApi, tradingOps)
-    } yield result
-
-    val order = result.futureValue(Timeout(10 seconds))
-
-    println(order)
-
-  }
-
   it should "run and trade multiple asset" in {
 
     val poloApi = new PoloApi()
@@ -66,10 +47,7 @@ class TradeBotServiceIT extends FlatSpec with ScalaFutures with MockitoSugar {
     when(apiMock.returnTicker()).thenReturn(krakenApi.returnTicker())
     when(apiMock.buy(any(), any(), any())).thenReturn(Future.successful("TOTO"))
 
-    val result = for {
-      priceData <- PriceService.getPriceData(Asset.Eth)
-      result <- TradeBotService.runAndTrade(Asset.Eth, priceData, SafeStrategy, krakenApi, tradingOps)
-    } yield result
+    val result = TradeBotService.runMapAndTrade(Map(Asset.Eth -> BigDecimal(1.0)), SafeStrategy, krakenApi, tradingOps, Asset.Usd)
 
     val order = result.futureValue(Timeout(10 seconds))
 

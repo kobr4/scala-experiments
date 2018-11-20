@@ -3,6 +3,7 @@ package com.kobr4.tradebot.services
 import java.time.ZonedDateTime
 
 import com.kobr4.tradebot.DefaultConfiguration
+import com.kobr4.tradebot.model.{ Buy, Order, Sell }
 import com.typesafe.scalalogging.StrictLogging
 import courier.{ Envelope, Mailer, Multipart, Text }
 import javax.mail.internet.InternetAddress
@@ -36,6 +37,13 @@ object MailService extends StrictLogging {
         activationMail(token), login))
   }
 
+  def orderExecutionMail(to: String, orderList: List[Order])(implicit ec: ExecutionContext): Unit = {
+    sendMail(
+      s"[${DefaultConfiguration.Service.Name}] Order execution mail",
+      orderListMail(orderList),
+      to)
+  }
+
   private def activationMail(token: String): String = {
     html(
       body(
@@ -45,4 +53,16 @@ object MailService extends StrictLogging {
           "The last step is to activate your account: ",
           a(href := s"${DefaultConfiguration.Service.Url}/activation?token=$token")("Follow this link to activate"))))
   }.render
+
+  private def orderListMail(orderList: List[Order]): String = {
+    html(
+      body(
+        p("Dear user,"),
+        p("A scheduled job has run"),
+        p("The following orders were executed: "),
+        orderList.map {
+          case b: Buy => b.toHtml
+          case s: Sell => s.toHtml
+        })).render
+  }
 }

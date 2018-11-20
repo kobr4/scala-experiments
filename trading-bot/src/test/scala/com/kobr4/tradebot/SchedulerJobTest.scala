@@ -2,17 +2,19 @@ package com.kobr4.tradebot
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
+import com.kobr4.tradebot.model.Order
 import com.kobr4.tradebot.scheduler.{ SchedulerJob, SchedulerJobInterface }
 import com.kobr4.tradebot.services.SchedulingService
 import org.scalatest.{ BeforeAndAfterEach, FlatSpec, Matchers }
 import org.scalatest.concurrent.ScalaFutures
 
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ ExecutionContext, Future }
 import scala.util.Success
 
 class SchedulerJobForTest extends SchedulerJobInterface {
-  override def run()(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Unit = {
+  override def run()(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[List[Order]] = {
     println("test")
+    Future.successful(List())
   }
 }
 
