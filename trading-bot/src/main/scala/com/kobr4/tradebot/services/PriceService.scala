@@ -37,7 +37,7 @@ object PriceService {
     }
   }
 
-  private def getPricesOrPair(pair: CurrencyPair, startDate: ZonedDateTime, endDate: ZonedDateTime, withCache: Boolean = true)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[PairPrices] = {
+  def getPricesOrPair(pair: CurrencyPair, startDate: ZonedDateTime, endDate: ZonedDateTime, withCache: Boolean = true)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[PairPrices] = {
     if (pair.left == Asset.Usd && withCache)
       getPricesWithCache(pair.right)
     else if (pair.left == Asset.Usd) {
@@ -73,6 +73,7 @@ object PriceService {
     case Asset.Dash => getCoinmetricsPricesWithCache(CoinMetricsPriceUrl.dash)
     case Asset.Bch => getCoinmetricsPricesWithCache(CoinMetricsPriceUrl.bch)
     case Asset.Maid => getCoinmetricsPricesWithCache(CoinMetricsPriceUrl.maid)
+    case Asset.Tether => getCoinmetricsPricesWithCache(CoinMetricsPriceUrl.usdt)
     case other => getYahooPricesWithCache(other.toString)
   }
 
@@ -91,6 +92,7 @@ object PriceService {
     case Asset.Dash => PairPrice.fromUrlAsync(CoinMetricsPriceUrl.dash)
     case Asset.Bch => PairPrice.fromUrlAsync(CoinMetricsPriceUrl.bch)
     case Asset.Maid => PairPrice.fromUrlAsync(CoinMetricsPriceUrl.maid)
+    case Asset.Tether => PairPrice.fromUrlAsync(CoinMetricsPriceUrl.usdt)
     case other => getYahooPricesWithCache(other.toString)
   }
 
@@ -103,7 +105,7 @@ object PriceService {
   def getPriceHistory(pair: CurrencyPair, startDate: ZonedDateTime, endDate: ZonedDateTime)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[List[BigDecimal]] =
     getPricesOrPair(pair, startDate, endDate).map { prices => groupAndFilter(prices, startDate, endDate) }
 
-  def getPairPrice(pair: CurrencyPair, startDate: ZonedDateTime, endDate: ZonedDateTime, withCache: Boolean = true)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[PairPrices] = {
+  private def getPairPrice(pair: CurrencyPair, startDate: ZonedDateTime, endDate: ZonedDateTime, withCache: Boolean = true)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[PairPrices] = {
     for {
       leftPrices <- if (withCache) getPricesWithCache(pair.left) else getPricesWithoutCache(pair.left)
       rightPrices <- if (withCache) getPricesWithCache(pair.right) else getPricesWithoutCache(pair.right)

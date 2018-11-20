@@ -4,6 +4,8 @@ import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import com.kobr4.tradebot.api.{ ExchangeApi, SupportedExchange }
 import com.kobr4.tradebot.db.TradingJob
+import com.kobr4.tradebot.engine.Strategy
+import com.kobr4.tradebot.model.Asset
 import com.kobr4.tradebot.services.{ SchedulingService, UserService }
 import com.kobr4.tradebot.{ Configuration, ScheduledTaskConfiguration }
 
@@ -33,8 +35,13 @@ object SchedulerJob {
     UserService.getApiKey(job.apiKeyId).map { maybeApiKey =>
       maybeApiKey.map { apiKey =>
         val jobInstance = new TradeBotDailyJob {
+
           override def getExchangeInterface()(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): ExchangeApi =
             ExchangeApi(SupportedExchange.fromString(apiKey.exchange), apiKey.key, apiKey.secret)
+
+          override def getStrategy(): Strategy = job.strategy
+
+          override def getAssetMap(): Map[Asset, BigDecimal] = job.weights
         }
         service.schedule(s"${job.id}-${job.userId}-${job.apiKeyId}", "0 0 9 * * ?", () => jobInstance.run())
       }

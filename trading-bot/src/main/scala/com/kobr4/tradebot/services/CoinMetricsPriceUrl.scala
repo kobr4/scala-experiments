@@ -15,4 +15,5 @@ object CoinMetricsPriceUrl {
   val zec = "https://coinmetrics.io/data/zec.csv"
   val dash = "https://coinmetrics.io/data/dash.csv"
   val maid = "https://coinmetrics.io/data/maid.csv"
+  val usdt = "https://coinmetrics.io/data/usdt.csv"
 }

@@ -24,7 +24,7 @@ object LaunchReport {
   //val strategy = SafeStrategy
 
   def runPairAndReport(pair: CurrencyPair)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[RunPairReport] = {
-    PriceService.getPairPrice(pair, date, ZonedDateTime.now()).map { pd =>
+    PriceService.getPricesOrPair(pair, date, ZonedDateTime.now()).map { pd =>
       val orderList = TradeBotService.runPair(pair, date, initialAmount, pd, fees, strategy)
       val lastOrder = orderList.last
       val (assetOut, price, quantity, orderDate) = lastOrder match {

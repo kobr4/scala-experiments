@@ -41,6 +41,8 @@ object Asset {
 
   case object Maid extends Asset { val code = "MAID" }
 
+  case object Tether extends Asset { val code = "TETHER" }
+
   case class Custom(code: String) extends Asset
 
   def fromString(s: String): Option[Asset] = s match {
