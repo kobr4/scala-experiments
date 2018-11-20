@@ -21,7 +21,7 @@ const balanceEndpoint = '/trading_api/balances';
 const openOrdersEndpoint = '/trading_api/open_orders';
 
 function allAssets() {
-  return [['BTC','BTC'],['ETH','ETH'],['XMR','XMR'],['XRP','XRP'],['XLM','XLM'],['DOGE','DOGE']];
+  return [['BTC','BTC'],['ETH','ETH'],['XMR','XMR'],['XRP','XRP'],['XLM','XLM'],['DOGE','DOGE'], ['TETHER', 'TETHER']];
 }
 
 function defaultStrategy() {
@@ -431,7 +431,7 @@ class GraphResult extends React.Component {
     RestUtils.performRestReqWithPromise( '/trade_bot/run', 
       [ ['asset', this.props.asset], ['start', this.state.start.format(moment.defaultFormatUtc)], 
         ['end',this.state.end.format(moment.defaultFormatUtc)], ['initial', this.state.initial], 
-        ['fees', this.state.fees], ['strategy', this.state.strategy], ['pair', this.state.currency_left+'_'+this.state.currency_right] ]
+        ['fees', this.state.fees], ['strategy', !this.state.use_custom ? this.state.strategy : JSON.stringify(this.state.custom_strategy)], ['pair', this.state.currency_left+'_'+this.state.currency_right] ]
     ).then((tradeBotResponse) => {
       this.setState({responseFields : Helper.buildResponseComponent(tradeBotResponse)});
       buildExecutionResult(tradeBotResponse, this.state.initial, this.state.currency_left, this.state.currency_right, this.state.start, this.state.end, 
@@ -486,6 +486,8 @@ class GraphResult extends React.Component {
       currency_left : 'USD',
       currency_right : this.props.asset,
       asset : this.props.asset,
+      use_custom : false,
+      custom_strategy : defaultStrategy(),
       executionResultFields : null
     }
 
@@ -553,14 +555,34 @@ class GraphResult extends React.Component {
                   <FormTextField value={this.state.fees} name="fees" handleTextChange={(event) => this.setState({fees: event.target.value})} />
                 </FormRow>
                 <FormRow label='Strategy'>
-                  <FormOption name='strategy' values={[ ['safe','safe and defensive'], ['custom','custom undocumented'] ]} onChange={(event) => this.setState({strategy: event.target.value})}/>    
+                  <FormOption name='strategy' values={[ ['safe','safe and defensive'], ['custom','custom'] ]} onChange={(event) => {
+                    if (event.target.value === 'custom') { 
+                      this.setState({use_custom: true})
+                    } else {
+                      this.setState({use_custom: false})
+                    }
+                    this.setState({strategy: event.target.value})
+                  }}/>    
                 </FormRow>
+                { this.state.use_custom && 
+                  <FormRow label='Custom Strategy'>
+                  <textarea name="custom_strategy" onChange={(event) => {
+                    try {
+                    this.setState({custom_strategy: JSON.parse(event.target.value)})
+                    } catch(error) {
+                    }
+                  }} value={JSON.stringify(this.state.custom_strategy, null, 2)}>
+                  </textarea>
+                  </FormRow>
+                }
                 <FormRow>
                   <FormButton text='Update' handleClick={ (event) => { this.componentDidMount(); this.setState({asset: this.state.currency_right})} }/>
                 </FormRow>
+                { false &&
                 <FormRow>
                   <FormButton text='Learn' handleClick={ (event) => { this.handleLearn(event) } }/>
-                </FormRow>                
+                </FormRow>
+                }                
               </FormTable>    
             </FormContainer>
           </Panel>

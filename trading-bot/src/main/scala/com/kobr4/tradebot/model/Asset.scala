@@ -65,6 +65,7 @@ object Asset {
     case "DASH" => Some(Asset.Dash)
     case "ZEC" => Some(Asset.Zec)
     case "MAID" => Some(Asset.Maid)
+    case "TETHER" => Some(Asset.Tether)
     case xs if xs != "XUSD" && xs.startsWith("X") && xs.length == 4 => fromString(xs.substring(1))
     case code => Some(Custom(code))
   }

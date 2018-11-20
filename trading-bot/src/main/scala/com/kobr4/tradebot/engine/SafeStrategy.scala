@@ -4,7 +4,7 @@ import java.time.ZonedDateTime
 
 import com.kobr4.tradebot.api.CurrencyPair
 import com.kobr4.tradebot.model._
-import play.api.libs.json.{ JsPath, Reads }
+import play.api.libs.json.{ JsPath, Json, Reads }
 
 import scala.math.BigDecimal.RoundingMode
 
@@ -29,7 +29,7 @@ object Strategy {
   def fromString(strategy: String): Option[Strategy] = strategy match {
     case "safe" => Some(SafeStrategy)
     case "custom" => Some(AlternativeStrategy)
-    case _ => None
+    case json => Json.parse(json).asOpt[AggregatedStrategy]
   }
 
   implicit val strategyReads: Reads[Strategy] = JsPath.read[String].map(fromString(_).getOrElse(throw new RuntimeException("Invalid strategy")))
