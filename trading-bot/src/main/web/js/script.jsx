@@ -45,6 +45,26 @@ function defaultStrategy() {
   }
 }
 
+function defaultKrakenWeight() {
+  return {
+    BTC : 0.4,
+    ETH : 0.2,
+    XMR : 0.2,
+    XRP : 0.2
+  }
+}
+
+function defaultPoloniexWeight() {
+  return {
+    BTC : 0.3,
+    ETH : 0.2,
+    XMR : 0.1,
+    XRP : 0.2,
+    XLM : 0.1,
+    DOGE : 0.1
+  }
+}
+
 class CommonUtils {
   static isUser() {
     return document.cookie.indexOf('authtoken=') >= 0;
@@ -249,7 +269,7 @@ class TradingForm extends React.Component {
 
     this.state = {
       apikey :'', apisecret : '', balanceFields : null, tradingJobs : [], apiKeys: [], 
-      new_trading_apiKeyId : 0, new_trading_cron : '', new_trading_strategy : defaultStrategy(), 
+      new_trading_apiKeyId : 0, new_trading_cron : '', new_trading_strategy : defaultStrategy(), use_custom: false, 
       new_asset_weight : 'BTC', new_weight: 1.0, tradeWeight : {}} 
   }
 
@@ -275,9 +295,34 @@ class TradingForm extends React.Component {
                 <FormTextField value={this.state.new_weight} name='weight' handleTextChange={(event) => this.setState({new_weight: event.target.value})} />  
                 <FormButton text='Add Weight' handleClick={ (event) => { this.addWeight() } }/>
               </FormRow>  
+              <FormRow label='Set default Asset/Weight'>
+                <FormButton text='Kraken Default' handleClick={ (event) => { this.setState({tradeWeight: defaultKrakenWeight()}) } }/>
+                <FormButton text='Poloniex Default' handleClick={ (event) => { this.setState({tradeWeight: defaultPoloniexWeight()}) } }/>
+              </FormRow>
               <FormRow label='API Key'>
                 <FormOption name='apikeyId' values={ this.getApiKeyOptions() } onChange={(event) => this.setState({new_trading_apiKeyId: event.target.value})}/> 
-              </FormRow>           
+              </FormRow>      
+              <FormRow label='Strategy'>
+                <FormOption name='strategy' values={[ ['safe','safe and defensive'], ['custom','custom'] ]} onChange={(event) => {
+                  if (event.target.value === 'custom') { 
+                    this.setState({use_custom: true})
+                  } else {
+                    this.setState({use_custom: false})
+                    this.setState({new_trading_strategy: defaultStrategy()})
+                  }
+                }}/>    
+              </FormRow>
+              { this.state.use_custom && 
+                <FormRow label='Custom Strategy'>
+                <textarea name="custom_strategy" onChange={(event) => {
+                  try {
+                  this.setState({new_trading_strategy: JSON.parse(event.target.value)})
+                  } catch(error) {
+                  }
+                }} value={JSON.stringify(this.state.new_trading_strategy, null, 2)}>
+                </textarea>
+                </FormRow>
+              }
             </FormTable>          
         </FormContainer>
       </Panel>
