@@ -17,7 +17,7 @@ object LaunchSearch extends StrictLogging {
 
   val date = ZonedDateTime.parse("2017-01-01T01:00:00.000Z")
   val initialAmount = BigDecimal(10000)
-  val fees = BigDecimal(0.1)
+  val fees = BigDecimal(0.2)
   //val pair = CurrencyPair(Asset.Usd, Asset.Custom("SOI.PA"))
   val pair = CurrencyPair(Asset.Usd, Asset.Btc)
 
