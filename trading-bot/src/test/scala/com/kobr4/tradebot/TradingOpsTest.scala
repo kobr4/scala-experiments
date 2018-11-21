@@ -54,14 +54,15 @@ class TradingOpsTest extends FlatSpec with Matchers with ScalaFutures with Mocki
 
     val apiMock = mock[ExchangeApi]
     val poloApi = new PoloApi()
-    when(apiMock.returnTicker()).thenReturn(poloApi.returnTicker())
+    val eventualTicker = poloApi.returnTicker()
+    when(apiMock.returnTicker()).thenReturn(eventualTicker)
     when(apiMock.sell(any[CurrencyPair], any[BigDecimal], any[BigDecimal])).thenReturn(Future.successful("success"))
 
     val tradingOps = new TradingOps(apiMock)
 
     val pair = CurrencyPair(Asset.Usd, Asset.Xlm)
 
-    val quote = poloApi.returnTicker().futureValue(Timeout(10 seconds)).filter(q => q.pair.left == pair.left && q.pair.right == pair.right).head
+    val quote = eventualTicker.futureValue(Timeout(10 seconds)).filter(q => q.pair.left == pair.left && q.pair.right == pair.right).head
 
     tradingOps.sellAtMarketValue(quote.last, pair, Quantity(1)).futureValue(Timeout(10 seconds))
 
