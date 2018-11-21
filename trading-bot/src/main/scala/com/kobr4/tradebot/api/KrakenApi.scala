@@ -21,9 +21,13 @@ import scala.concurrent.{ ExecutionContext, Future }
 
 sealed trait SupportedExchange
 
-case object Kraken extends SupportedExchange
+case object Kraken extends SupportedExchange {
+  override def toString = "kraken"
+}
 
-case object Poloniex extends SupportedExchange
+case object Poloniex extends SupportedExchange {
+  override def toString = "poloniex"
+}
 
 object UnsupportedExchangeException extends RuntimeException
 
@@ -148,10 +152,10 @@ class KrakenApi(krakenUrl: String = KrakenApi.rootUrl, apiKey: String = DefaultC
       KrakenApi.DepositMethods.build(reqNonce, asset), apiKey, apiSecret).map { message =>
         println(message)
         /*
-      Json.parse(message).as[JsObject].value("result").as[JsObject].fields.flatMap {
+    Json.parse(message).as[JsObject].value("result").as[JsObject].fields.flatMap {
 
-      }
-      */
+    }
+    */
         List()
       }
   }

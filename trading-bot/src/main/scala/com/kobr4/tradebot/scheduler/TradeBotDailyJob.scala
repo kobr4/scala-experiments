@@ -2,13 +2,13 @@ package com.kobr4.tradebot.scheduler
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
-import com.kobr4.tradebot.api.{ExchangeApi, Poloniex}
-import com.kobr4.tradebot.engine.{SafeStrategy, Strategy}
-import com.kobr4.tradebot.model.{Asset, Order}
-import com.kobr4.tradebot.services.{TradeBotService, TradingOps}
+import com.kobr4.tradebot.api.{ ExchangeApi, Poloniex }
+import com.kobr4.tradebot.engine.{ SafeStrategy, Strategy }
+import com.kobr4.tradebot.model.{ Asset, Order }
+import com.kobr4.tradebot.services.{ TradeBotService, TradingOps }
 import com.typesafe.scalalogging.StrictLogging
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{ ExecutionContext, Future }
 import scala.util.control.NonFatal
 
 class TradeBotDailyJob extends SchedulerJobInterface with StrictLogging {

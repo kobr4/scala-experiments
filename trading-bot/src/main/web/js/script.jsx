@@ -214,10 +214,10 @@ class TradingForm extends React.Component {
     this.getApiKeys();
   }
 
-  requestBalance = () => RestUtils.performRestPostReq(
+  requestBalance = (exchange, apiKey, apiSecret) => RestUtils.performRestPostReq(
     (balanceList)=> { this.setState({balanceFields: Helper.rowsFromObjet(balanceList)})},
     balanceEndpoint,
-    [['apikey', this.state.apikey],['apisecret',this.state.apisecret]]
+    [ ['exchange', exchange], ['apikey', apiKey],['apisecret',apiSecret]]
   )
 
   requestOpenOrders = () => RestUtils.performRestPostReq(
@@ -735,10 +735,20 @@ class InHouseInfo extends React.Component {
 }
 
 function ApiKeysField(props) {
-  return <tr key={props.id}><td>{props.exchange}</td><td>{props.key}</td><td><FormButton text='Delete' handleClick={ (event) => props.handleClick(event) }/></td></tr>;
+  return <tr key={props.id}><td>{props.exchange}</td><td>{props.key}</td><td><FormButton text='Show Balance' handleClick={ (event) => props.handleBalance(event) }/></td><td><FormButton text='Delete' handleClick={ (event) => props.handleDelete(event) }/></td></tr>;
 }
 
 class ApiKeysPanel extends React.Component {
+
+  rowsFromObjets(jsArr) {
+    var fields = [];  
+    jsArr.forEach(function(jsObj) {
+      if (jsObj.quantity > 0) {
+        fields.push(<tr><td>{jsObj.asset}</td><td>{jsObj.quantity}</td></tr>);
+      }
+    })
+    return fields;
+  }
 
   deleteApiKey = (id) => { return ((event) =>{
       RestUtils.performRestPostReqWithCreds(() => this.getApiKeys(), '/trading_job/api_key_delete',
@@ -746,11 +756,19 @@ class ApiKeysPanel extends React.Component {
     })  
   }  
 
+  getRequestBalance = (exchange, apiKey, apiSecret) => { return ((event) => { RestUtils.performRestPostReq (
+      (balanceList) => { this.setState({balancesFields: this.rowsFromObjets(balanceList.assetList), balance_valuation: balanceList.valuation}) },
+      balanceEndpoint,
+      [['exchange', exchange], ['apiKey', apiKey],['apiSecret',apiSecret]])
+    })
+  }
+
   getComp = () => {
     var fields = [];
     this.state.apiKeys.forEach(
       (item) => {
-        item.handleClick = this.deleteApiKey(item.id);
+        item.handleDelete = this.deleteApiKey(item.id);
+        item.handleBalance = this.getRequestBalance(item.exchange, item.key, item.secret)
         fields.push(ApiKeysField(item))
       }
     )
@@ -782,7 +800,8 @@ class ApiKeysPanel extends React.Component {
       apiKeys : [],
       new_api_exchange : 'POLONIEX',
       new_api_key : '',
-      new_api_secret : ''
+      new_api_secret : '',
+      balancesFields : null
     }
   }
 
@@ -805,6 +824,11 @@ class ApiKeysPanel extends React.Component {
       </FormTable>
       </FormContainer>      
       </Panel>
+      { this.state.balancesFields && 
+      <Panel title={'Balances ['+(this.state.balance_valuation).toFixed(2)+' USD]'}>
+        <ResponseTable first='Currency' second='Quantity' responseFields={this.state.balancesFields}/>
+      </Panel>
+      }      
       </span>
     )
   } 

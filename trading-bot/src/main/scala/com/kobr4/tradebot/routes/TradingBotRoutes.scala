@@ -21,9 +21,13 @@ import play.api.libs.json._
 
 import scala.concurrent.ExecutionContext
 
-case class ExchangeCreds(exchange: String, apiKey: String, apiSecret: String)
+case class ExchangeCreds(exchange: SupportedExchange, apiKey: String, apiSecret: String)
 
 object ExchangeCreds {
+
+  implicit val supportedExchangeReads: Reads[SupportedExchange] = JsPath.read[String].map(SupportedExchange.fromString)
+
+  implicit val supportedExchangeWrites: Writes[SupportedExchange] = (ex: SupportedExchange) => JsString(ex.toString)
 
   implicit val exchangeCredsFormat: Format[ExchangeCreds] = Json.format[ExchangeCreds]
 }
@@ -129,17 +133,26 @@ trait TradingBotRoutes extends PlayJsonSupport with PriceApiRoutes with TradeJob
     path("balances") {
       post {
         entity(as[ExchangeCreds]) { creds =>
-          val poloApi = new PoloApi(creds.apiKey, creds.apiSecret)
-          onSuccess(poloApi.returnBalances.map(_.toList)) { assetQuantityList =>
-            complete(assetQuantityList)
+          val exchangeApi = ExchangeApi(creds.exchange, creds.apiKey, creds.apiSecret)
+          val eventualBalancePrice = for {
+            a <- exchangeApi.returnBalances.map(_.toList)
+            b <- exchangeApi.returnTicker()
+          } yield {
+            (a, b)
+          }
+          onSuccess(eventualBalancePrice) { (assetQuantityList, quoteList) =>
+            val usdValue = assetQuantityList.map(assetQ =>
+              quoteList.find(p => p.pair.left == Asset.Usd && p.pair.right == assetQ._1)
+                .map(_.last).getOrElse(BigDecimal(1)) * assetQ._2.quantity).sum
+            complete(Balances(usdValue, assetQuantityList))
           }
         }
       }
     } ~ path("open_orders") {
       post {
         entity(as[ExchangeCreds]) { creds =>
-          val poloApi = new PoloApi(creds.apiKey, creds.apiSecret)
-          onSuccess(poloApi.returnOpenOrders()) { openOrdersList =>
+          val exchangeApi = ExchangeApi(creds.exchange, creds.apiKey, creds.apiSecret)
+          onSuccess(exchangeApi.returnOpenOrders()) { openOrdersList =>
             complete(openOrdersList)
           }
         }
