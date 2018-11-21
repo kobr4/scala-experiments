@@ -270,7 +270,7 @@ class TradingForm extends React.Component {
         </table>
         <FormContainer handleSubmit={this.addTradingJob} submit="Add">
           <FormTable>
-              <FormRow>
+              <FormRow label='Asset to trade'>
                 <FormOption name='asset' values={ allAssets() } onChange={(event) => this.setState({new_asset_weight: event.target.value}) }/>
                 <FormTextField value={this.state.new_weight} name='weight' handleTextChange={(event) => this.setState({new_weight: event.target.value})} />  
                 <FormButton text='Add Weight' handleClick={ (event) => { this.addWeight() } }/>
