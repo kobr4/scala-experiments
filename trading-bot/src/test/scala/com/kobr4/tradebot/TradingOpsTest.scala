@@ -60,13 +60,13 @@ class TradingOpsTest extends FlatSpec with Matchers with ScalaFutures with Mocki
 
     val tradingOps = new TradingOps(apiMock)
 
-    val pair = CurrencyPair(Asset.Usd, Asset.Xlm)
+    val pair = CurrencyPair(Asset.Tether, Asset.Xlm)
 
     val quote = eventualTicker.futureValue(Timeout(10 seconds)).filter(q => q.pair.left == pair.left && q.pair.right == pair.right).head
 
     tradingOps.sellAtMarketValue(quote.last, pair, Quantity(1)).futureValue(Timeout(10 seconds))
 
-    verify(apiMock).sell(CurrencyPair(Asset.Usd, Asset.Xlm), quote.last, 1)
+    verify(apiMock).sell(CurrencyPair(Asset.Tether, Asset.Xlm), quote.last, 1)
   }
 
   "TradingOps" should "cancel an order" in {

@@ -27,7 +27,7 @@ object Asset {
 
   case object Xlm extends Asset { val code = "STR" }
 
-  case object Usd extends Asset { val code = "USDT" }
+  case object Usd extends Asset { val code = "USD" }
 
   case object Dgb extends Asset { val code = "DGB" }
 
@@ -41,11 +41,11 @@ object Asset {
 
   case object Maid extends Asset { val code = "MAID" }
 
-  case object Tether extends Asset { val code = "TETHER" }
+  case object Tether extends Asset { val code = "USDT" }
 
   case class Custom(code: String) extends Asset
 
-  def fromString(s: String): Option[Asset] = s match {
+  def fromStringExact(s: String): Option[Asset] = s match {
     case "ETH" => Some(Asset.Eth)
     case "BTC" => Some(Asset.Btc)
     case "XBT" => Some(Asset.Btc)
@@ -56,7 +56,7 @@ object Asset {
     case "DGB" => Some(Asset.Dgb)
     case "XLM" => Some(Asset.Xlm)
     case "USD" => Some(Asset.Usd)
-    case "USDT" => Some(Asset.Usd)
+    case "USDT" => Some(Asset.Tether)
     case "ZUSD" => Some(Asset.Usd)
     case "ADA" => Some(Asset.Ada)
     case "STR" => Some(Asset.Xlm)
@@ -66,11 +66,13 @@ object Asset {
     case "ZEC" => Some(Asset.Zec)
     case "MAID" => Some(Asset.Maid)
     case "TETHER" => Some(Asset.Tether)
-    case xs if xs != "XUSD" && xs.startsWith("X") && xs.length == 4 => fromString(xs.substring(1))
-    case code => Some(Custom(code))
+    case xs if xs != "XUSD" && xs.startsWith("X") && xs.length == 4 => fromStringExact(xs.substring(1))
+    case other => None
   }
+
+  def fromString(s: String): Asset = fromStringExact(s).getOrElse(Custom(s))
 
   implicit val assetWrites: Writes[Asset] = { a: Asset => JsString(a.toString) }
 
-  implicit val assetReads: Reads[Asset] = JsPath.read[String].map(fromString(_).getOrElse(throw new RuntimeException("Invalid asset")))
+  implicit val assetReads: Reads[Asset] = JsPath.read[String].map(fromString)
 }

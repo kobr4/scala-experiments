@@ -73,14 +73,14 @@ trait TradingBotRoutes extends PlayJsonSupport with PriceApiRoutes with TradeJob
 
   private val stringToBigDecimal = Unmarshaller.strict[String, BigDecimal](BigDecimal.apply)
 
-  private val stringToAsset = Unmarshaller.strict[String, Asset](s => Asset.fromString(s).getOrElse(Asset.Btc))
+  private val stringToAsset = Unmarshaller.strict[String, Asset](s => Asset.fromString(s))
 
   private val stringToStrategy = Unmarshaller.strict[String, Strategy](s => Strategy.fromString(s).getOrElse(throw UnsupportedStrategyException))
 
   private val stringToSupportedExchange = Unmarshaller.strict[String, SupportedExchange](s => SupportedExchange.fromString(s))
 
   private val stringToCurrencyPair = Unmarshaller.strict[String, CurrencyPair](s => s.toUpperCase.split('_').map(s => Asset.fromString(s)).toList match {
-    case Some(a) :: Some(b) :: Nil => CurrencyPair(a, b)
+    case a :: b :: Nil => CurrencyPair(a, b)
   })
 
   implicit val assetQuantityWrites: Writes[(Asset, Quantity)] = (

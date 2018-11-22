@@ -24,12 +24,12 @@ trait PriceApiRoutes extends PlayJsonSupport {
 
   private val stringToZonedDateTime = Unmarshaller.strict[String, ZonedDateTime](ZonedDateTime.parse)
 
-  private val stringToAsset = Unmarshaller.strict[String, Asset](s => Asset.fromString(s).getOrElse(Asset.Btc))
+  private val stringToAsset = Unmarshaller.strict[String, Asset](s => Asset.fromString(s))
 
   private val stringToSupportedExchange = Unmarshaller.strict[String, SupportedExchange](s => SupportedExchange.fromString(s))
 
   private val stringToCurrencyPair = Unmarshaller.strict[String, CurrencyPair](s => s.toUpperCase.split('_').map(s => Asset.fromString(s)).toList match {
-    case Some(a) :: Some(b) :: Nil => CurrencyPair(a, b)
+    case a :: b :: Nil => CurrencyPair(a, b)
   })
 
   lazy val priceApiRoutes: Route =

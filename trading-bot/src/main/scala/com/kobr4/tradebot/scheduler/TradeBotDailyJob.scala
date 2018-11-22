@@ -18,6 +18,8 @@ class TradeBotDailyJob extends SchedulerJobInterface with StrictLogging {
 
   def getAssetMap(): Map[Asset, BigDecimal] = TradeBotDailyJob.assetMap
 
+  def getBaseAsset(): Asset = Asset.Tether
+
   def getStrategy(): Strategy = SafeStrategy
 
   override def run()(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[List[Order]] = {
@@ -30,7 +32,7 @@ class TradeBotDailyJob extends SchedulerJobInterface with StrictLogging {
 
     val eventualResult = for {
       _ <- tradingOps.cancelAllOpenOrders()
-      orderList <- TradeBotService.runMapAndTrade(getAssetMap(), getStrategy(), exchangeApi, tradingOps, Asset.Usd)
+      orderList <- TradeBotService.runMapAndTrade(getAssetMap(), getStrategy(), exchangeApi, tradingOps, getBaseAsset())
     } yield {
       orderList.map(order => {
         logger.info(order.toString)

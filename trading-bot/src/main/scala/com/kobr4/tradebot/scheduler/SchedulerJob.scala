@@ -48,6 +48,8 @@ object SchedulerJob {
           override def getStrategy(): Strategy = job.strategy
 
           override def getAssetMap(): Map[Asset, BigDecimal] = job.weights
+
+          override def getBaseAsset(): Asset = job.baseAsset
         }
         service.schedule(s"${job.id}-${job.userId}-${job.apiKeyId}", "0 0 9 * * ?", () => jobInstance.run().map { orderList =>
           MailService.orderExecutionMail(apiUser._2.map(_.email).getOrElse(DefaultConfiguration.Mail.Admin), orderList)

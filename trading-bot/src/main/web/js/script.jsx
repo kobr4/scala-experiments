@@ -270,6 +270,7 @@ class TradingForm extends React.Component {
     this.state = {
       apikey :'', apisecret : '', balanceFields : null, tradingJobs : [], apiKeys: [], 
       new_trading_apiKeyId : 0, new_trading_cron : '', new_trading_strategy : defaultStrategy(), use_custom: false, 
+      new_trading_base_asset : 'USD',
       new_asset_weight : 'BTC', new_weight: 1.0, tradeWeight : {}} 
   }
 
@@ -298,6 +299,11 @@ class TradingForm extends React.Component {
               <FormRow label='Set default Asset/Weight'>
                 <FormButton text='Kraken Default' handleClick={ (event) => { this.setState({tradeWeight: defaultKrakenWeight()}) } }/>
                 <FormButton text='Poloniex Default' handleClick={ (event) => { this.setState({tradeWeight: defaultPoloniexWeight()}) } }/>
+              </FormRow>
+              <FormRow label='Base Asset'>
+                <FormTextField value={this.state.new_trading_base_asset} name='baseAsset' handleTextChange={(event) => this.setState({new_trading_base_asset: event.target.value})} /> 
+                <FormButton text='Kraken Default' handleClick={ (event) => { this.setState({new_trading_base_asset: 'USD'}) } }/>
+                <FormButton text='Poloniex Default' handleClick={ (event) => { this.setState({new_trading_base_asset: 'USDT'}) } }/>                 
               </FormRow>
               <FormRow label='API Key'>
                 <FormOption name='apikeyId' values={ this.getApiKeyOptions() } onChange={(event) => this.setState({new_trading_apiKeyId: event.target.value})}/> 

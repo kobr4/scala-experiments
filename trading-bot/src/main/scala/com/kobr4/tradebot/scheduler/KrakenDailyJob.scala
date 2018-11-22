@@ -12,6 +12,8 @@ class KrakenDailyJob extends TradeBotDailyJob {
   override def getExchangeInterface()(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): ExchangeApi =
     ExchangeApi(Kraken)
 
+  override def getBaseAsset() = Asset.Usd
+
   override def getAssetMap(): Map[Asset, BigDecimal] = KrakenDailyJob.assetMap
 
 }

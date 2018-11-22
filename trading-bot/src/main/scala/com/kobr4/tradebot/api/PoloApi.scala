@@ -102,25 +102,22 @@ class PoloApi(
 
   override def returnBalances: Future[Map[Asset, Quantity]] =
     PoloApi.httpRequestPost(tradingUrl, PoloApi.ReturnBalances.build(nonce), apiKey, apiSecret).map { message =>
-      Json.parse(message).as[JsObject].fields.flatMap {
-        case (s, v) => Asset.fromString(s.toUpperCase).map { asset =>
-          (asset, Quantity(BigDecimal(v.as[String])))
-        }
+      Json.parse(message).as[JsObject].fields.map {
+        case (s, v) => (Asset.fromString(s.toUpperCase), Quantity(BigDecimal(v.as[String])))
       }.toMap
     }
 
   override def returnDepositAddresses: Future[Map[Asset, String]] =
     PoloApi.httpRequestPost(tradingUrl, ReturnDepositAddresses.build(nonce), apiKey, apiSecret).map { message =>
-      Json.parse(message).as[JsObject].fields.flatMap {
-        case (s, v) => Asset.fromString(s.toUpperCase).map { asset =>
-          (asset, v.as[String])
-        }
+      Json.parse(message).as[JsObject].fields.map {
+        case (s, v) => (Asset.fromString(s.toUpperCase), v.as[String])
       }.toMap
     }
 
   override def returnOpenOrders(): Future[List[PoloOrder]] =
     PoloApi.httpRequestPost(tradingUrl, ReturnOpenOrders.build(nonce), apiKey, apiSecret).map { message =>
-      Json.parse(message).as[JsArray].value.map { order => order.as[PoloOrder] }.toList
+      Json.parse(message).as[JsObject].fields.toList.flatMap(_._2.as[JsArray].value.map { order => order.as[PoloOrder] }.toList)
+      //Json.parse(message).as[JsArray].value.map { order => order.as[PoloOrder] }.toList
     }
 
   override def cancelOrder(orderNumber: String): Future[Boolean] = {
@@ -139,7 +136,7 @@ class PoloApi(
       Json.parse(message).as[JsObject].fields.flatMap {
         case (s, v) =>
           s.toUpperCase.split('_').map(s => Asset.fromString(s)).toList match {
-            case Some(a) :: Some(b) :: Nil =>
+            case a :: b :: Nil =>
               v.as[JsArray].value.toList.map { jsValue =>
                 jsValue.as[PoloTrade].toOrder(CurrencyPair(a, b))
               }
@@ -159,7 +156,7 @@ class PoloApi(
     Json.parse(message).as[JsObject].fields.flatMap {
       case (s, v) =>
         s.toUpperCase.split('_').map(s => Asset.fromString(s)).toList match {
-          case Some(a) :: Some(b) :: Nil =>
+          case a :: b :: Nil =>
             v.asOpt[Quote](quoteReads(CurrencyPair(a, b)))
           case _ => None
         }
@@ -237,7 +234,9 @@ object PoloApi extends StrictLogging {
 
     val ReturnOpenOrders = "returnOpenOrders"
 
-    def build(nonce: Long): FormData = akka.http.scaladsl.model.FormData(Map(PoloApi.Command -> ReturnOpenOrders, PoloApi.Nonce -> nonce.toString))
+    val CurrencyPair = "currencyPair"
+
+    def build(nonce: Long): FormData = akka.http.scaladsl.model.FormData(Map(PoloApi.Command -> ReturnOpenOrders, PoloApi.Nonce -> nonce.toString, CurrencyPair -> "all"))
   }
 
   object ReturnDepositAddresses {

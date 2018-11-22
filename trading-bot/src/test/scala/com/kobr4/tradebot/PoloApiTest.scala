@@ -68,8 +68,8 @@ class PoloApiTest extends FlatSpec with Matchers with ScalaFutures with BeforeAn
       .willReturn(aResponse()
         .withHeader("Content-Type", "text/plain")
         .withBody(
-          """[{"orderNumber":"120466","type":"sell","rate":"0.025","amount":"100","total":"2.5"},
-            |{"orderNumber":"120467","type":"sell","rate":"0.04","amount":"100","total":"4"}]""".stripMargin)))
+          """{ "BTC_XCP" : [{"orderNumber":"120466","type":"sell","rate":"0.025","amount":"100","total":"2.5"},
+            |{"orderNumber":"120467","type":"sell","rate":"0.04","amount":"100","total":"4"}] }""".stripMargin)))
 
     val api = new PoloApi(DefaultConfiguration.PoloApi.Key, DefaultConfiguration.PoloApi.Secret, poloUrl)
     val list = api.returnOpenOrders().futureValue(Timeout(10 seconds))

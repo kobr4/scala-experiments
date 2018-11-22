@@ -10,7 +10,6 @@ import com.typesafe.scalalogging.StrictLogging
 
 import scala.concurrent.{ ExecutionContext, Future }
 import scala.util.control.NonFatal
-import scala.util.{ Failure, Success }
 
 class PoloniexBtcDailyJob extends SchedulerJobInterface with StrictLogging {
 

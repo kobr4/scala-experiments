@@ -40,4 +40,11 @@ class PoloApiIT extends FlatSpec with ScalaFutures with Matchers {
     chartData.prices.length shouldNot be(0)
   }
 
+  it should "return open orders" in {
+    val api = new PoloApi
+    val openOrderList = api.returnOpenOrders().futureValue(Timeout(10 seconds))
+
+    println(openOrderList)
+  }
+
 }

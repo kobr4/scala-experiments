@@ -86,7 +86,7 @@ trait TradeJobsRoutes extends PlayJsonSupport {
         post {
           entity(as[TradingJob]) { tradingJob =>
             authorizeAsync(UserService.getApiKey(tradingJob.apiKeyId).map(dbApiK => dbApiK.exists(_.userId == token.id))) {
-              val newTradingJob = TradingJob(0, token.id, tradingJob.cron, tradingJob.apiKeyId, tradingJob.strategy, tradingJob.weights)
+              val newTradingJob = TradingJob(0, token.id, tradingJob.cron, tradingJob.apiKeyId, tradingJob.strategy, tradingJob.weights, tradingJob.baseAsset)
               onSuccess(UserService.addTradingJob(newTradingJob, schedulingService)) { result =>
                 complete(result)
               }

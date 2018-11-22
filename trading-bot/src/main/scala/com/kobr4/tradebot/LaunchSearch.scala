@@ -15,7 +15,7 @@ import scala.util.control.NonFatal
 
 object LaunchSearch extends StrictLogging {
 
-  val date = ZonedDateTime.parse("2017-01-01T01:00:00.000Z")
+  val date = ZonedDateTime.parse("2016-01-01T01:00:00.000Z")
   val initialAmount = BigDecimal(10000)
   val fees = BigDecimal(0.2)
   //val pair = CurrencyPair(Asset.Usd, Asset.Custom("SOI.PA"))
@@ -66,7 +66,7 @@ object LaunchSearch extends StrictLogging {
     val eventualPData = Future.sequence(assetWeight.keys.toList.map(asset => PriceService.getPricesOrPair(CurrencyPair(Asset.Usd, asset), date, ZonedDateTime.now()).map(asset -> _)))
     eventualPData.map { priceMap =>
 
-      val reportList = RuleGenerator.getAll(2).combinations(2).toList.par.flatMap { buyList =>
+      val reportList = RuleGenerator.getAll(2).combinations(2).toList.flatMap { buyList =>
         RuleGenerator.getAll(2).combinations(2).toList.par.map { sellList =>
           val strategy = GeneratedStrategy(buyList, sellList)
           //runPairAndReport(pair, strategy, pd)
