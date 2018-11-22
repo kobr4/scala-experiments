@@ -98,14 +98,18 @@ object UserService extends StrictLogging {
     tradingJobsRepository.selectTradingJobById(id)
   }
 
-  def deleteTradingJob(id: Int, schedulingService: SchedulingService)(implicit ec: ExecutionContext): Future[Int] = {
-    tradingJobsRepository.deleteTradingJob(id).map { result =>
-      SchedulerJob
+  def deleteTradingJob(id: Int, schedulingService: SchedulingService)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[Int] = {
+    for {
+      _ <- getTradingJob(id).map(maybeJob =>  maybeJob.foreach(SchedulerJob.cancel(_, schedulingService )))
+      result <- tradingJobsRepository.deleteTradingJob(id)
+    } yield {
       result
     }
+
   }
 
   def updateTradingJob(tradingJob: TradingJob)(implicit ec: ExecutionContext): Future[Int] = {
+    //TODO: Missing rescheduling
     tradingJobsRepository.updateTradingJob(tradingJob)
   }
 
