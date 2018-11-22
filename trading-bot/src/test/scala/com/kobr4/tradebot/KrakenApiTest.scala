@@ -74,7 +74,7 @@ class KrakenApiTest extends FlatSpec with Matchers with ScalaFutures with Before
             |   }
             |}""".stripMargin)))
 
-    val api = new KrakenApi(s"http://127.0.0.1:$port", DefaultConfiguration.KrakenApi.Key, DefaultConfiguration.KrakenApi.Secret)
+    val api = new KrakenApi(DefaultConfiguration.KrakenApi.Key, DefaultConfiguration.KrakenApi.Secret, s"http://127.0.0.1:$port")
     val list = api.returnOpenOrders().futureValue(Timeout(10 seconds))
 
     list should contain(PoloOrder("O7ICPO-F4CLJ-MVBLHC", BigDecimal(1), BigDecimal(3)))

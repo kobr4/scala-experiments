@@ -92,8 +92,9 @@ object KrakenTrade {
     (JsPath \ "time").read[BigDecimal].map(_.rounded.toLong))(KrakenTrade.apply _)
 }
 
-class KrakenApi(krakenUrl: String = KrakenApi.rootUrl, apiKey: String = DefaultConfiguration.KrakenApi.Key,
-  apiSecret: String = DefaultConfiguration.KrakenApi.Secret)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext) extends ExchangeApi with StrictLogging {
+class KrakenApi(
+  apiKey: String = DefaultConfiguration.KrakenApi.Key,
+  apiSecret: String = DefaultConfiguration.KrakenApi.Secret, krakenUrl: String = KrakenApi.rootUrl)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext) extends ExchangeApi with StrictLogging {
 
   private val publicUrl = s"$krakenUrl/0/public"
 
