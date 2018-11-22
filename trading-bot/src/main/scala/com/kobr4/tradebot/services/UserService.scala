@@ -100,7 +100,7 @@ object UserService extends StrictLogging {
 
   def deleteTradingJob(id: Int, schedulingService: SchedulingService)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[Int] = {
     for {
-      _ <- getTradingJob(id).map(maybeJob =>  maybeJob.foreach(SchedulerJob.cancel(_, schedulingService )))
+      _ <- getTradingJob(id).map(maybeJob => maybeJob.foreach(SchedulerJob.cancel(_, schedulingService)))
       result <- tradingJobsRepository.deleteTradingJob(id)
     } yield {
       result

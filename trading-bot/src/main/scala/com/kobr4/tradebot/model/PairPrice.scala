@@ -105,7 +105,7 @@ object PairPrice extends StrictLogging {
         val time = LocalTime.MIDNIGHT
         EthUsd(
           ZonedDateTime.of(date, time, ZoneId.of("UTC")),
-          if (splitted.length >= priceLineId && splitted(priceLineId) != "") BigDecimal(splitted(priceLineId)) else BigDecimal(0))
+          if (splitted.length >= priceLineId && splitted(priceLineId) != "" && splitted(priceLineId) != "null") BigDecimal(splitted(priceLineId)) else BigDecimal(0))
       }
     logger.info("Latest price : {}", prices.last.date)
     PairPrices(prices)
