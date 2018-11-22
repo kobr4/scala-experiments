@@ -142,7 +142,7 @@ trait TradingBotRoutes extends PlayJsonSupport with PriceApiRoutes with TradeJob
           }
           onSuccess(eventualBalancePrice) { (assetQuantityList, quoteList) =>
             val usdValue = assetQuantityList.map(assetQ =>
-              quoteList.find(p => p.pair.left == Asset.Usd && p.pair.right == assetQ._1)
+              quoteList.find(p => (p.pair.left == Asset.Usd || p.pair.left == Asset.Tether) && p.pair.right == assetQ._1)
                 .map(_.last).getOrElse(BigDecimal(1)) * assetQ._2.quantity).sum
             complete(Balances(usdValue, assetQuantityList))
           }
@@ -171,7 +171,7 @@ trait TradingBotRoutes extends PlayJsonSupport with PriceApiRoutes with TradeJob
           }
           onSuccess(eventualBalancePrice) { (assetQuantityList, quoteList) =>
             val usdValue = assetQuantityList.map(assetQ =>
-              quoteList.find(p => p.pair.left == Asset.Usd && p.pair.right == assetQ._1)
+              quoteList.find(p => (p.pair.left == Asset.Usd || p.pair.left == Asset.Tether) && p.pair.right == assetQ._1)
                 .map(_.last).getOrElse(BigDecimal(1)) * assetQ._2.quantity).sum
             complete(Balances(usdValue, assetQuantityList))
           }
