@@ -227,7 +227,7 @@ class TradingForm extends React.Component {
 
   addTradingJob = (event) => {
     RestUtils.performRestPostReqWithCreds(() => this.getApiKeys(), '/trading_job/trade_job_add',
-    [ [ 'cron', this.state.new_trading_cron ], ['apiKeyId', this.state.new_trading_apiKeyId], [ 'strategy', this.state.new_trading_strategy],
+    [ [ 'cron', this.state.new_trading_cron ], ['apiKeyId', parseInt(this.state.new_trading_apiKeyId)], [ 'strategy', this.state.new_trading_strategy],
       [ 'userId',  0], [ 'id', 0], ['weights', this.state.tradeWeight], ['baseAsset', this.state.new_trading_base_asset] ], (status) => {});
     event.preventDefault();
   }
