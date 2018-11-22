@@ -57,9 +57,9 @@ export function FormButton(props) {
 
 export function FormOption(props) {
   return (
-    <select name={props.name} onChange={props.onChange}>
+    <select name={props.name} onChange={props.onChange} value={props.value}>
     {
-      props.values.map(value => <option value={value[0]}>{value[1]}</option>)
+      props.values.map(value => <option value={value[0]} key={value[0]}>{value[1]}</option>)
     }
     </select>
   )

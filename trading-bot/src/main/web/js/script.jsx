@@ -24,6 +24,10 @@ function allAssets() {
   return [['BTC','BTC'],['ETH','ETH'],['XMR','XMR'],['XRP','XRP'],['XLM','XLM'],['DOGE','DOGE'], ['TETHER', 'TETHER']];
 }
 
+function baseAssets() {
+  return [['BTC','BTC'],['USD','USD'],['TETHER','TETHER']];
+}
+
 function defaultStrategy() {
   return {
     strategyList : [
@@ -224,7 +228,7 @@ class TradingForm extends React.Component {
   addTradingJob = (event) => {
     RestUtils.performRestPostReqWithCreds(() => this.getApiKeys(), '/trading_job/trade_job_add',
     [ [ 'cron', this.state.new_trading_cron ], ['apiKeyId', this.state.new_trading_apiKeyId], [ 'strategy', this.state.new_trading_strategy],
-      [ 'userId',  0], [ 'id', 0], ['weights', this.state.tradeWeight] ], (status) => {});
+      [ 'userId',  0], [ 'id', 0], ['weights', this.state.tradeWeight], ['baseAsset', this.state.new_trading_base_asset] ], (status) => {});
     event.preventDefault();
   }
 
@@ -301,9 +305,9 @@ class TradingForm extends React.Component {
                 <FormButton text='Poloniex Default' handleClick={ (event) => { this.setState({tradeWeight: defaultPoloniexWeight()}) } }/>
               </FormRow>
               <FormRow label='Base Asset'>
-                <FormTextField value={this.state.new_trading_base_asset} name='baseAsset' handleTextChange={(event) => this.setState({new_trading_base_asset: event.target.value})} /> 
+                <FormOption values={ baseAssets() } name='baseAsset' onChange={(event) => this.setState({new_trading_base_asset: event.target.value})} value={this.state.new_trading_base_asset}/> 
                 <FormButton text='Kraken Default' handleClick={ (event) => { this.setState({new_trading_base_asset: 'USD'}) } }/>
-                <FormButton text='Poloniex Default' handleClick={ (event) => { this.setState({new_trading_base_asset: 'USDT'}) } }/>                 
+                <FormButton text='Poloniex Default' handleClick={ (event) => { this.setState({new_trading_base_asset: 'TETHER'}) } }/>                 
               </FormRow>
               <FormRow label='API Key'>
                 <FormOption name='apikeyId' values={ this.getApiKeyOptions() } onChange={(event) => this.setState({new_trading_apiKeyId: event.target.value})}/> 

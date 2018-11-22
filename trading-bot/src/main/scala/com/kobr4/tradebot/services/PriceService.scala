@@ -15,25 +15,14 @@ object PriceService {
 
   implicit val guavaCache: Cache[PairPrices] = GuavaCache[PairPrices]
 
-  private def getCoinmetricsPricesWithCache(url: String)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[PairPrices] = {
+  private def getPricesWithCache(asset: Asset)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[PairPrices] = {
     import scalacache._
     import scalacache.modes.scalaFuture._
 
     import scala.concurrent.duration._
 
-    cachingF(url)(ttl = Some(2 hours)) {
-      PairPrice.fromUrlAsync(url)
-    }
-  }
-
-  private def getYahooPricesWithCache(code: String)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[PairPrices] = {
-    import scalacache._
-    import scalacache.modes.scalaFuture._
-
-    import scala.concurrent.duration._
-
-    cachingF(code)(ttl = Some(2 hours)) {
-      YahooFinanceApi.fetchPriceData(code)
+    cachingF(asset)(ttl = Some(2 hours)) {
+      getPricesWithoutCache(asset)
     }
   }
 
@@ -58,25 +47,6 @@ object PriceService {
     }
   }
 
-  private def getPricesWithCache(asset: Asset)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[PairPrices] = asset match {
-    case Asset.Btc => getCoinmetricsPricesWithCache(CoinMetricsPriceUrl.btc)
-    case Asset.Eth => getCoinmetricsPricesWithCache(CoinMetricsPriceUrl.eth)
-    case Asset.Xmr => getCoinmetricsPricesWithCache(CoinMetricsPriceUrl.xmr)
-    case Asset.Doge => getCoinmetricsPricesWithCache(CoinMetricsPriceUrl.doge)
-    case Asset.Xem => getCoinmetricsPricesWithCache(CoinMetricsPriceUrl.xem)
-    case Asset.Xrp => getCoinmetricsPricesWithCache(CoinMetricsPriceUrl.xrp)
-    case Asset.Xlm => getCoinmetricsPricesWithCache(CoinMetricsPriceUrl.xlm)
-    case Asset.Dgb => getCoinmetricsPricesWithCache(CoinMetricsPriceUrl.dgb)
-    case Asset.Ada => getCoinmetricsPricesWithCache(CoinMetricsPriceUrl.ada)
-    case Asset.Ltc => getCoinmetricsPricesWithCache(CoinMetricsPriceUrl.ltc)
-    case Asset.Zec => getCoinmetricsPricesWithCache(CoinMetricsPriceUrl.zec)
-    case Asset.Dash => getCoinmetricsPricesWithCache(CoinMetricsPriceUrl.dash)
-    case Asset.Bch => getCoinmetricsPricesWithCache(CoinMetricsPriceUrl.bch)
-    case Asset.Maid => getCoinmetricsPricesWithCache(CoinMetricsPriceUrl.maid)
-    case Asset.Tether => getCoinmetricsPricesWithCache(CoinMetricsPriceUrl.usdt)
-    case other => getYahooPricesWithCache(other.toString)
-  }
-
   private def getPricesWithoutCache(asset: Asset)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[PairPrices] = asset match {
     case Asset.Btc => PairPrice.fromUrlAsync(CoinMetricsPriceUrl.btc)
     case Asset.Eth => PairPrice.fromUrlAsync(CoinMetricsPriceUrl.eth)
@@ -93,7 +63,7 @@ object PriceService {
     case Asset.Bch => PairPrice.fromUrlAsync(CoinMetricsPriceUrl.bch)
     case Asset.Maid => PairPrice.fromUrlAsync(CoinMetricsPriceUrl.maid)
     case Asset.Tether => PairPrice.fromUrlAsync(CoinMetricsPriceUrl.usdt)
-    case other => getYahooPricesWithCache(other.toString)
+    case other => YahooFinanceApi.fetchPriceData(other.toString)
   }
 
   private def groupAndFilter(pairPrices: PairPrices, startDate: ZonedDateTime, endDate: ZonedDateTime)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): List[BigDecimal] =
