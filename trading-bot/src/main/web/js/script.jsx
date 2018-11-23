@@ -21,7 +21,8 @@ const balanceEndpoint = '/trading_api/balances';
 const openOrdersEndpoint = '/trading_api/open_orders';
 
 function allAssets() {
-  return [['BTC','BTC'],['ETH','ETH'],['XMR','XMR'],['XRP','XRP'],['XLM','XLM'],['DOGE','DOGE'], ['TETHER', 'TETHER']];
+  return [['BTC','BTC'],['ETH','ETH'],['XMR','XMR'],['XRP','XRP'],
+  ['XLM','XLM'],['DOGE','DOGE'],['ADA','ADA'],['LTC','LTC'],['XEM','XEM'],['ZEC','ZEC'],['DASH','DASH'],['DGB','DGB'],['TETHER', 'TETHER']];
 }
 
 function baseAssets() {
