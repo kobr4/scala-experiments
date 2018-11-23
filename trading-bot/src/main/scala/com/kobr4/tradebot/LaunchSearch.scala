@@ -16,6 +16,7 @@ import scala.util.control.NonFatal
 object LaunchSearch extends StrictLogging {
 
   val date = ZonedDateTime.parse("2016-01-01T01:00:00.000Z")
+  val endDate = ZonedDateTime.parse("2018-01-01T01:00:00.000Z")
   val initialAmount = BigDecimal(10000)
   val fees = BigDecimal(0.2)
   //val pair = CurrencyPair(Asset.Usd, Asset.Custom("SOI.PA"))
@@ -63,7 +64,7 @@ object LaunchSearch extends StrictLogging {
     val assetWeight: Map[Asset, BigDecimal] = Map(Asset.Tether -> BigDecimal(1.0))
     //val assetWeight: Map[Asset, BigDecimal]
     // = Map(Asset.Custom("GLE.PA") -> BigDecimal(0.2), Asset.Custom("BNP.PA") -> BigDecimal(0.3), Asset.Custom("FP.PA") -> BigDecimal(0.3), Asset.Custom("ENGI.PA") -> BigDecimal(0.2))
-    val eventualPData = Future.sequence(assetWeight.keys.toList.map(asset => PriceService.getPricesOrPair(CurrencyPair(Asset.Usd, asset), date, ZonedDateTime.now()).map(asset -> _)))
+    val eventualPData = Future.sequence(assetWeight.keys.toList.map(asset => PriceService.getPricesOrPair(CurrencyPair(Asset.Usd, asset), date, endDate).map(asset -> _)))
     eventualPData.map { priceMap =>
 
       val reportList = RuleGenerator.getAll(2).combinations(2).toList.flatMap { buyList =>

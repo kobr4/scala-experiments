@@ -60,6 +60,7 @@ object MailService extends StrictLogging {
         p("Dear user,"),
         p("A scheduled job has run"),
         p("The following orders were executed: "),
+        if (orderList.isEmpty) p(b("No orders")) else
         orderList.map {
           case b: Buy => b.toHtml
           case s: Sell => s.toHtml

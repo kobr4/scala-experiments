@@ -4,16 +4,15 @@ import java.time.ZonedDateTime
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
-import com.kobr4.tradebot.api.{ CurrencyPair, PoloApi }
+import com.kobr4.tradebot.api.CurrencyPair
 import com.kobr4.tradebot.services.TradingOps
 import com.typesafe.scalalogging.StrictLogging
-import play.api.libs.json.{ JsObject, Json, Writes }
+import play.api.libs.json.{JsObject, Json, Writes}
 import scalatags.Text
 import scalatags.Text.all._
 
-import scala.concurrent.{ ExecutionContext, Future }
+import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.NonFatal
-import scala.util.{ Failure, Success }
 
 sealed trait Order {
   val date: ZonedDateTime
@@ -22,16 +21,16 @@ sealed trait Order {
 case class Buy(pair: CurrencyPair, price: BigDecimal, quantity: BigDecimal, date: ZonedDateTime) extends Order {
   def toHtml: Text.TypedTag[String] = {
     table(
-      th(td("Currency Pair"), td("Price"), td("Quantity"), td("Date")),
-      tr(td(pair.toString), td(price.toString()), td(quantity.toString())))
+      tr(th("Type"),th("Currency Pair"), th("Price"), th("Quantity"), th("Date")),
+      tr(td("BUY"),td(pair.toString), td(price.toString()), td(quantity.toString())))
   }
 }
 
 case class Sell(pair: CurrencyPair, price: BigDecimal, quantity: BigDecimal, date: ZonedDateTime) extends Order {
   def toHtml: Text.TypedTag[String] = {
     table(
-      th(td("Currency Pair"), td("Price"), td("Quantity"), td("Date")),
-      tr(td(pair.toString), td(price.toString()), td(quantity.toString())))
+      tr(th("Type"),th("Currency Pair"), th("Price"), th("Quantity"), th("Date")),
+      tr(td("SELL"),td(pair.toString), td(price.toString()), td(quantity.toString())))
   }
 }
 
