@@ -58,6 +58,7 @@ object CurrencyPairHelper {
   def toString(pair: CurrencyPair): String = pair match {
     case CurrencyPair(Asset.Usd, Asset.Ada) => s"ADAUSD"
     case CurrencyPair(Asset.Usd, Asset.Btc) => s"XXBTZUSD"
+    case CurrencyPair(Asset.Usd, Asset.Tether) => s"USDTZUSD"
     case CurrencyPair(Asset.Usd, a: Asset) => s"X${a}ZUSD"
     case CurrencyPair(b: Asset, a: Asset) => s"$a$b"
   }

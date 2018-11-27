@@ -21,7 +21,10 @@ class KrakenApiIT extends FlatSpec with ScalaFutures with Matchers {
 
     val krakenApi = new KrakenApi()
 
-    krakenApi.tradableAsset().futureValue(Timeout(10 seconds)) should contain("ADACAD")
+    val tradableAssetList = krakenApi.tradableAsset().futureValue(Timeout(10 seconds))
+    tradableAssetList should contain("ADACAD")
+    tradableAssetList should contain(com.kobr4.tradebot.api.CurrencyPairHelper.toString(CurrencyPair(Asset.Usd, Asset.Tether)))
+
 
   }
 
