@@ -120,15 +120,16 @@ class KrakenApi(
   }
 
   def returnTicker()(implicit ec: ExecutionContext): Future[List[Quote]] =
-    tradableAsset.map(_.filter(aList => aList.contains("ETH") || aList.contains("XMR") || aList.contains("XBT")).mkString(",")).flatMap { assetListParam =>
+    tradableAsset.map(_.filter(aList => aList.contains("ETH") || aList.contains("XMR") || aList.contains("XBT") || aList.contains("USDT")).mkString(",")).flatMap { assetListParam =>
       {
-
         KrakenApi.httpRequest(publicUrl, Public.ticker(assetListParam)).map { message =>
 
           Json.parse(message).as[JsObject].value("result").as[JsObject].fields.flatMap {
             case (s, v) =>
               val pairString = s.toUpperCase
               val (a, b) = pairString.length match {
+                case _ if pairString == "USDTZUSD" =>
+                  ("USDT","ZUSD")
                 case 6 =>
                   (pairString.substring(0, 3), pairString.substring(3))
                 case 7 =>
