@@ -1,4 +1,5 @@
 package com.kobr4.tradebot.engine
+
 import java.time.ZonedDateTime
 
 import com.kobr4.tradebot.api.CurrencyPair
@@ -22,6 +23,8 @@ object ConditionObject {
       case "whenHigh" => (JsPath \ "days").read[Int].map(WhenHigh)
       case "whenLow" => (JsPath \ "days").read[Int].map(WhenLow)
       case "whenNoOp" => Reads.pure(WhenNoOp())
+      case "whenAbove" => (JsPath \ "threshold").read[BigDecimal].map(WhenAbove)
+      case "whenBelow" => (JsPath \ "threshold").read[BigDecimal].map(WhenBelow)
     }
 
   implicit val conditionObjectWrites: Writes[ConditionObject] = {
@@ -37,6 +40,10 @@ object ConditionObject {
       (JsPath \ "method").write[String].writes("whenLow") ++ (JsPath \ "days").write[Int].writes(days)
     case WhenNoOp() =>
       (JsPath \ "method").write[String].writes("whenNoOp")
+    case WhenAbove(threshold: BigDecimal) =>
+      (JsPath \ "method").write[String].writes("whenAbove") ++ (JsPath \ "threshold").write[BigDecimal].writes(threshold)
+    case WhenBelow(threshold: BigDecimal) =>
+      (JsPath \ "method").write[String].writes("whenBelow") ++ (JsPath \ "threshold").write[BigDecimal].writes(threshold)
   }
 }
 
@@ -79,6 +86,20 @@ case class WhenNoOp() extends ConditionObject {
 
   def when[T <: Order](in: Option[T], asset: Asset, current: ZonedDateTime, assetPrice: BigDecimal, priceData: PairPrices)(implicit portfolio: Portfolio): Option[T] = {
     in
+  }
+}
+
+case class WhenAbove(thresholdPrice: BigDecimal) extends ConditionObject {
+
+  def when[T <: Order](in: Option[T], asset: Asset, current: ZonedDateTime, assetPrice: BigDecimal, priceData: PairPrices)(implicit portfolio: Portfolio): Option[T] = {
+    in.whenAbove(assetPrice, thresholdPrice)
+  }
+}
+
+case class WhenBelow(thresholdPrice: BigDecimal) extends ConditionObject {
+
+  def when[T <: Order](in: Option[T], asset: Asset, current: ZonedDateTime, assetPrice: BigDecimal, priceData: PairPrices)(implicit portfolio: Portfolio): Option[T] = {
+    in.whenBelow(assetPrice, thresholdPrice)
   }
 }
 

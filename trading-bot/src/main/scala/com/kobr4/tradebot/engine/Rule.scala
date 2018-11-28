@@ -21,6 +21,10 @@ object Rule {
 
     def whenAboveWeightedMovingAverage(current: ZonedDateTime, currentPrice: BigDecimal, priceData: PairPrices, days: Int): T
 
+    def whenBelow(currentPrice: BigDecimal, thresholdPrice: BigDecimal): T
+
+    def whenAbove(currentPrice: BigDecimal, thresholdPrice: BigDecimal): T
+
     def when(v: Boolean): T
 
     def whenLastBuyingPrice(asset: Asset, f: (BigDecimal) => Boolean)(implicit portfolio: Portfolio): T
@@ -70,6 +74,9 @@ object Rule {
 
       def or(f: Option[T] => Option[T]): Option[T] = input.flatMap(in => f(Option(in)))
 
+      override def whenBelow(currentPrice: BigDecimal, thresholdPrice: BigDecimal): Option[T] = when(currentPrice < thresholdPrice)
+
+      override def whenAbove(currentPrice: BigDecimal, thresholdPrice: BigDecimal): Option[T] = when(currentPrice > thresholdPrice)
     }
 
   }

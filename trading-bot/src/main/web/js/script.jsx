@@ -6,11 +6,15 @@ import { BrowserRouter, Route, Switch } from 'react-router-dom'
 import { ResponseTable, FormRow, FormTable, FormTextField, FormPasswordField, FormButton, FormContainer, FormOption, Panel, PanelTable, FormInputField} from './components/generics'
 
 import Helper from './components/helper'
+
 import RestUtils from './restutils'
 import {Line} from 'react-chartjs'
 import DatePicker from 'react-datepicker';
 import moment from 'moment';
 
+import { SignUpFormComp, getSignUpForm } from './reducers/signupform'
+import { createStore } from 'redux'
+import { Provider } from 'react-redux'
 import 'react-datepicker/dist/react-datepicker.css';
 
 const priceEndpoint = '/price_api/price_history';
@@ -426,7 +430,7 @@ class LoginForm extends React.Component {
   }  
 }
 
-class SignUpForm extends React.Component {
+class SignUpFormToto extends React.Component {
 
   handleSubmit = (event) => {
     RestUtils.performRestPostReq((token) => {
@@ -890,7 +894,11 @@ class ApiKeysPanel extends React.Component {
   } 
 } 
 
+//import todoApp from './reducers'
+const store = createStore(getSignUpForm)
+
 ReactDOM.render(
+    <Provider store={store}>
     <BrowserRouter>
       <Switch>
         <Route path='/btc_price' render={() => ( <GraphResult endpoint={priceEndpoint} title='BTC backtest' asset='BTC'/>)} />
@@ -904,11 +912,12 @@ ReactDOM.render(
         <Route path='/inhouse_info_kraken' render={() => ( <InHouseInfo exchange='kraken'/>)} />
         <Route path='/login' render={() => <LoginForm/>}/>
         <Route path='/logout' render={() => <SignOut/>}/>
-        <Route path='/signup' render={() => <SignUpForm/>}/>
+        <Route path='/signup' render={() => <SignUpFormComp/>}/>
         <Route path='/activation' render= {() => <ActivationResult/>}/>
         <Route path='/' render={() => ( <TradingGlobal />)} />
       </Switch>
-    </BrowserRouter>,
+    </BrowserRouter>
+    </Provider>,
   document.getElementById('toto')
 );
 
