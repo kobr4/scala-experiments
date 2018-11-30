@@ -304,8 +304,8 @@ object KrakenApi extends StrictLogging {
     def build(nonce: Long, currencyPair: String, rate: BigDecimal, amount: BigDecimal, isBuy: Boolean) = {
       akka.http.scaladsl.model.FormData(Map(
         BuySell.pair -> currencyPair,
-        BuySell.price -> rate.toString(),
-        BuySell.volume -> amount.toString(),
+        BuySell.price -> rate.underlying().toPlainString,
+        BuySell.volume -> amount.underlying().toPlainString,
         BuySell.orderType -> "limit",
         BuySell.`type` -> (if (isBuy) BuySell.buy else BuySell.sell),
         PoloApi.Nonce -> nonce.toString))

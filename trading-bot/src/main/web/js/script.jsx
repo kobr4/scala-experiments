@@ -12,10 +12,11 @@ import {Line} from 'react-chartjs'
 import DatePicker from 'react-datepicker';
 import moment from 'moment';
 
-import { SignUpFormComp, getSignUpForm } from './reducers/signupform'
+import rootReducer  from './reducers/root'
 import { createStore } from 'redux'
 import { Provider } from 'react-redux'
 import 'react-datepicker/dist/react-datepicker.css';
+import SignUpForm from './components/signupform'
 
 const priceEndpoint = '/price_api/price_history';
 const tickerEndpoint = '/price_api/ticker';
@@ -895,7 +896,7 @@ class ApiKeysPanel extends React.Component {
 } 
 
 //import todoApp from './reducers'
-const store = createStore(getSignUpForm)
+const store = createStore(rootReducer);
 
 ReactDOM.render(
     <Provider store={store}>
@@ -912,7 +913,7 @@ ReactDOM.render(
         <Route path='/inhouse_info_kraken' render={() => ( <InHouseInfo exchange='kraken'/>)} />
         <Route path='/login' render={() => <LoginForm/>}/>
         <Route path='/logout' render={() => <SignOut/>}/>
-        <Route path='/signup' render={() => <SignUpFormComp/>}/>
+        <Route path='/signup' render={() => <SignUpForm/>}/>
         <Route path='/activation' render= {() => <ActivationResult/>}/>
         <Route path='/' render={() => ( <TradingGlobal />)} />
       </Switch>

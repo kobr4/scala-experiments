@@ -85,7 +85,7 @@ trait TradingBotRoutes extends PlayJsonSupport with PriceApiRoutes with TradeJob
 
   implicit val assetQuantityWrites: Writes[(Asset, Quantity)] = (
     (JsPath \ "asset").write[Asset] and
-    (JsPath \ "quantity").write[BigDecimal]) { a: (Asset, Quantity) => (a._1, a._2.quantity) }
+    (JsPath \ "quantity").write[String]) { a: (Asset, Quantity) => (a._1, a._2.quantity.underlying().toPlainString) }
 
   implicit val balancesWrites: Writes[Balances] = Json.writes[Balances]
 

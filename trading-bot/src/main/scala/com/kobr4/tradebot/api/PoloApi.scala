@@ -205,8 +205,8 @@ object PoloApi extends StrictLogging {
     def build(nonce: Long, currencyPair: String, rate: BigDecimal, amount: BigDecimal, isBuy: Boolean) = {
       akka.http.scaladsl.model.FormData(Map(
         BuySell.currencyPair -> currencyPair,
-        BuySell.rate -> rate.toString(),
-        BuySell.amount -> amount.toString(),
+        BuySell.rate -> rate.underlying().toPlainString,
+        BuySell.amount -> amount.underlying().toPlainString,
         PoloApi.Command -> (if (isBuy) BuySell.buy else BuySell.sell),
         PoloApi.Nonce -> nonce.toString))
     }

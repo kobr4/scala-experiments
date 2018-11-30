@@ -60,7 +60,7 @@ object Order extends StrictLogging {
   implicit val buyWrites = new Writes[Buy] {
     def writes(buy: Buy): JsObject = Json.obj(
       "quantity" -> buy.quantity,
-      "price" -> buy.price,
+      "price" -> buy.price.underlying().toPlainString,
       "asset" -> buy.pair.right.toString,
       "date" -> buy.date.toOffsetDateTime.toString(),
       "type" -> "BUY")
@@ -69,7 +69,7 @@ object Order extends StrictLogging {
   implicit val sellWrites = new Writes[Sell] {
     def writes(sell: Sell): JsObject = Json.obj(
       "quantity" -> sell.quantity,
-      "price" -> sell.price,
+      "price" -> sell.price.underlying().toPlainString,
       "asset" -> sell.pair.right.toString,
       "date" -> sell.date.toOffsetDateTime.toString(),
       "type" -> "SELL")
