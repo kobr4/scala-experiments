@@ -8,7 +8,6 @@ import { ResponseTable, FormRow, FormTable, FormTextField, FormPasswordField, Fo
 import Helper from './components/helper'
 
 import RestUtils from './restutils'
-import {Line} from 'react-chartjs'
 import DatePicker from 'react-datepicker';
 import moment from 'moment';
 
@@ -19,7 +18,10 @@ import 'react-datepicker/dist/react-datepicker.css';
 import SignUpForm from './components/signupform'
 import TradingGlobal from './components/tradingglobal'
 
-const priceEndpoint = '/price_api/price_history';
+import GraphCanvas from './components/graphcandlestick'
+
+
+const priceEndpoint = '/price_api/price_data';
 const tickerEndpoint = '/price_api/ticker';
 const priceAtEndpoint = '/price_api/price_at';
 const movingEndpoint = '/price_api/moving';
@@ -87,23 +89,6 @@ class CommonUtils {
     var expires = "expires=" + d.toGMTString(); //Compose the expirartion date
     window.document.cookie = cname+"="+"; "+expires;//Set the cookie with name and the expiration date
   }
-}
-
-
-function GraphResultBase(props) {
-  const datas = props.datas.map(data => 
-    ({ 
-        label: data.name,
-        fillColor: 'rgba(0,0,0,0)',
-        strokeColor: data.color,
-        pointColor: data.color,
-        data : data.datapoints
-      })
-    )
-    const chartData = { labels : [],datasets : datas };
-  return (
-    <Line data={chartData} width="800" height="400"/>
-  );
 }
 
 
@@ -397,7 +382,13 @@ class GraphResult extends React.Component {
   requestBTC = () => RestUtils.performRestPriceReqWithPromise( this.props.endpoint, 
     [ ['asset', this.props.asset], ['start', this.state.start.format(moment.defaultFormatUtc)], 
       ['end',this.state.end.format(moment.defaultFormatUtc)], ['pair', this.state.currency_left+'_'+this.state.currency_right]  ]
-    ).then((prices) => { this.setState({btcdatapoints : prices}) });
+    ).then((prices) => {
+      const dataFormated = prices.map(d => ({
+        date : moment(d.date).toDate(), 
+        close : d.price 
+      })) 
+      this.setState({btcdatapoints : dataFormated
+    }) });
   
 
   requestMA30 = () => RestUtils.performRestPriceReqWithPromise( movingEndpoint, 
@@ -478,7 +469,7 @@ class GraphResult extends React.Component {
     setInterval(() => this.performTickerRequest('poloniex'),5000);
       
     this.requestBTC();
-    this.requestMA30();
+    //this.requestMA30();
 
   }
 
@@ -503,8 +494,9 @@ class GraphResult extends React.Component {
           }
 
           <Panel title={this.state.asset+' price history'}>
-            <GraphResultBase datas={[ { name: this.props.asset, color: 'rgba(220,220,220,1)', datapoints: this.state.btcdatapoints},
-              { name: 'MA30', color: 'rgba(220,0,0,1)', datapoints: this.state.ma30datapoints } ]}/>
+           { this.state.btcdatapoints.length > 0 &&
+            <GraphCanvas data={ this.state.btcdatapoints } ratio={1} width={800}/>
+           }
             <FormContainer handleSubmit={this.handleSubmit} submit="Run trade-bot">  
               <FormTable>
               {

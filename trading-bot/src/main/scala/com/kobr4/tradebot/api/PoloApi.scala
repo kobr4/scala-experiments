@@ -98,7 +98,7 @@ class PoloApi(
 
   implicit val pairPriceReads: Reads[PairPrice] = (
     (JsPath \ "date").read[Long].map(t => ZonedDateTime.ofInstant(Instant.ofEpochSecond(t), ZoneOffset.UTC)) and
-    (JsPath \ "close").read[BigDecimal])(EthUsd.apply _)
+    (JsPath \ "close").read[BigDecimal])(PairPrice.apply _)
 
   override def returnBalances: Future[Map[Asset, Quantity]] =
     PoloApi.httpRequestPost(tradingUrl, PoloApi.ReturnBalances.build(nonce), apiKey, apiSecret).map { message =>

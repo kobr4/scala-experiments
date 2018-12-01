@@ -5,7 +5,7 @@ import java.time.ZonedDateTime
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import com.kobr4.tradebot.api._
-import com.kobr4.tradebot.model.{ Asset, EthUsd, PairPrice, PairPrices }
+import com.kobr4.tradebot.model.{ Asset, PairPrice, PairPrices }
 import scalacache.{ Cache, cachingF }
 import scalacache.guava.GuavaCache
 
@@ -28,9 +28,9 @@ object PriceService {
 
   def getPricesOrPair(pair: CurrencyPair, startDate: ZonedDateTime, endDate: ZonedDateTime, withCache: Boolean = true)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[PairPrices] = {
     if (pair.left == Asset.Usd && withCache)
-      getPricesWithCache(pair.right)
+      getPricesWithCache(pair.right).map(_.filter(startDate, endDate))
     else if (pair.left == Asset.Usd) {
-      getPricesWithoutCache(pair.right)
+      getPricesWithoutCache(pair.right).map(_.filter(startDate, endDate))
     } else
       getPairPrice(pair, startDate, endDate, withCache)
   }
@@ -81,7 +81,7 @@ object PriceService {
       rightPrices <- if (withCache) getPricesWithCache(pair.right) else getPricesWithoutCache(pair.right)
     } yield {
       val pairPriceList = leftPrices.filter(startDate, endDate).prices.zip(rightPrices.filter(startDate, endDate).prices).
-        map(pairTuple => EthUsd(pairTuple._1.date, pairTuple._2.price / pairTuple._1.price))
+        map(pairTuple => PairPrice(pairTuple._1.date, pairTuple._2.price / pairTuple._1.price))
       PairPrices(pairPriceList)
     }
   }

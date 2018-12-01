@@ -12,12 +12,7 @@ import com.typesafe.scalalogging.StrictLogging
 
 import scala.concurrent.{ ExecutionContext, Future }
 
-sealed trait PairPrice {
-  val date: ZonedDateTime
-  val price: BigDecimal
-}
-
-case class EthUsd(date: ZonedDateTime, price: BigDecimal) extends PairPrice
+case class PairPrice(date: ZonedDateTime, price: BigDecimal)
 
 case class PairPrices(prices: List[PairPrice]) {
 
@@ -57,11 +52,11 @@ case class PairPrices(prices: List[PairPrice]) {
   def filter(f: PairPrice => Boolean): PairPrices = PairPrices(prices.filter(f))
 
   def movingAverage(days: Int): PairPrices = {
-    PairPrices(prices.map { price => EthUsd(price.date, movingAverage(price.date, days).getOrElse(BigDecimal(0))) })
+    PairPrices(prices.map { price => PairPrice(price.date, movingAverage(price.date, days).getOrElse(BigDecimal(0))) })
   }
 
   def weightedMovingAverage(days: Int): PairPrices = {
-    PairPrices(prices.map { price => EthUsd(price.date, weightedMovingAverage(price.date, days).getOrElse(BigDecimal(0))) })
+    PairPrices(prices.map { price => PairPrice(price.date, weightedMovingAverage(price.date, days).getOrElse(BigDecimal(0))) })
   }
 
   def filter(startDate: ZonedDateTime, endDate: ZonedDateTime): PairPrices =
@@ -82,7 +77,7 @@ object PairPrice extends StrictLogging {
         val splitted = line.split(',')
         val date = LocalDate.parse(splitted(0), formatter)
         val time = LocalTime.MIDNIGHT
-        EthUsd(
+        PairPrice(
           ZonedDateTime.of(date, time, ZoneId.of("UTC")),
           if (splitted(priceLineId) != "") BigDecimal(splitted(priceLineId)) else BigDecimal(0))
       }
@@ -103,7 +98,7 @@ object PairPrice extends StrictLogging {
         val splitted = line.split(',')
         val date = LocalDate.parse(splitted(0), formatter)
         val time = LocalTime.MIDNIGHT
-        EthUsd(
+        PairPrice(
           ZonedDateTime.of(date, time, ZoneId.of("UTC")),
           if (splitted.length >= priceLineId && splitted(priceLineId) != "" && splitted(priceLineId) != "null") BigDecimal(splitted(priceLineId)) else BigDecimal(0))
       }
