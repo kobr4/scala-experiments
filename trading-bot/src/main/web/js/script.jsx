@@ -17,6 +17,7 @@ import { createStore } from 'redux'
 import { Provider } from 'react-redux'
 import 'react-datepicker/dist/react-datepicker.css';
 import SignUpForm from './components/signupform'
+import TradingGlobal from './components/tradingglobal'
 
 const priceEndpoint = '/price_api/price_history';
 const tickerEndpoint = '/price_api/ticker';
@@ -151,47 +152,6 @@ function ExecutionResultPanel(props) {
       <tr><td>Buy and hold valuation</td><td>{props.result.buyAndHoldValue} [ {props.result.buyAndHoldPerformance} ]</td></tr>
     </tbody>
   );  
-}
-
-class TradingGlobal extends React.Component {
-
-  handleTrade = (asset) => {
-    RestUtils.performRestReq((tradeBotResponse) => {
-      let storeObj = new Object();
-      storeObj[asset]=tradeBotResponse.slice(-1)[0];
-      this.setState(storeObj);
-    }, '/trade_bot/run', [['asset', asset], ['start', moment("2017-01-01").format(moment.defaultFormatUtc)], ['end',moment().format(moment.defaultFormatUtc)], ['initial', 10000], ['fees', 0.1], ['strategy', 'safe']]) ;
-  }
-
-
-  constructor(props) {
-    super(props);
-
-    this.state = {}
-  }
-
-  componentDidMount() {
-    this.handleTrade('BTC');
-    this.handleTrade('ETH');
-    this.handleTrade('XMR');
-  }
-
-  formatOrder = (order) => {
-    return order.type+' at '+order.price+' on '+moment(order.date).format('LL');
-  }
-
-  render() {
-    return (
-      <Panel title='Introduction'>
-      <p>
-        Simple and honest trading algorithm with a provable performance record.<br/>
-        Positions are evaluated on daily basis.
-      </p>
-      Last take on BTC : { this.state.BTC && this.formatOrder(this.state.BTC) }<br/>
-      Last take on ETH : { this.state.ETH && this.formatOrder(this.state.ETH) }<br/>
-      Last take on XMR : { this.state.XMR && this.formatOrder(this.state.XMR) }<br/>
-      </Panel>
-      )}
 }
 
 function TradingJobsField(props) {
@@ -426,49 +386,6 @@ class LoginForm extends React.Component {
       </FormTable>
       </FormContainer>
       </Panel>
-      </span>
-    )
-  }  
-}
-
-class SignUpFormToto extends React.Component {
-
-  handleSubmit = (event) => {
-    RestUtils.performRestPostReq((token) => {
-      this.setState({activation: true})
-    }, '/user/signup',[ ['email', this.state.email], ['password', this.state.password] ] )
-    event.preventDefault();  
-  }
-
-  constructor(props) {
-    super(props);
-
-    this.state = { 
-      email: '',
-      password: '',
-      activation: false
-    }
-  }
-
-  render() {
-    return (
-      
-      <span>
-      { !this.state.activation && 
-      <Panel title='Sign up form'>
-      <FormContainer handleSubmit={this.handleSubmit} submit="Sign up">
-      <FormTable>
-      <FormRow label="Email"><FormTextField value={this.state.email} name="email" handleTextChange={(event) => this.setState({email: event.target.value})} /></FormRow>
-      <FormRow label="Password"><FormPasswordField value={this.state.password} name="password" handleTextChange={(event) => this.setState({password: event.target.value})} /></FormRow>
-      </FormTable>
-      </FormContainer>
-      </Panel>
-      } 
-      { this.state.activation &&
-        <Panel title='Sign up form submitted'>
-        An email has been sent to {this.state.email}, follow the included link to activate your account. 
-        </Panel>
-      }
       </span>
     )
   }  
