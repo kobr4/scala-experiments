@@ -85,7 +85,11 @@ object UserService extends StrictLogging {
 
   def addTradingJob(tradingJob: TradingJob, schedulingService: SchedulingService)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[Option[Int]] = {
     tradingJobsRepository.insertTradingJob(tradingJob).map { result =>
-      SchedulerJob.schedule(tradingJob, schedulingService)
+      result.foreach { id =>
+        val insertedTradingJob = TradingJob(id, tradingJob.userId, tradingJob.cron, tradingJob.apiKeyId,
+          tradingJob.strategy, tradingJob.weights, tradingJob.baseAsset)
+        SchedulerJob.schedule(insertedTradingJob, schedulingService)
+      }
       result
     }
   }
