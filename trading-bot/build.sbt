@@ -1,3 +1,5 @@
+resolvers += "Bartek's repo at Bintray" at "https://dl.bintray.com/btomala/maven"
+
 libraryDependencies += "com.typesafe.play" %% "play-json" % "2.6.0"
 libraryDependencies += "com.typesafe.akka" %% "akka-http" % "10.0.9"
 libraryDependencies += "ch.qos.logback" % "logback-classic" % "1.2.3"
@@ -5,14 +7,12 @@ libraryDependencies += "com.typesafe.scala-logging" %% "scala-logging" % "3.9.0"
 libraryDependencies += "com.typesafe" % "config" % "1.3.2"
 libraryDependencies += "com.enragedginger" %% "akka-quartz-scheduler" % "1.7.0-akka-2.5.x"
 libraryDependencies += "com.github.cb372" %% "scalacache-guava" % "0.24.3"
-//libraryDependencies += "com.pauldijou" %% "jwt-play-json" % "0.19.0"
 libraryDependencies += "com.github.daddykotex" %% "courier" % "1.0.0-RC1"
 libraryDependencies += "com.typesafe.slick" %% "slick" % "3.2.3"
 libraryDependencies += "com.typesafe.slick" %% "slick-hikaricp" % "3.2.3"
 libraryDependencies += "mysql" % "mysql-connector-java" % "8.0.11"
 libraryDependencies += "com.lihaoyi" %% "scalatags" % "0.6.7"
 libraryDependencies += "com.sun.mail" % "javax.mail" % "1.6.2"
-//libraryDependencies += "org.bouncycastle" % "bcprov-ext-jdk16" % "1.46"
 libraryDependencies += ("com.pauldijou" %% "jwt-play-json" % "0.19.0")
   .exclude("org.bouncycastle", "bcpkix-jdk15on")
   .exclude("org.bouncycastle", "bcprov-jdk15on")
@@ -21,10 +21,12 @@ libraryDependencies += "com.github.t3hnar" %% "scala-bcrypt" % "3.1"
 libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.5" % Test
 libraryDependencies += "com.github.tomakehurst" % "wiremock" % "2.16.0" % Test
 libraryDependencies += "org.mockito" % "mockito-all" % "1.9.5" % Test
+libraryDependencies += "btomala" %% "akka-http-twirl" % "1.2.0"
+
 
 Test / testOptions := Seq(Tests.Filter(s => s.endsWith("Test")))
 
-lazy val root = (project in file(".")).enablePlugins(SbtWeb).enablePlugins(DockerPlugin).
+lazy val root = (project in file(".")).enablePlugins(SbtTwirl).enablePlugins(SbtWeb).enablePlugins(DockerPlugin).
   settings(
     inThisBuild(List(
       organization    := "com.nicolasmy",

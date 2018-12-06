@@ -14,6 +14,7 @@ import com.kobr4.tradebot.QuickstartServer
 import com.kobr4.tradebot.api._
 import com.kobr4.tradebot.engine.Strategy
 import com.kobr4.tradebot.model.{ Asset, Quantity }
+import com.kobr4.tradebot.routes.stub.Foo
 import com.kobr4.tradebot.scheduler.{ KrakenDailyJob, TradeBotDailyJob }
 import com.kobr4.tradebot.services._
 import play.api.libs.functional.syntax._
@@ -52,6 +53,10 @@ object ScheduledTradeBot {
     (JsPath \ "minutes").read[Int] and
     (JsPath \ "asset").read[Asset] and
     (JsPath \ "strategy").read[Strategy])(ScheduledTradeBot.apply _)
+}
+
+package object stub {
+  case class Foo(bar: String)
 }
 
 case object UnsupportedStrategyException extends RuntimeException
@@ -238,8 +243,20 @@ trait TradingBotRoutes extends PlayJsonSupport with PriceApiRoutes with TradeJob
         }
       }
     }
-  } ~ tradeJobsRoutes ~ pathSingleSlash {
-    getFromResource("public/api.html")
+  } ~ tradeJobsRoutes ~ path("about") {
+    import akkahttptwirl.TwirlSupport._
+    get {
+      complete {
+        html.ModernBusiness.render()
+      }
+    }
+  } ~ pathSingleSlash {
+    import akkahttptwirl.TwirlSupport._
+    get {
+      complete {
+        html.ModernBusiness.render()
+      }
+    }
   } ~ get {
     getFromResource("public/api.html")
   }

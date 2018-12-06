@@ -824,6 +824,7 @@ ReactDOM.render(
         <Route path='/logout' render={() => <SignOut/>}/>
         <Route path='/signup' render={() => <SignUpForm/>}/>
         <Route path='/activation' render= {() => <ActivationResult/>}/>
+        <Route path='/global' render={() => ( <TradingGlobal />)} />
         <Route path='/' render={() => ( <TradingGlobal />)} />
       </Switch>
     </BrowserRouter>
