@@ -1,6 +1,6 @@
 package com.kobr4.tradebot.services
 
-import java.util.TimeZone
+import java.util.{Date, TimeZone}
 
 import akka.actor.{Actor, ActorSystem, Props}
 import akka.stream.ActorMaterializer
@@ -20,7 +20,7 @@ class SchedulingService(implicit arf: ActorSystem, am: ActorMaterializer, ec: Ex
 
   val scheduler = QuartzSchedulerExtension(arf)
 
-  def schedule(name: String, cronExpression: String, func: () => Unit) = {
+  def schedule(name: String, cronExpression: String, func: () => Unit): Date = {
 
     logger.info("Create schedule [{}] cron [{}]", name, cronExpression)
 

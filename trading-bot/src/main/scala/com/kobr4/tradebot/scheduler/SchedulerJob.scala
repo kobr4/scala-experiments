@@ -1,22 +1,25 @@
 package com.kobr4.tradebot.scheduler
 
+import java.util.Date
+
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
-import com.kobr4.tradebot.api.{ ExchangeApi, SupportedExchange }
+import com.kobr4.tradebot.api.{ExchangeApi, SupportedExchange}
 import com.kobr4.tradebot.db.TradingJob
 import com.kobr4.tradebot.engine.Strategy
-import com.kobr4.tradebot.model.{ Asset, Order }
-import com.kobr4.tradebot.services.{ MailService, SchedulingService, UserService }
-import com.kobr4.tradebot.{ Configuration, DefaultConfiguration, ScheduledTaskConfiguration }
+import com.kobr4.tradebot.model.{Asset, Order}
+import com.kobr4.tradebot.services.{MailService, SchedulingService, UserService}
+import com.kobr4.tradebot.{Configuration, DefaultConfiguration, ScheduledTaskConfiguration}
+import com.typesafe.scalalogging.StrictLogging
 
-import scala.concurrent.{ ExecutionContext, Future }
-import scala.util.Try
+import scala.concurrent.{ExecutionContext, Future}
+import scala.util.{Failure, Success, Try}
 
 trait SchedulerJobInterface {
   def run()(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[List[Order]]
 }
 
-object SchedulerJob {
+object SchedulerJob extends StrictLogging {
 
   def fromConfiguration(service: SchedulingService, taskConfig: ScheduledTaskConfiguration)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Try[Unit] = Try {
 
@@ -32,7 +35,7 @@ object SchedulerJob {
     config.Scheduled.tasks.filter(_.enabled).map(SchedulerJob.fromConfiguration(service, _))
   }
 
-  def schedule(job: TradingJob, service: SchedulingService)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Unit = {
+  def schedule(job: TradingJob, service: SchedulingService)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[Option[Date]] = {
     val eventualApiUser = for {
       maybeApiKey <- UserService.getApiKey(job.apiKeyId)
       maybeUserId <- UserService.get(job.userId)
@@ -65,7 +68,12 @@ object SchedulerJob {
 
   def fromDB(service: SchedulingService)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[Unit] = {
 
-    UserService.getAllTradingJobs().map { jobs => jobs.foreach(schedule(_, service)) }
+    UserService.getAllTradingJobs().map { jobs => jobs.foreach(
+      schedule(_, service) onComplete {
+        case Failure(f) => logger.info("An error occurred in the scheduling [{}]", f.getMessage)
+        case _ =>
+      }
+    ) }
   }
 
 }
