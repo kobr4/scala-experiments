@@ -2,9 +2,10 @@ package com.kobr4.tradebot.services
 
 import java.util.TimeZone
 
-import akka.actor.{ Actor, ActorSystem, Props }
+import akka.actor.{Actor, ActorSystem, Props}
 import akka.stream.ActorMaterializer
 import com.typesafe.akka.extension.quartz.QuartzSchedulerExtension
+import com.typesafe.scalalogging.StrictLogging
 
 import scala.concurrent.ExecutionContext
 
@@ -15,11 +16,13 @@ class WorkerActor(func: () => Unit) extends Actor {
   }
 }
 
-class SchedulingService(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext) {
+class SchedulingService(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext) extends StrictLogging {
 
   val scheduler = QuartzSchedulerExtension(arf)
 
   def schedule(name: String, cronExpression: String, func: () => Unit) = {
+
+    logger.info("Create schedule [{}] cron [{}]", name, cronExpression)
 
     scheduler.createSchedule(name, None, cronExpression, None, TimeZone.getTimeZone("UTC"))
 
