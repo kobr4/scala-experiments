@@ -11,7 +11,7 @@ class TradingOps(val api: ExchangeApi)(implicit ec: ExecutionContext) extends St
 
   private def percentage(base: BigDecimal, pct: BigDecimal): BigDecimal = base * pct / BigDecimal(100)
 
-  private val pricePctDeltaThreshold = BigDecimal(5)
+  private val pricePctDeltaThreshold = BigDecimal(10)
 
   private def getAmount(currencyPair: CurrencyPair, asset: Asset, rate: BigDecimal, quantity: BigDecimal) = {
     if (currencyPair.right == asset)

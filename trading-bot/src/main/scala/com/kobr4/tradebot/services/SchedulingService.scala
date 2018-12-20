@@ -1,8 +1,8 @@
 package com.kobr4.tradebot.services
 
-import java.util.{Date, TimeZone}
+import java.util.{ Date, TimeZone }
 
-import akka.actor.{Actor, ActorSystem, Props}
+import akka.actor.{ Actor, ActorSystem, Props }
 import akka.stream.ActorMaterializer
 import com.typesafe.akka.extension.quartz.QuartzSchedulerExtension
 import com.typesafe.scalalogging.StrictLogging

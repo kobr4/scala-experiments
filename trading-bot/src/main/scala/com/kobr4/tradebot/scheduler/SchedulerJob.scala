@@ -4,16 +4,16 @@ import java.util.Date
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
-import com.kobr4.tradebot.api.{ExchangeApi, SupportedExchange}
+import com.kobr4.tradebot.api.{ ExchangeApi, SupportedExchange }
 import com.kobr4.tradebot.db.TradingJob
 import com.kobr4.tradebot.engine.Strategy
-import com.kobr4.tradebot.model.{Asset, Order}
-import com.kobr4.tradebot.services.{MailService, SchedulingService, UserService}
-import com.kobr4.tradebot.{Configuration, DefaultConfiguration, ScheduledTaskConfiguration}
+import com.kobr4.tradebot.model.{ Asset, Order }
+import com.kobr4.tradebot.services.{ MailService, SchedulingService, UserService }
+import com.kobr4.tradebot.{ Configuration, DefaultConfiguration, ScheduledTaskConfiguration }
 import com.typesafe.scalalogging.StrictLogging
 
-import scala.concurrent.{ExecutionContext, Future}
-import scala.util.{Failure, Success, Try}
+import scala.concurrent.{ ExecutionContext, Future }
+import scala.util.{ Failure, Success, Try }
 
 trait SchedulerJobInterface {
   def run()(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[List[Order]]
@@ -68,12 +68,13 @@ object SchedulerJob extends StrictLogging {
 
   def fromDB(service: SchedulingService)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[Unit] = {
 
-    UserService.getAllTradingJobs().map { jobs => jobs.foreach(
-      schedule(_, service) onComplete {
-        case Failure(f) => logger.info("An error occurred in the scheduling [{}]", f.getMessage)
-        case _ =>
-      }
-    ) }
+    UserService.getAllTradingJobs().map { jobs =>
+      jobs.foreach(
+        schedule(_, service) onComplete {
+          case Failure(f) => logger.info("An error occurred in the scheduling [{}]", f.getMessage)
+          case _ =>
+        })
+    }
   }
 
 }
