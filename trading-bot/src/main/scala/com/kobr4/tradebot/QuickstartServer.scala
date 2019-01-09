@@ -13,7 +13,7 @@ import com.typesafe.scalalogging.StrictLogging
 import scala.concurrent.duration.Duration
 import scala.concurrent.{ Await, ExecutionContext }
 import scala.util.{ Failure, Success }
-
+import com.kobr4.tradebot.routes.RequestInflux
 //#main-class
 object QuickstartServer extends App with StrictLogging with TradingBotRoutes {
 
@@ -27,7 +27,9 @@ object QuickstartServer extends App with StrictLogging with TradingBotRoutes {
 
   //#main-class
   // from the UserRoutes trait
-  lazy val routes: Route = tradingBotRoutes
+  lazy val routes: Route = RequestInflux {
+    tradingBotRoutes
+  }
   //#main-class
 
   lazy val schedulingService = new SchedulingService()

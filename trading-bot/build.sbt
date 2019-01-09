@@ -22,7 +22,7 @@ libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.5" % Test
 libraryDependencies += "com.github.tomakehurst" % "wiremock" % "2.16.0" % Test
 libraryDependencies += "org.mockito" % "mockito-all" % "1.9.5" % Test
 libraryDependencies += "btomala" %% "akka-http-twirl" % "1.2.0"
-
+libraryDependencies += "com.paulgoldbaum" %% "scala-influxdb-client" % "0.6.1"
 
 Test / testOptions := Seq(Tests.Filter(s => s.endsWith("Test")))
 

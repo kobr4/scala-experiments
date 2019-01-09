@@ -68,7 +68,7 @@ object PairPrice extends StrictLogging {
   private val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd").withZone(ZoneId.of("UTC"))
 
   def fromUrl(s: String): PairPrices = {
-    val bufferedSource = io.Source.fromURL(s)
+    val bufferedSource = scala.io.Source.fromURL(s)
 
     val priceLines = bufferedSource.getLines.toList
     val priceLineId = priceLines.head.split(',').zipWithIndex.find(_._1 == "price(USD)").map(_._2).getOrElse(throw new RuntimeException("Invalid file"))
