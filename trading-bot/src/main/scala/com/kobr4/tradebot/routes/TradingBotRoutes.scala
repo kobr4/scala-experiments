@@ -20,7 +20,7 @@ import com.kobr4.tradebot.services._
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ ExecutionContext, Future }
 
 case class ExchangeCreds(exchange: SupportedExchange, apiKey: String, apiSecret: String)
 
@@ -245,10 +245,22 @@ trait TradingBotRoutes extends PlayJsonSupport with PriceApiRoutes with TradeJob
     }
   } ~ tradeJobsRoutes ~ path("about") {
     import akkahttptwirl.TwirlSupport._
+
     get {
       complete {
         html.ModernBusiness.render()
       }
+    }
+  } ~ tradeJobsRoutes ~ path("prices") {
+    import akkahttptwirl.TwirlSupport._
+
+    get {
+
+      val eventualTicker = Future.sequence(Seq(ExchangeApi(Poloniex).returnTicker(), ExchangeApi(Kraken).returnTicker()))
+      onSuccess(eventualTicker) {
+        case poloQuote :: krakenQuote :: Nil => complete(html.Prices.render(poloQuote, krakenQuote))
+      }
+
     }
   } ~ pathSingleSlash {
     import akkahttptwirl.TwirlSupport._

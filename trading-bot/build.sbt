@@ -26,6 +26,8 @@ libraryDependencies += "com.paulgoldbaum" %% "scala-influxdb-client" % "0.6.1"
 
 Test / testOptions := Seq(Tests.Filter(s => s.endsWith("Test")))
 
+TwirlKeys.templateImports += "com.kobr4.tradebot.api._"
+
 lazy val root = (project in file(".")).enablePlugins(SbtTwirl).enablePlugins(SbtWeb).enablePlugins(DockerPlugin).
   settings(
     inThisBuild(List(

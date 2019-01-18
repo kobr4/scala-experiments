@@ -1,0 +1,78 @@
+@(poloQuotes: List[Quote], krakenQuotes: List[Quote])
+<!doctype html>
+
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+
+    <title>Crypto TradeBot: In Code We Trust</title>
+    <meta name="description" content="Simple and honest trading algorithm with a provable performance record. Positions are evaluated on daily basis.">
+    <meta name="author" content="Innovative Software">
+    <meta http-equiv="refresh" content="30">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/public/css/sb-admin-2.min.css">
+    <style type="text/css">
+
+        .l-grid-container {
+          display: grid;
+          grid-template-columns: auto auto auto auto auto auto;
+        }
+
+        .item-in-grid {
+          width: 100%;
+          height: 100%;
+          font-size: 20px;
+          padding: 20px 30px;
+          box-sizing: border-box;
+        }
+
+        .item1 {
+          color: #004a67;
+          background: #09b0d4;
+        }
+    </style>
+</head>
+
+<body>
+
+<div id="wrapper">
+    <nav class="navbar navbar-default navbar-static-top" role="navigation" style="margin-bottom: 0">
+        <div class="navbar-header">
+            <a class="navbar-brand" href="/">
+                TradeBot And Backtest Tools [BETA]
+            </a>
+            <img style="display: inline-block;" src="/public/img/Bender-large.png" height="45" width="45"/>
+        </div>
+        <div class="nav navbar-top-links navbar-right" id="top-right">
+        </div>
+
+        <div class="navbar-default sidebar" role="navigation">
+            <div class="sidebar-nav navbar-collapse" id="side">
+            </div>
+        </div>
+    </nav>
+    <div id="page-wrapper">
+        <div class="row">
+            <div id="toto" style="display: none;"></div>
+            <div class="l-grid-container">
+                @for(quote <- poloQuotes) {
+                    <div class="item-in-grid item1">
+                        @quote.pair.left/@quote.pair.right @@ Poloniex <br>
+                        @quote.last <br>
+                    </div>
+                }
+
+                @for(quote <- krakenQuotes) {
+                <div class="item-in-grid item1">
+                    @quote.pair.left/@quote.pair.right @@ Kraken <br>
+                    @quote.last <br>
+                </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="/public/bundles/bundle.js"></script>
+</body>
+</html>
