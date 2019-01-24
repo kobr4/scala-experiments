@@ -849,6 +849,7 @@ ReactDOM.render(
 
   <li><a href="inhouse_info_poloniex">In-House @ Poloniex</a></li>
   <li><a href="inhouse_info_kraken">In-House @ Kraken</a></li>
+  <li><a href="prices">Crypto Prices</a></li>
   </ul>,
   document.getElementById('side')
 )
