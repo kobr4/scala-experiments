@@ -1,0 +1,17 @@
+{
+  "name": "sri-web-template",
+  "version": "0.6.0",
+  "description": "sri  web template project",
+  "devDependencies": {
+    "babel-loader": "^8.0.2",
+    "webpack": "^4.18.1",
+    "acorn": "^6.0.5"
+  },
+  "dependencies": {
+    "history": "4.4.0",
+    "react": "16.5.1",
+    "react-art": "^16.7.0",
+    "react-dom": "16.5.1",
+    "react-native-web": "^0.10.0-alpha.3"
+  }
+}
