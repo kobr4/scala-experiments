@@ -5,6 +5,7 @@ lazy val akkaVersion    = "2.5.16"
 lazy val server = project
   .in(file("server"))
   .enablePlugins(SbtWeb)
+  .enablePlugins(DockerPlugin)
   .settings(
     inThisBuild(List(
       organization := "com.nicolasmy",
@@ -21,6 +22,25 @@ lazy val server = project
     WebKeys.packagePrefix in Assets := "public/",
     WebKeys.pipeline := WebKeys.pipeline.dependsOn(webpack.toTask("")).value
   )
+
+
+dockerfile in docker := {
+  // The assembly task generates a fat JAR file
+  val artifact: File = assembly.value
+  val artifactTargetPath = s"/app/${artifact.name}"
+
+  new Dockerfile {
+    from("openjdk:8-jre")
+    entryPoint("java", "-jar", artifactTargetPath)
+  }
+}
+
+imageNames in docker := {
+  Seq(ImageName(
+    registry = Some("10.8.0.1:5000"),
+    repository = "tictactoe",
+    tag = Some("latest")))
+}
 
 
 lazy val root = project
