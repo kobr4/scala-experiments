@@ -101,8 +101,10 @@ object Game {
 
 
   def play(side: Side, index: Int, game: Game): Game = {
-    val board = game.plays.head.current.updated(index, Some(side))
-    Game(Board(side.other, board)::game.plays)
+    if (game.plays.head.current(index).isEmpty) {
+      val board = game.plays.head.current.updated(index, Some(side))
+      Game(Board(side.other, board) :: game.plays)
+    } else game
   }
 
   def newGame: Game = {

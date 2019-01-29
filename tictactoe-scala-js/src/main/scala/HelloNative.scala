@@ -25,7 +25,8 @@ object HelloNative {
     }
 
     def iaPlay() : Unit = {
-      this.setState((state:HelloNative.ComponentBoard.State, Unit) => HelloNative.ComponentBoard.State(Game.iaPlay(state.game.side, state.game)))
+      this.setState((state:HelloNative.ComponentBoard.State, Unit) =>
+        if (state.game.side == O) HelloNative.ComponentBoard.State(Game.iaPlay(state.game.side, state.game)) else state )
     }
 
     def updateGame(index: Int): Unit = {
