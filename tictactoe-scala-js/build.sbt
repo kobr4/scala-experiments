@@ -22,7 +22,7 @@ lazy val server = project
     (managedClasspath in Runtime) += (packageBin in Assets).value,
     WebKeys.packagePrefix in Assets := "public/",
     WebKeys.pipeline := WebKeys.pipeline.dependsOn(webpack.toTask("")).value,
-    
+
     dockerfile in docker := {
       // The assembly task generates a fat JAR file
       val artifact: File = assembly.value
@@ -30,6 +30,7 @@ lazy val server = project
 
       new Dockerfile {
         from("openjdk:8-jre")
+        add(artifact, artifactTargetPath)
         entryPoint("java", "-jar", artifactTargetPath)
       }
     },
