@@ -1,6 +1,7 @@
+import sbtdocker.DockerPlugin.autoImport.imageNames
 
 lazy val akkaHttpVersion = "10.1.4"
-lazy val akkaVersion    = "2.5.16"
+lazy val akkaVersion = "2.5.16"
 
 lazy val server = project
   .in(file("server"))
@@ -9,38 +10,40 @@ lazy val server = project
   .settings(
     inThisBuild(List(
       organization := "com.nicolasmy",
-      version      := "0.1-SNAPSHOT",
+      version := "0.1-SNAPSHOT",
       scalaVersion := "2.12.6"
     )),
     name := "tictactoe-scala-js",
     libraryDependencies ++= Seq(
-      "com.typesafe.akka" %% "akka-http"    % akkaHttpVersion,
-      "com.typesafe.akka" %% "akka-stream"  % akkaVersion,
-      "org.scalatest" %%% "scalatest"       % "3.0.5"    % "test"
+      "com.typesafe.akka" %% "akka-http" % akkaHttpVersion,
+      "com.typesafe.akka" %% "akka-stream" % akkaVersion,
+      "org.scalatest" %%% "scalatest" % "3.0.5" % "test"
     ),
     (managedClasspath in Runtime) += (packageBin in Assets).value,
     WebKeys.packagePrefix in Assets := "public/",
-    WebKeys.pipeline := WebKeys.pipeline.dependsOn(webpack.toTask("")).value
+    WebKeys.pipeline := WebKeys.pipeline.dependsOn(webpack.toTask("")).value,
+    
+    dockerfile in docker := {
+      // The assembly task generates a fat JAR file
+      val artifact: File = assembly.value
+      val artifactTargetPath = s"/app/${artifact.name}"
+
+      new Dockerfile {
+        from("openjdk:8-jre")
+        entryPoint("java", "-jar", artifactTargetPath)
+      }
+    },
+
+    imageNames in docker := {
+      Seq(ImageName(
+        registry = Some("10.8.0.1:5000"),
+        repository = "tictactoe",
+        tag = Some("latest")))
+    }
+
   )
 
 
-dockerfile in docker := {
-  // The assembly task generates a fat JAR file
-  val artifact: File = assembly.value
-  val artifactTargetPath = s"/app/${artifact.name}"
-
-  new Dockerfile {
-    from("openjdk:8-jre")
-    entryPoint("java", "-jar", artifactTargetPath)
-  }
-}
-
-imageNames in docker := {
-  Seq(ImageName(
-    registry = Some("10.8.0.1:5000"),
-    repository = "tictactoe",
-    tag = Some("latest")))
-}
 
 
 lazy val root = project
@@ -49,13 +52,13 @@ lazy val root = project
   .settings(
     inThisBuild(List(
       organization := "com.nicolasmy",
-      version      := "0.1-SNAPSHOT",
+      version := "0.1-SNAPSHOT",
       scalaVersion := "2.12.6"
     )),
     name := "tictactoe-scala-js",
     libraryDependencies ++= Seq(
-      "org.scala-js"  %%% "scalajs-dom"     % "0.9.5",
-      "org.scalatest" %%% "scalatest"       % "3.0.5"    % "test",
+      "org.scala-js" %%% "scalajs-dom" % "0.9.5",
+      "org.scalatest" %%% "scalatest" % "3.0.5" % "test",
       "com.github.chandu0101" %%% "sri-web" % "0.7.1"
     ),
     scalaJSUseMainModuleInitializer := true
@@ -69,10 +72,9 @@ val fastOptWeb = Def.taskKey[Unit]("Generate web output file for fastOptJS")
 artifactPath in Compile in fastOptJS :=
   server.base / SJS_OUTPUT_PATH
 //fastOptWeb in Compile := {
-  //val launcher = (scalaJSLauncher in Compile).value.data.content
-  //IO.write(baseDirectory.value / "assets/scalajs-output-launcher.js", launcher)
+//val launcher = (scalaJSLauncher in Compile).value.data.content
+//IO.write(baseDirectory.value / "assets/scalajs-output-launcher.js", launcher)
 //}
-
 
 
 // Automatically generate index-dev.html which uses *-fastopt.js
