@@ -1,4 +1,4 @@
-import scala.annotation.tailrec
+package com.nicolasmy.games.tictactoe
 
 sealed trait Side {
   def other: Side = this match {
@@ -45,6 +45,8 @@ case class Game(plays: List[Board]) {
     case Some(b) if b.hasWinner(X) => Some(X)
     case _ => None
   }
+
+  def isDraw: Boolean = !hasWinner && plays.headOption.exists(!_.current.exists(b => b.isEmpty))
 }
 
 object Game {
@@ -68,7 +70,6 @@ object Game {
 
   private def iaPlay(side: Side, inBoard : List[Board], cDepth: Int, maxDepth: Int) : Option[(Int, List[Board])] = {
     generate(inBoard.last).flatMap(board =>
-
       if (board.hasWinner(O)) {
         Some(100, inBoard:::board::Nil)
       } else
@@ -83,25 +84,18 @@ object Game {
       }
       else
       iaPlay(side, inBoard:::board::Nil, cDepth+1, maxDepth)
-    ).map(t => {
-      if (cDepth == 0) Console.println(s"D${cDepth} Score: ${t._1}")
-      t
-    }
     ).reduceLeftOption(minMaxReducer(side, inBoard.last.turn, _, _))
   }
 
-
   def iaPlay(side: Side, game: Game) : Game = {
-    iaPlay(side, List(game.plays.head), 0, 4).flatMap(t => t._2.tail.headOption.map(board => {
-      Game(board :: game.plays)
-    }
+    iaPlay(side, List(game.plays.head), 0, 4).
+      flatMap(t => t._2.tail.headOption.map(board => { Game(board :: game.plays) }
     )).getOrElse(game)
-
   }
 
 
   def play(side: Side, index: Int, game: Game): Game = {
-    if (game.plays.head.current(index).isEmpty) {
+    if (!game.hasWinner && game.plays.head.current(index).isEmpty) {
       val board = game.plays.head.current.updated(index, Some(side))
       Game(Board(side.other, board) :: game.plays)
     } else game

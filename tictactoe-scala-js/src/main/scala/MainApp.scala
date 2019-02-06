@@ -24,7 +24,7 @@ object MainApp extends JSApp {
   @JSExport
   override def main(): Unit = {
     //AppStyles.load()
-    ReactDOM.render(HelloNative.apply(), dom.document.getElementById("app"))
+    ReactDOM.render(TicTacToeView.apply(), dom.document.getElementById("app"))
   }
 
 }

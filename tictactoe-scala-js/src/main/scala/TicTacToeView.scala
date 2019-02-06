@@ -1,51 +1,57 @@
+import com.nicolasmy.games.tictactoe.{Game, O, X}
 import sri.core._
 import sri.core.ElementFactory._
 import sri.core.ReactComponent
-import sri.universal.components._
+import sri.universal.components.{Text, _}
 import sri.universal.styles.UniversalStyleSheet
 
 import scala.scalajs.js.annotation.ScalaJSDefined
 
-object HelloNative {
-/*
-  var game = Game.newGame
-  def gamePlay(index: Int): Unit = {
-    println("Game updated at ")
-    game = Game.play(game.side, index, game)
+object TicTacToeView {
+
+  case class Score(wins: Int, losses: Int) {
+
+    def getString: String = s"W $wins - L $losses"
+
+    def update(game: Game): Score = {
+      game.winnerIs match {
+        case Some(O) => Score(wins, losses + 1)
+        case Some(X) => Score(wins + 1, losses)
+        case None => this
+      }
+    }
   }
-*/
 
   @ScalaJSDefined
   class ComponentBoard extends ReactComponent[Unit, ComponentBoard.State] {
 
-    initialState(HelloNative.ComponentBoard.State(game = Game.newGame))
+    initialState(TicTacToeView.ComponentBoard.State(game = Game.newGame, score = Score(0, 0)))
 
-    def newGame() : Unit = {
-      this.setState((state:HelloNative.ComponentBoard.State, Unit) => HelloNative.ComponentBoard.State(Game.newGame))
+    def newGame(): Unit = {
+      this.setState((state: TicTacToeView.ComponentBoard.State, Unit) => TicTacToeView.ComponentBoard.State(
+        Game.newGame, state.score
+      ))
     }
 
-    def iaPlay() : Unit = {
-      this.setState((state:HelloNative.ComponentBoard.State, Unit) =>
-        if (state.game.side == O) HelloNative.ComponentBoard.State(Game.iaPlay(state.game.side, state.game)) else state )
+    def iaPlay(): Unit = {
+      this.setState((state: TicTacToeView.ComponentBoard.State, Unit) =>
+        if (state.game.side == O) TicTacToeView.ComponentBoard.State(Game.iaPlay(state.game.side, state.game), state.score) else state)
     }
 
     def updateGame(index: Int): Unit = {
-      this.setState((state:HelloNative.ComponentBoard.State, Unit) => HelloNative.ComponentBoard.State(Game.play(state.game.side, index, state.game)))
-      iaPlay()
-    }
+      if (!state.game.hasWinner) {
 
-    def displayWinner(): Unit = {
+        this.setState((state: TicTacToeView.ComponentBoard.State, Unit) =>
+          TicTacToeView.ComponentBoard.State(Game.play(state.game.side, index, state.game), state.score))
+        iaPlay()
 
+        this.setState((state: TicTacToeView.ComponentBoard.State, Unit) =>
+          TicTacToeView.ComponentBoard.State(state.game, state.score.update(state.game)))
+      }
     }
 
     def render() = {
-/*
-      View(style = styles.container)(
-        Text(style = styles.text)(s"Welcome to Sri Web"),
-        Image(style = styles.image, source = ImageSource(uri = "http://www.scala-js.org/images/scala-js-logo-256.png"))(),
-        Text(style = styles.text)("Scala.js - Future of app development!")
-      )
-*/
+
       val array = state.game.plays.head.current
       View(style = styles.container)(
         View(style = styles.rowContainer)(
@@ -71,7 +77,7 @@ object HelloNative {
           ),
           state.game.hasWinner ?= View(style = styles.rowHiddenContainer)(
             Text()(s"Winner is ${state.game.winnerIs.getOrElse("")}"),
-            Button(title="New Game", onPress=() => newGame(), style=styles.button)()
+            Button(title = "New Game", onPress = () => newGame(), style = styles.button)()
           )
         ),
         View(style = styles.rowContainer)(
@@ -86,8 +92,11 @@ object HelloNative {
           )
         ),
         View(style = styles.rowContainer)(
-          Text()("Turn: "+state.game.side.toString),
-          Button(title="New Game", onPress=() => newGame(), style=styles.button)()
+          View(style = styles.panelContainer)(
+            Text()("Turn: " + state.game.side.toString),
+            Button(title = "New Game", onPress = () => newGame(), style = styles.button)(),
+            Text()(state.score.getString)
+          )
         )
       )
     }
@@ -95,16 +104,15 @@ object HelloNative {
 
   object ComponentBoard {
 
-    case class State(game: Game)
+    case class State(game: Game, score: Score)
 
-    //def apply() = CreateElement[ComponentBoard]()
   }
 
   object styles extends UniversalStyleSheet {
 
     val container = style(flexOne,
       flexDirection := "row",
-      backgroundColor := "rgb(175, 9, 119)",
+      backgroundColor := "rgb(169,169,169)",
       justifyContent.center)
 
     val image = style(width := 256, height := 256, margin := 20)
@@ -127,9 +135,23 @@ object HelloNative {
       //backgroundColor := "steelblue",
       justifyContent.center
     )
+
+    val panelContainer = style(
+      flex := -1,
+      padding := 20,
+      flexDirection := "column",
+      //backgroundColor := "rgb(130,130,130)",
+      //backgroundColor := "steelblue",
+      justifyContent.center,
+      alignItems.center
+    )
+
     val square = style(
+      flex := -1,
       width := 50,
       height := 50,
+      borderWidth := 1,
+      borderColor := "black",
       backgroundColor := "powderblue",
       justifyContent.center,
       alignItems.center
@@ -143,9 +165,6 @@ object HelloNative {
       shadowRadius := 2,
       justifyContent.center,
       alignItems.center)
-
-      //shadowOffset := json(height = 1, width = 0))
-    //    val buttonCommon = style()
 
   }
 
