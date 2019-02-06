@@ -51,11 +51,11 @@ case class Game(plays: List[Board]) {
 
 object Game {
 
-  def generate(board: Board) : List[Board] =
+  def generate(board: Board) : Stream[Board] =
     scala.util.Random.shuffle((0 to 8).flatMap(i =>
       if (board.current(i).isEmpty)
         Some(board.current.updated(i, Some(board.turn)))
-      else None).map(b => Board(board.turn.other, b)).toList)
+      else None).map(b => Board(board.turn.other, b)).toStream)
 
 
   def minMaxReducer(side: Side, currentSide: Side,t1: (Int, List[Board]), t2: (Int, List[Board])) = {
@@ -65,25 +65,17 @@ object Game {
       case (X, O) => if (t1._1 > t2._1) t1 else t2
       case (X, X) => if (t1._1 < t2._1) t1 else t2
     }
-
   }
 
   private def iaPlay(side: Side, inBoard : List[Board], cDepth: Int, maxDepth: Int) : Option[(Int, List[Board])] = {
     generate(inBoard.last).flatMap(board =>
-      if (board.hasWinner(O)) {
-        Some(100, inBoard:::board::Nil)
-      } else
-      if (board.hasWinner(X)){
-        Some(-100, inBoard:::board::Nil)
-      } else
-      if (cDepth == maxDepth) {
-        Some(0, inBoard:::board::Nil)
-      } else
-      if (board.current.count(_.isEmpty) == 0) {
-        Some(0, inBoard:::board::Nil)
+      board match {
+        case _ if board.hasWinner(O) => Some(100, inBoard:::board::Nil)
+        case _ if board.hasWinner(X) => Some(-100, inBoard:::board::Nil)
+        case _ if cDepth == maxDepth => Some(0, inBoard:::board::Nil)
+        case _ if board.current.count(_.isEmpty) == 0 => Some(0, inBoard:::board::Nil)
+        case _ => iaPlay(side, inBoard:::board::Nil, cDepth+1, maxDepth)
       }
-      else
-      iaPlay(side, inBoard:::board::Nil, cDepth+1, maxDepth)
     ).reduceLeftOption(minMaxReducer(side, inBoard.last.turn, _, _))
   }
 
