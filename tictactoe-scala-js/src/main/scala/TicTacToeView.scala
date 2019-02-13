@@ -1,4 +1,6 @@
-import com.nicolasmy.games.tictactoe.{Game, O, X}
+import com.nicolasmy.games.tictactoe.circuit.{IaPlay, NewGame, Play, TicTacToeCircuit}
+import com.nicolasmy.games.tictactoe.{Game, O, Score, X}
+import diode.{Dispatcher, ModelR, ModelRO}
 import sri.core._
 import sri.core.ElementFactory._
 import sri.core.ReactComponent
@@ -9,36 +11,31 @@ import scala.scalajs.js.annotation.ScalaJSDefined
 
 object TicTacToeView {
 
-  case class Score(wins: Int, losses: Int) {
-
-    def getString: String = s"W $wins - L $losses"
-
-    def update(game: Game): Score = {
-      game.winnerIs match {
-        case Some(O) => Score(wins, losses + 1)
-        case Some(X) => Score(wins + 1, losses)
-        case None => this
-      }
-    }
-  }
-
   @ScalaJSDefined
   class ComponentBoard extends ReactComponent[Unit, ComponentBoard.State] {
 
-    initialState(TicTacToeView.ComponentBoard.State(game = Game.newGame, score = Score(0, 0)))
+    initialState ({
+      val circuit  =  new TicTacToeCircuit()
+      circuit.subscribe(circuit.zoom[Game](g=>g))(m =>
+        this.setState((state: TicTacToeView.ComponentBoard.State, Unit) => TicTacToeView.ComponentBoard.State(m, circuit))
+      )
+      TicTacToeView.ComponentBoard.State(game = circuit.zoom[Game](g=>g), dispatcher = circuit)
+    })
 
     def newGame(): Unit = {
-      this.setState((state: TicTacToeView.ComponentBoard.State, Unit) => TicTacToeView.ComponentBoard.State(
-        Game.newGame, state.score
-      ))
+      this.state.dispatcher.dispatch(NewGame)
     }
 
     def iaPlay(): Unit = {
+      /*
       this.setState((state: TicTacToeView.ComponentBoard.State, Unit) =>
         if (state.game.side == O) TicTacToeView.ComponentBoard.State(Game.iaPlay(state.game.side, state.game), state.score) else state)
+        */
+      this.state.dispatcher.dispatch(IaPlay)
     }
 
     def updateGame(index: Int): Unit = {
+      /*
       if (!state.game.hasWinner) {
 
         this.setState((state: TicTacToeView.ComponentBoard.State, Unit) =>
@@ -48,11 +45,13 @@ object TicTacToeView {
         this.setState((state: TicTacToeView.ComponentBoard.State, Unit) =>
           TicTacToeView.ComponentBoard.State(state.game, state.score.update(state.game)))
       }
+      */
+      this.state.dispatcher.dispatch(Play(index))
     }
 
     def render() = {
 
-      val array = state.game.plays.head.current
+      val array = state.game.value.plays.head.current
       View(style = styles.container)(
         View(style = styles.rowContainer)(
           TouchableHighlight(onPress = () => updateGame(0))(
@@ -75,8 +74,8 @@ object TicTacToeView {
           TouchableHighlight(onPress = () => updateGame(5))(
             View(style = styles.square)(Text()(array(5).getOrElse("").toString))
           ),
-          state.game.hasWinner ?= View(style = styles.rowHiddenContainer)(
-            Text()(s"Winner is ${state.game.winnerIs.getOrElse("")}"),
+          state.game.value.hasWinner ?= View(style = styles.rowHiddenContainer)(
+            Text()(s"Winner is ${state.game.value.winnerIs.getOrElse("")}"),
             Button(title = "New Game", onPress = () => newGame(), style = styles.button)()
           )
         ),
@@ -93,9 +92,9 @@ object TicTacToeView {
         ),
         View(style = styles.rowContainer)(
           View(style = styles.panelContainer)(
-            Text()("Turn: " + state.game.side.toString),
+            Text()("Turn: " + state.game.value.side.toString),
             Button(title = "New Game", onPress = () => newGame(), style = styles.button)(),
-            Text()(state.score.getString)
+            Text()(state.game.value.score.getString)
           )
         )
       )
@@ -104,7 +103,7 @@ object TicTacToeView {
 
   object ComponentBoard {
 
-    case class State(game: Game, score: Score)
+    case class State(game: ModelRO[Game], dispatcher : Dispatcher)
 
   }
 

@@ -59,6 +59,7 @@ lazy val root = project
     name := "tictactoe-scala-js",
     libraryDependencies ++= Seq(
       "org.scala-js" %%% "scalajs-dom" % "0.9.5",
+      "io.suzaku" %%% "diode" % "1.1.4",
       "org.scalatest" %%% "scalatest" % "3.0.5" % "test",
       "com.github.chandu0101" %%% "sri-web" % "0.7.1"
     ),
