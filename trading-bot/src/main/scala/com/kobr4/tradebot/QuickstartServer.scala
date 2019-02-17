@@ -34,12 +34,18 @@ object QuickstartServer extends App with StrictLogging with TradingBotRoutes {
 
   lazy val schedulingService = new SchedulingService()
   SchedulerJob.loadConfiguration(DefaultConfiguration, schedulingService).foreach {
-    case Failure(f) => logger.error("Failure to instantiable scheduling job: {}", f.getMessage)
+    case Failure(f) =>
+      logger.error("Failure to instantiable scheduling job: {}", f.getMessage)
+      Runtime.getRuntime.halt(0)
+      logger.info("Exiting service")
     case _ =>
   }
 
   SchedulerJob.fromDB(schedulingService) onComplete {
-    case Failure(f) => logger.error("Couldn't instantiate job from DB error: [{}]", f.getMessage)
+    case Failure(f) =>
+      logger.error("Couldn't instantiate job from DB error: [{}]", f.getMessage)
+      Runtime.getRuntime.halt(0)
+      logger.info("Exiting service")
     case _ =>
   }
 
