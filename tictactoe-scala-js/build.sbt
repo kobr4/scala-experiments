@@ -35,14 +35,26 @@ lazy val server = project
         entryPoint("java", "-jar", artifactTargetPath)
       }
     },
-
     imageNames in docker := {
       Seq(ImageName(
         registry = Some("10.8.0.1:5000"),
         repository = "tictactoe",
         tag = Some("latest")))
-    }
+    },
+    assemblyMergeStrategy in assembly := {
+      case "reference.conf" => MergeStrategy.concat
+      case PathList("META-INF", xs @ _*) =>
+        (xs map {_.toLowerCase}) match {
+          case "javamail.default.address.map" :: Nil => MergeStrategy.first
+          case "mailcap.default" :: Nil => MergeStrategy.first
+          case "mimetypes.default" :: Nil => MergeStrategy.first
+          case "mailcap" :: Nil => MergeStrategy.first
+          case "services" :: "java.security.provider" :: Nil => MergeStrategy.first
+          case _ => MergeStrategy.discard
+        }
 
+      case x => MergeStrategy.first
+    }
   )
 
 
