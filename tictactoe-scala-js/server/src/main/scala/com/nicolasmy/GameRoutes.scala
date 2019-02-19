@@ -5,11 +5,11 @@ import akka.http.scaladsl.server.Route
 
 trait GameRoutes {
 
-  lazy val gameRoutes: Route =
+  lazy val gameRoutes: Route = RequestInflux {
     pathPrefix("public") {
       getFromResourceDirectory("public")
     } ~ pathSingleSlash {
       getFromResource("public/index.html")
     }
-
+  }
 }

@@ -17,7 +17,8 @@ lazy val server = project
     libraryDependencies ++= Seq(
       "com.typesafe.akka" %% "akka-http" % akkaHttpVersion,
       "com.typesafe.akka" %% "akka-stream" % akkaVersion,
-      "org.scalatest" %%% "scalatest" % "3.0.5" % "test"
+      "org.scalatest" %%% "scalatest" % "3.0.5" % "test",
+      "com.paulgoldbaum" %% "scala-influxdb-client" % "0.6.1"
     ),
     (managedClasspath in Runtime) += (packageBin in Assets).value,
     WebKeys.packagePrefix in Assets := "public/",
