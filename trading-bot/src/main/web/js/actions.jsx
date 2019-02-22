@@ -1,6 +1,7 @@
 export const SignUpAction = ({
     SET_EMAIL : 'SET_EMAIL',
     SET_PASSWORD : 'SET_PASSWORD',
+    SET_SCORE : 'SET_SCORE',
     SIGN_UP : 'SIGN_UP'
 }) 
 

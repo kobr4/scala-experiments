@@ -3,12 +3,12 @@ package com.kobr4.tradebot
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import com.github.tomakehurst.wiremock.WireMockServer
-import com.github.tomakehurst.wiremock.client.WireMock.{aResponse, post, urlEqualTo}
+import com.github.tomakehurst.wiremock.client.WireMock.{ aResponse, post, urlEqualTo }
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration.options
-import com.kobr4.tradebot.api.{CurrencyPair, KrakenApi, PoloApi, PoloOrder}
+import com.kobr4.tradebot.api.{ CurrencyPair, KrakenApi, PoloApi, PoloOrder }
 import com.kobr4.tradebot.model.Asset
 import org.scalatest.concurrent.PatienceConfiguration.Timeout
-import org.scalatest.{BeforeAndAfterEach, FlatSpec, Matchers}
+import org.scalatest.{ BeforeAndAfterEach, FlatSpec, Matchers }
 import org.scalatest.concurrent.ScalaFutures
 
 import scala.concurrent.duration._
@@ -83,9 +83,10 @@ class KrakenApiTest extends FlatSpec with Matchers with ScalaFutures with Before
 
   it should "return a valid form request" in {
 
-    val body = KrakenApi.BuySell.build(1L,
+    val body = KrakenApi.BuySell.build(
+      1L,
       com.kobr4.tradebot.api.CurrencyPairHelper.toString(CurrencyPair(Asset.Usd, Asset.Btc)),
-      BigDecimal(1.0), BigDecimal("0.0000001700"), false ).fields.toString
+      BigDecimal(1.0), BigDecimal("0.0000001700"), false).fields.toString
 
     body should be("nonce=1&price=1.0&ordertype=limit&pair=XXBTZUSD&type=sell&volume=0.0000001700")
   }

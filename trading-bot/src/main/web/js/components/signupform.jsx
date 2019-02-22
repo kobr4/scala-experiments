@@ -3,15 +3,25 @@ import PropTypes from 'prop-types'
 import {Panel, FormContainer, FormTable, FormRow, FormTextField, FormPasswordField} from './generics'
 import { connect } from 'react-redux'
 import { SignUpAction } from '../actions'
+import ReactPasswordStrength from 'react-password-strength'
 
-const SignUpForm = ({activation, email, password, formSubmit, formEmailChange, formPasswordChange }) => (
+const SignUpForm = ({activation, email, password, formSubmit, formEmailChange, formPasswordScoreChange }) => (
     <span>
     { !activation && 
     <Panel title='Sign up form'>
     <FormContainer handleSubmit={formSubmit} submit="Sign up">
     <FormTable>
     <FormRow label="Email"><FormTextField value={email} name="email" handleTextChange={formEmailChange} /></FormRow>
-    <FormRow label="Password"><FormPasswordField value={password} name="password" handleTextChange={formPasswordChange} /></FormRow>
+    <FormRow label="Password">
+        <ReactPasswordStrength
+            className="customClass"
+            minLength={5}
+            minScore={2}
+            scoreWords={['weak', 'okay', 'good', 'strong', 'stronger']}
+            changeCallback={formPasswordScoreChange}
+            inputProps={{ name: "password", autoComplete: "off", className: "form-control" }}
+        />
+    </FormRow>
     </FormTable>
     </FormContainer>
     </Panel>
@@ -51,18 +61,27 @@ const handleEmailChange = (event) => ({
     email : event.target.value
 })
 
-const handlePasswordChange = (event) => ({
+const handlePasswordChange = (password) => ({
     type : SignUpAction.SET_PASSWORD,
-    password : event.target.value
+    password : password
+})
+
+const handleScoreChange = (score) => ({
+    type: SignUpAction.SET_SCORE,
+    score : score
 })
 
 const mapDispatchToProps = dispatch => {
     return {
         formSubmit: (event) => { 
             event.preventDefault();
+            RestUtils.performRestPostReq((token) => {}, '/user/signup',[ ['email', state.email], ['password', state.password] ]);
             dispatch(handleSubmit(event)) },
         formEmailChange: (event) => { dispatch(handleEmailChange(event)) },
-        formPasswordChange: (event) => { dispatch(handlePasswordChange(event)) }
+        formPasswordScoreChange: (score, password, isValid) => {
+            dispatch(handlePasswordChange(password))
+            dispatch(handleScoreChange(score)) 
+        }
        }
 };
   

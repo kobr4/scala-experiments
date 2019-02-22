@@ -7,10 +7,10 @@ import akka.stream.ActorMaterializer
 import com.kobr4.tradebot.api.CurrencyPair
 import com.kobr4.tradebot.engine._
 import com.kobr4.tradebot.model._
-import com.kobr4.tradebot.services.{PriceService, RunMultipleReport, RunPairReport, TradeBotService}
+import com.kobr4.tradebot.services.{ PriceService, RunMultipleReport, RunPairReport, TradeBotService }
 import com.typesafe.scalalogging.StrictLogging
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{ ExecutionContext, Future }
 import scala.util.control.NonFatal
 
 object LaunchSearch extends StrictLogging {
@@ -59,7 +59,7 @@ object LaunchSearch extends StrictLogging {
 
     val assetWeight: Map[Asset, BigDecimal] = Map(Asset.Btc -> BigDecimal(0.3), Asset.Eth -> BigDecimal(0.3),
       Asset.Xmr -> BigDecimal(0.1), Asset.Xrp -> BigDecimal(0.2), Asset.Xlm -> BigDecimal(0.1)
-      //, Asset.Doge -> BigDecimal(0.1)
+    //, Asset.Doge -> BigDecimal(0.1)
     )
     //val assetWeight: Map[Asset, BigDecimal] = Map(Asset.Eth -> BigDecimal(0.2), Asset.Ltc -> BigDecimal(0.2),
     //  Asset.Xmr -> BigDecimal(0.2), Asset.Dgb -> BigDecimal(0.1), Asset.Xrp -> BigDecimal(0.1), Asset.Xlm -> BigDecimal(0.1), Asset.Doge -> BigDecimal(0.1))
@@ -85,13 +85,13 @@ object LaunchSearch extends StrictLogging {
         }
       }
       var count = 0
-      println("Computing dual strategy "+ strategies.length)
+      println("Computing dual strategy " + strategies.length)
       val comb = strategies.combinations(2)
       println("Computing done ")
       val reportList = comb.map { sDualList =>
         val report = runMultipleAndReport(assetWeight, priceMap.toMap, AggregatedStrategy(sDualList))
         count = count + 1
-        println(count+" "+report)
+        println(count + " " + report)
         report
       }
 
