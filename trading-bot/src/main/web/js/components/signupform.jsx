@@ -1,28 +1,29 @@
 import React from 'react'
 import PropTypes from 'prop-types'
-import {Panel, FormContainer, FormTable, FormRow, FormTextField, FormPasswordField} from './generics'
+import {Panel, FormContainer, FormTable, FormRow, FormGroup, FormTextField, FormPasswordField} from './generics'
 import { connect } from 'react-redux'
 import { SignUpAction } from '../actions'
 import ReactPasswordStrength from 'react-password-strength'
+import RestUtils from '../restutils'
 
 const SignUpForm = ({activation, email, password, formSubmit, formEmailChange, formPasswordScoreChange }) => (
     <span>
     { !activation && 
     <Panel title='Sign up form'>
-    <FormContainer handleSubmit={formSubmit} submit="Sign up">
-    <FormTable>
-    <FormRow label="Email"><FormTextField value={email} name="email" handleTextChange={formEmailChange} /></FormRow>
-    <FormRow label="Password">
+    <FormContainer handleSubmit={ (event) => formSubmit(event, email, password)} submit="Sign up">
+    <FormGroup>
+        <FormTextField value={email} placeholder="Enter your email..." name="email" handleTextChange={formEmailChange} />
+    </FormGroup>
+    <FormGroup>
         <ReactPasswordStrength
             className="customClass"
             minLength={5}
             minScore={2}
             scoreWords={['weak', 'okay', 'good', 'strong', 'stronger']}
             changeCallback={formPasswordScoreChange}
-            inputProps={{ name: "password", autoComplete: "off", className: "form-control" }}
+            inputProps={{ name: "password", placeholder: "Enter your password...", autoComplete: "off", className: "form-control" }}
         />
-    </FormRow>
-    </FormTable>
+    </FormGroup>
     </FormContainer>
     </Panel>
     } 
@@ -44,13 +45,12 @@ SignUpForm.propTypes = {
   }
 
 
-  const mapStateToProps = state => {
-    return {
-        email: state.getSignUpForm.email,
-        password: state.getSignUpForm.password,
-        activation: state.getSignUpForm.activation
-    }
-};
+const mapStateToProps = state => {
+return {
+    email: state.getSignUpForm.email,
+    password: state.getSignUpForm.password,
+    activation: state.getSignUpForm.activation
+}};
 
 const handleSubmit = (event) => ({
     type: SignUpAction.SIGN_UP
@@ -73,9 +73,9 @@ const handleScoreChange = (score) => ({
 
 const mapDispatchToProps = dispatch => {
     return {
-        formSubmit: (event) => { 
+        formSubmit: (event, email, password) => { 
             event.preventDefault();
-            RestUtils.performRestPostReq((token) => {}, '/user/signup',[ ['email', state.email], ['password', state.password] ]);
+            RestUtils.performRestPostReq((token) => {}, '/user/signup',[ ['email', email], ['password', password] ]);
             dispatch(handleSubmit(event)) },
         formEmailChange: (event) => { dispatch(handleEmailChange(event)) },
         formPasswordScoreChange: (score, password, isValid) => {

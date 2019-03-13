@@ -1,5 +1,3 @@
-import React from 'react'
-import RestUtils from '../restutils'
 import { SignUpAction } from '../actions'
 
 export default function(state = {email: '', password: '', activation: false, score: ''}, action) {

@@ -38,16 +38,16 @@ export function FormRadioFieldList(props) {
 }
 
 export function FormTextField(props) {
-  return <input type="text" value={props.value} name={props.name} onChange={props.handleTextChange} />;
+  return <input type="text" value={props.value} className="form-control" placeholder={props.placeholder} name={props.name} onChange={props.handleTextChange} />;
 }
 
 export function FormPasswordField(props) {
-  return <input type="password" value={props.value} name={props.name} onChange={props.handleTextChange} />;
+  return <input type="password" value={props.value} className="form-control" placeholder={props.placeholder} name={props.name} onChange={props.handleTextChange} />;
 }
 
 export function FormInputField(props) {
   return (
-    <input type="submit" value={props.submit} />
+    <input type="submit" className="btn btn-primary" value={props.submit} />
   );
 }
 
@@ -70,7 +70,7 @@ export function FormContainer(props) {
   return (
      <form onSubmit={props.handleSubmit}>
         {props.children}
-        <input type="submit" value={props.submit} />
+        <input type="submit" class="btn btn-primary" value={props.submit} />
      </form>
   );
 }
@@ -82,6 +82,12 @@ export function FormTable(props) {
       {props.children}
       </tbody>
     </table>
+  );
+}
+
+export function FormGroup(props) {
+  return (
+    <div className="form-group">{props.children}</div>
   );
 }
 

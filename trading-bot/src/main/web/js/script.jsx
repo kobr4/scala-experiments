@@ -16,6 +16,7 @@ import { createStore } from 'redux'
 import { Provider } from 'react-redux'
 import 'react-datepicker/dist/react-datepicker.css';
 import SignUpForm from './components/signupform'
+import LoginForm from './components/loginform'
 import TradingGlobal from './components/tradingglobal'
 
 import GraphCanvas from './components/graphcandlestick'
@@ -334,48 +335,6 @@ class SignOut extends React.Component {
     )
   }
 }
-
-class LoginForm extends React.Component {
-
-  handleSubmit = (event) => {
-    RestUtils.performRestPostReq((token) => {
-      document.cookie = 'authtoken='+token+';path=/'
-      window.location.href = '/';
-    }, '/auth/login',[ ['email', this.state.email], ['password', this.state.password] ],
-    (status) => this.setState({error: true})
-  )
-    event.preventDefault();  
-  }
-
-  constructor(props) {
-    super(props);
-
-    this.state = { 
-      email: '',
-      password: '',
-      error: false
-    }
-  }
-
-  render() {
-    return (
-      <span>
-      <Panel title='Sign In'>
-      { this.state.error &&
-      <div className="alert alert-danger">Failed to log-in. Check your parameters or contact support</div>
-      }      
-      <FormContainer handleSubmit={this.handleSubmit} submit="Login">
-      <FormTable>
-      <FormRow label="Email"><FormTextField value={this.state.email} name="email" handleTextChange={(event) => this.setState({email: event.target.value})} /></FormRow>
-      <FormRow label="Password"><FormPasswordField value={this.state.password} name="password" handleTextChange={(event) => this.setState({password: event.target.value})} /></FormRow>
-      </FormTable>
-      </FormContainer>
-      </Panel>
-      </span>
-    )
-  }  
-}
-
 
 class GraphResult extends React.Component {
 
