@@ -49,6 +49,8 @@ class Configuration(config: Config) {
     val Name = config.getString("service.name")
 
     val Url = config.getString("service.url")
+
+    val ExitOnFail = config.getBoolean("service.exit-on-fail")
   }
 
   object Influx {
