@@ -24,6 +24,12 @@ body {
   background-size: cover;
 }
 
+.carousel-content {
+    color:white;
+    align-items:center;
+    height: 100%;
+}
+
 .portfolio-item {
   margin-bottom: 30px;
 }

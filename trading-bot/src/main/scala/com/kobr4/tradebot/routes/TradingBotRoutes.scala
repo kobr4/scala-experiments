@@ -13,7 +13,7 @@ import akka.stream.ActorMaterializer
 import com.kobr4.tradebot.QuickstartServer
 import com.kobr4.tradebot.api._
 import com.kobr4.tradebot.engine.Strategy
-import com.kobr4.tradebot.model.{ Asset, Quantity }
+import com.kobr4.tradebot.model.{ Asset, Order, Quantity }
 import com.kobr4.tradebot.routes.stub.Foo
 import com.kobr4.tradebot.scheduler.{ KrakenDailyJob, TradeBotDailyJob }
 import com.kobr4.tradebot.services._
@@ -248,7 +248,7 @@ trait TradingBotRoutes extends PlayJsonSupport with PriceApiRoutes with TradeJob
 
     get {
       complete {
-        html.ModernBusiness.render()
+        html.ModernBusiness.render(List())
       }
     }
   } ~ tradeJobsRoutes ~ path("prices") {
@@ -265,8 +265,14 @@ trait TradingBotRoutes extends PlayJsonSupport with PriceApiRoutes with TradeJob
   } ~ pathSingleSlash {
     import akkahttptwirl.TwirlSupport._
     get {
-      complete {
-        html.ModernBusiness.render()
+      val eventualOrders = Future.sequence(Seq(
+        TradeBotCachedService.run(Asset.Btc),
+        TradeBotCachedService.run(Asset.Eth),
+        TradeBotCachedService.run(Asset.Xmr)))
+      onSuccess(eventualOrders.map(_.map(_.last).toList)) { orders: List[Order] =>
+        complete {
+          html.ModernBusiness.render(orders)
+        }
       }
     }
   } ~ get {

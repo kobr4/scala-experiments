@@ -16,9 +16,13 @@ import scala.util.control.NonFatal
 
 sealed trait Order {
   val date: ZonedDateTime
+  val pair: CurrencyPair
+  val typeStr: String
+  val price: BigDecimal
 }
 
 case class Buy(pair: CurrencyPair, price: BigDecimal, quantity: BigDecimal, date: ZonedDateTime) extends Order {
+  val typeStr = "BUY"
   def toHtml: Text.TypedTag[String] = {
     table(
       tr(th("Type"), th("Currency Pair"), th("Price"), th("Quantity"), th("Date")),
@@ -27,6 +31,7 @@ case class Buy(pair: CurrencyPair, price: BigDecimal, quantity: BigDecimal, date
 }
 
 case class Sell(pair: CurrencyPair, price: BigDecimal, quantity: BigDecimal, date: ZonedDateTime) extends Order {
+  val typeStr = "SELL"
   def toHtml: Text.TypedTag[String] = {
     table(
       tr(th("Type"), th("Currency Pair"), th("Price"), th("Quantity"), th("Date")),

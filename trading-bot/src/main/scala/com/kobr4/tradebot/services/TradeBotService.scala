@@ -1,14 +1,16 @@
 package com.kobr4.tradebot.services
 
-import java.time.ZonedDateTime
+import java.time.{ ZoneId, ZonedDateTime }
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import com.kobr4.tradebot.api.{ CurrencyPair, ExchangeApi }
-import com.kobr4.tradebot.engine.{ GeneratedStrategy, RuleGenerator, Strategy }
+import com.kobr4.tradebot.engine.{ GeneratedStrategy, RuleGenerator, SafeStrategy, Strategy }
 import com.kobr4.tradebot.model.Asset.Usd
 import com.kobr4.tradebot.model._
 import com.typesafe.scalalogging.StrictLogging
+import scalacache.Cache
+import scalacache.guava.GuavaCache
 
 import scala.concurrent.{ ExecutionContext, Future }
 import scala.util.control.NonFatal
@@ -110,6 +112,28 @@ object TradeBotService extends StrictLogging {
     case NonFatal(t) =>
       logger.error("Error occured {}", t.getMessage)
       throw t
+  }
+
+}
+
+object TradeBotCachedService extends StrictLogging {
+
+  implicit val guavaCache: Cache[List[Order]] = GuavaCache[List[Order]]
+
+  private val startDate = ZonedDateTime.of(2018, 1, 1, 0, 0, 0, 0, ZoneId.of("UTC"))
+
+  def run(asset: Asset)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[List[Order]] = {
+    import scalacache._
+
+    import scalacache.modes.scalaFuture._
+
+    import scala.concurrent.duration._
+
+    cachingF(asset)(ttl = Some(1 hours)) {
+
+      TradeBotService.runMap(Map(asset -> BigDecimal(1.0)), startDate, 1000, 0.2, SafeStrategy)
+
+    }
   }
 
 }

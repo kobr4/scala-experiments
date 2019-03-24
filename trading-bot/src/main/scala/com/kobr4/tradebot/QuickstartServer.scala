@@ -36,7 +36,7 @@ object QuickstartServer extends App with StrictLogging with TradingBotRoutes {
   SchedulerJob.loadConfiguration(DefaultConfiguration, schedulingService).foreach {
     case Failure(f) =>
       logger.error("Failure to instantiable scheduling job: {}", f.getMessage)
-      Runtime.getRuntime.halt(0)
+      //Runtime.getRuntime.halt(0)
       logger.info("Exiting service")
     case _ =>
   }
@@ -44,7 +44,7 @@ object QuickstartServer extends App with StrictLogging with TradingBotRoutes {
   SchedulerJob.fromDB(schedulingService) onComplete {
     case Failure(f) =>
       logger.error("Couldn't instantiate job from DB error: [{}]", f.getMessage)
-      Runtime.getRuntime.halt(0)
+      //Runtime.getRuntime.halt(0)
       logger.info("Exiting service")
     case _ =>
   }
