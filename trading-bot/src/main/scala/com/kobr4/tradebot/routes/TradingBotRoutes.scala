@@ -268,7 +268,9 @@ trait TradingBotRoutes extends PlayJsonSupport with PriceApiRoutes with TradeJob
       val eventualOrders = Future.sequence(Seq(
         TradeBotCachedService.run(Asset.Btc),
         TradeBotCachedService.run(Asset.Eth),
-        TradeBotCachedService.run(Asset.Xmr)))
+        TradeBotCachedService.run(Asset.Xmr),
+        TradeBotCachedService.run(Asset.Xrp),
+        TradeBotCachedService.run(Asset.Ltc)))
       onSuccess(eventualOrders.map(_.map(_.last).toList)) { orders: List[Order] =>
         complete {
           html.ModernBusiness.render(orders)
