@@ -6,44 +6,96 @@ sealed trait Asset {
 
   val code: String
 
+  val displayName: String
+
   override def toString: String = { code }
 }
 
 object Asset {
 
-  case object Eth extends Asset { val code = "ETH" }
+  case object Eth extends Asset {
+    val code = "ETH"
+    val displayName = "Ethereum"
+  }
 
-  case object Ltc extends Asset { val code = "LTC" }
+  case object Ltc extends Asset {
+    val code = "LTC"
+    val displayName = "Litecoin"
+  }
 
-  case object Btc extends Asset { val code = "BTC" }
+  case object Btc extends Asset {
+    val code = "BTC"
+    val displayName = "Bitcoin"
+  }
 
-  case object Xmr extends Asset { val code = "XMR" }
+  case object Xmr extends Asset {
+    val code = "XMR"
+    val displayName = "Monero"
+  }
 
-  case object Doge extends Asset { val code = "DOGE" }
+  case object Doge extends Asset {
+    val code = "DOGE"
+    val displayName = "Dogecoin"
+  }
 
-  case object Xrp extends Asset { val code = "XRP" }
+  case object Xrp extends Asset {
+    val code = "XRP"
+    val displayName = "Ripple"
+  }
 
-  case object Xem extends Asset { val code = "XEM" }
+  case object Xem extends Asset {
+    val code = "XEM"
+    val displayName = "NEM"
+  }
 
-  case object Xlm extends Asset { val code = "STR" }
+  case object Xlm extends Asset {
+    val code = "STR"
+    val displayName = "Stellar"
+  }
 
-  case object Usd extends Asset { val code = "USD" }
+  case object Usd extends Asset {
+    val code = "USD"
+    val displayName = "Dollar"
+  }
 
-  case object Dgb extends Asset { val code = "DGB" }
+  case object Dgb extends Asset {
+    val code = "DGB"
+    val displayName = "DigiByte"
+  }
 
-  case object Ada extends Asset { val code = "ADA" }
+  case object Ada extends Asset {
+    val code = "ADA"
+    val displayName = "Cardano"
+  }
 
-  case object Bch extends Asset { val code = "BCH" }
+  case object Bch extends Asset {
+    val code = "BCH"
+    val displayName = "Bitcoin Cash"
+  }
 
-  case object Dash extends Asset { val code = "DASH" }
+  case object Dash extends Asset {
+    val code = "DASH"
+    val displayName = "Dash"
+  }
 
-  case object Zec extends Asset { val code = "ZEC" }
+  case object Zec extends Asset {
+    val code = "ZEC"
+    val displayName = "ZCash"
+  }
 
-  case object Maid extends Asset { val code = "MAID" }
+  case object Maid extends Asset {
+    val code = "MAID"
+    val displayName = "MaidSafeCoin"
+  }
 
-  case object Tether extends Asset { val code = "USDT" }
+  case object Tether extends Asset {
+    val code = "USDT"
+    val displayName = "Tether"
+  }
 
-  case class Custom(code: String) extends Asset
+  case class Custom(code: String) extends Asset {
+    override val displayName: String =  code
+  }
 
   def fromStringExact(s: String): Option[Asset] = s match {
     case "ETH" => Some(Asset.Eth)

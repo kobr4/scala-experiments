@@ -64,9 +64,9 @@
                             <tbody>
                             @for(order <- orders) {
                             <tr>
-                                <td>@order.pair.right</td>
+                                <td>@order.pair.right.displayName</td>
                                 <td>@order.typeStr</td>
-                                <td>@order.price</td>
+                                <td>@order.price $</td>
                                 <td>@order.date</td>
                             </tr>
                             }
