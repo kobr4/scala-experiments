@@ -26,6 +26,12 @@ class Configuration(config: Config) {
     val Secret = config.getString("kraken.api.secret")
   }
 
+  object BinanceApi {
+    val Key = config.getString("binance.api.key")
+
+    val Secret = config.getString("binance.api.secret")
+  }
+
   object Scheduled {
     import scala.collection.JavaConverters._
     val tasks: List[ScheduledTaskConfiguration] = config.getConfigList("scheduled-tasks").asScala.toList.map(ScheduledTaskConfiguration.fromConfig)
