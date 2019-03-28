@@ -56,6 +56,7 @@ class KrakenApiTest extends FlatSpec with Matchers with ScalaFutures with Before
             |               "starttm":0,
             |               "expiretm":0,
             |               "descr":{
+            |                  "pair" : "XBTUSD",
             |                  "order":"sell 3.00000000 XBTUSD @ limit 500.00000"
             |               },
             |               "vol":3.00000000,
@@ -78,14 +79,14 @@ class KrakenApiTest extends FlatSpec with Matchers with ScalaFutures with Before
     val api = new KrakenApi(DefaultConfiguration.KrakenApi.Key, DefaultConfiguration.KrakenApi.Secret, s"http://127.0.0.1:$port")
     val list = api.returnOpenOrders().futureValue(Timeout(10 seconds))
 
-    list should contain(PoloOrder("O7ICPO-F4CLJ-MVBLHC", BigDecimal(1), BigDecimal(3)))
+    list should contain(PoloOrder(CurrencyPair(Asset.Usd, Asset.Btc), "O7ICPO-F4CLJ-MVBLHC", BigDecimal(1), BigDecimal(3)))
   }
 
   it should "return a valid form request" in {
 
     val body = KrakenApi.BuySell.build(
       1L,
-      com.kobr4.tradebot.api.CurrencyPairHelper.toString(CurrencyPair(Asset.Usd, Asset.Btc)),
+      com.kobr4.tradebot.api.KrakenCurrencyPairHelper.toString(CurrencyPair(Asset.Usd, Asset.Btc)),
       BigDecimal(1.0), BigDecimal("0.0000001700"), false).fields.toString
 
     body should be("nonce=1&price=1.0&ordertype=limit&pair=XXBTZUSD&type=sell&volume=0.0000001700")

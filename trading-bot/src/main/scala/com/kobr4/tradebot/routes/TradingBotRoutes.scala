@@ -95,6 +95,7 @@ trait TradingBotRoutes extends PlayJsonSupport with PriceApiRoutes with TradeJob
   implicit val balancesWrites: Writes[Balances] = Json.writes[Balances]
 
   implicit val poloOrderWrites: Writes[PoloOrder] = (
+    (JsPath \ "pair").write[CurrencyPair] and
     (JsPath \ "orderNumber").write[String] and
     (JsPath \ "rate").write[BigDecimal] and
     (JsPath \ "amount").write[BigDecimal])(unlift(PoloOrder.unapply))

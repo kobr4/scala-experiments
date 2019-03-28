@@ -68,13 +68,13 @@ class PoloApiTest extends FlatSpec with Matchers with ScalaFutures with BeforeAn
       .willReturn(aResponse()
         .withHeader("Content-Type", "text/plain")
         .withBody(
-          """{ "BTC_XCP" : [{"orderNumber":"120466","type":"sell","rate":"0.025","amount":"100","total":"2.5"},
+          """{ "BTC_XRP" : [{"orderNumber":"120466","type":"sell","rate":"0.025","amount":"100","total":"2.5"},
             |{"orderNumber":"120467","type":"sell","rate":"0.04","amount":"100","total":"4"}] }""".stripMargin)))
 
     val api = new PoloApi(DefaultConfiguration.PoloApi.Key, DefaultConfiguration.PoloApi.Secret, poloUrl)
     val list = api.returnOpenOrders().futureValue(Timeout(10 seconds))
 
-    list should contain(PoloOrder("120466", BigDecimal("0.025"), BigDecimal("100")))
+    list should contain(PoloOrder(CurrencyPair(Asset.Btc, Asset.Xrp),"120466", BigDecimal("0.025"), BigDecimal("100")))
   }
 
   it should "place a sell order" in {

@@ -18,7 +18,7 @@ import play.api.libs.json._
 
 import scala.concurrent.{ ExecutionContext, Future }
 
-case class PoloOrder(orderNumber: String, rate: BigDecimal, amount: BigDecimal)
+case class PoloOrder(currencyPair: CurrencyPair, orderNumber: String, rate: BigDecimal, amount: BigDecimal)
 
 case class PoloTrade(globalTradeID: Long, tradeID: Long, date: ZonedDateTime, rate: BigDecimal, amount: BigDecimal,
   total: BigDecimal, fee: BigDecimal, orderNumber: Long, `type`: String, category: String) {
@@ -60,6 +60,14 @@ object CurrencyPair {
   implicit val currencyPairWrites = Json.writes[CurrencyPair]
 }
 
+object PoloCurrencyPairHelper {
+
+  def fromString(s: String) : CurrencyPair = {
+    val cP = s.toUpperCase.split('_').map(s => Asset.fromString(s)).toList
+    CurrencyPair(cP.head, cP.last)
+  }
+}
+
 case class Quote(pair: CurrencyPair, last: BigDecimal, lowestAsk: BigDecimal, highestBid: BigDecimal, percentChange: BigDecimal,
   baseVolume: BigDecimal, quoteVolume: BigDecimal)
 
@@ -82,7 +90,8 @@ class PoloApi(
 
   import play.api.libs.functional.syntax._
 
-  implicit val poloOrderReads: Reads[PoloOrder] = (
+  implicit def poloOrderReads(pair: CurrencyPair): Reads[PoloOrder] = (
+    Reads.pure(pair) and
     (JsPath \ "orderNumber").read[String] and
     (JsPath \ "rate").read[BigDecimal] and
     (JsPath \ "amount").read[BigDecimal])(PoloOrder.apply _)
@@ -116,7 +125,7 @@ class PoloApi(
 
   override def returnOpenOrders(): Future[List[PoloOrder]] =
     PoloApi.httpRequestPost(tradingUrl, ReturnOpenOrders.build(nonce), apiKey, apiSecret).map { message =>
-      Json.parse(message).as[JsObject].fields.toList.flatMap(_._2.as[JsArray].value.map { order => order.as[PoloOrder] }.toList)
+      Json.parse(message).as[JsObject].fields.toList.flatMap(t => t._2.as[JsArray].value.map { order => order.as[PoloOrder](PoloCurrencyPairHelper.fromString(t._1)) }.toList)
       //Json.parse(message).as[JsArray].value.map { order => order.as[PoloOrder] }.toList
     }
 
@@ -154,12 +163,8 @@ class PoloApi(
 
   override def returnTicker()(implicit ec: ExecutionContext): Future[List[Quote]] = PoloApi.httpRequest(publicUrl, Public.returnTicker).map { message =>
     Json.parse(message).as[JsObject].fields.flatMap {
-      case (s, v) =>
-        s.toUpperCase.split('_').map(s => Asset.fromString(s)).toList match {
-          case a :: b :: Nil =>
-            v.asOpt[Quote](quoteReads(CurrencyPair(a, b)))
-          case _ => None
-        }
+      case (s, v) => v.asOpt[Quote](quoteReads(PoloCurrencyPairHelper.fromString(s)))
+      case _ => None
     }.toList
   }
 
