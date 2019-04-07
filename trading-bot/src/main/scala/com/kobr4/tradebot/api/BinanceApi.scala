@@ -11,6 +11,7 @@ import akka.stream.ActorMaterializer
 import com.kobr4.tradebot.DefaultConfiguration
 import com.kobr4.tradebot.model.Asset.Custom
 import com.kobr4.tradebot.model._
+import com.kobr4.tradebot.scheduler.BinanceDailyJob
 import com.typesafe.scalalogging.StrictLogging
 import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
@@ -90,17 +91,21 @@ class BinanceApi(apiKey: String = DefaultConfiguration.BinanceApi.Key,
     }
   }
 
-  override def cancelOrder(orderNumber: String): Future[Boolean] = {
+  override def cancelOrder(order: PoloOrder): Future[Boolean] = {
     BinanceApi.httpRequest(binanceUrl, BinanceApi.CancelOrder.Order,
-      BinanceApi.CancelOrder.build(nonce(), orderNumber), apiKey, apiSecret, HttpMethods.DELETE).map { _ => true }
+      BinanceApi.CancelOrder.build(nonce(), order.orderNumber, BinanceCurrencyPairHelper.toString(order.currencyPair)),
+      apiKey, apiSecret, HttpMethods.DELETE).map { _ => true }
   }
 
   override def returnTradeHistory(start: ZonedDateTime, end: ZonedDateTime): Future[List[Order]] = {
-    val currencyPair = CurrencyPair(Asset.Btc, Asset.Tether)
-    BinanceApi.httpRequest(binanceUrl, BinanceApi.ReturnTradesHistory.MyTrades, BinanceApi.ReturnTradesHistory.build(nonce(),
-      BinanceCurrencyPairHelper.toString(currencyPair), start.toEpochSecond, end.toEpochSecond), apiKey, apiSecret, HttpMethods.GET).map { message =>
-      Json.parse(message).as[JsArray].value.map(_.as[Trade].toOrder).toList
+    val evList = BinanceDailyJob.pairList.map { pair =>
+      BinanceApi.httpRequest(binanceUrl, BinanceApi.ReturnTradesHistory.MyTrades, BinanceApi.ReturnTradesHistory.build(nonce(),
+        BinanceCurrencyPairHelper.toString(pair), start.toEpochSecond, end.toEpochSecond), apiKey, apiSecret, HttpMethods.GET).map { message =>
+        Json.parse(message).as[JsArray].value.map(_.as[Trade].toOrder).toList
+      }
     }
+
+    Future.sequence(evList).map(_.flatten.sortBy(_.date.toEpochSecond))
   }
 
   override def buy(currencyPair: CurrencyPair, rate: BigDecimal, amount: BigDecimal): Future[String] = {
@@ -202,9 +207,9 @@ object BinanceApi extends StrictLogging {
 
     val MyTrades = "myTrades"
 
-    val Start = "start"
+    val Start = "startTime"
 
-    val End = "end"
+    val End = "endTime"
 
     val Symbol = "symbol"
 
@@ -228,8 +233,11 @@ object BinanceApi extends StrictLogging {
 
     val OrderId = "orderId"
 
-    def build(nonce: Long, txid: String): FormData = akka.http.scaladsl.model.FormData(Map(
+    val Symbol = "symbol"
+
+    def build(nonce: Long, txid: String, currencyPair: String): FormData = akka.http.scaladsl.model.FormData(Map(
       BinanceApi.timestamp -> nonce.toString,
+      BinanceApi.CancelOrder.Symbol -> currencyPair,
       BinanceApi.CancelOrder.OrderId -> txid))
   }
 

@@ -43,4 +43,14 @@ class BinanceApiIT extends FlatSpec with ScalaFutures with Matchers {
 
     println(assetMap)
   }
+
+
+  it should "return trade history" in {
+
+    val binanceApi = new BinanceApi(DefaultConfiguration.BinanceApi.Key, DefaultConfiguration.BinanceApi.Secret)
+
+    val tradeList = binanceApi.returnTradeHistory().futureValue(Timeout(10 seconds))
+
+    println(tradeList)
+  }
 }

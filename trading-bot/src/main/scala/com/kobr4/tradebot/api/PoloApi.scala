@@ -129,8 +129,8 @@ class PoloApi(
       //Json.parse(message).as[JsArray].value.map { order => order.as[PoloOrder] }.toList
     }
 
-  override def cancelOrder(orderNumber: String): Future[Boolean] = {
-    PoloApi.httpRequestPost(tradingUrl, CancelOrder.build(nonce, orderNumber), apiKey, apiSecret).map { message =>
+  override def cancelOrder(order: PoloOrder): Future[Boolean] = {
+    PoloApi.httpRequestPost(tradingUrl, CancelOrder.build(nonce, order.orderNumber), apiKey, apiSecret).map { message =>
       Json.parse(message).as[JsObject].value.get("success").exists(_.as[Int] match {
         case 1 => true
         case _ => false

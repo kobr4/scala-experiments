@@ -196,10 +196,10 @@ class KrakenApi(
       }
   }
 
-  override def cancelOrder(orderNumber: String): Future[Boolean] = {
+  override def cancelOrder(order: PoloOrder): Future[Boolean] = {
     val reqNonce = nonce()
     KrakenApi.httpRequestPost(krakenUrl, s"$privateUrl/${KrakenApi.CancelOrder.CancelOrder}", reqNonce,
-      KrakenApi.CancelOrder.build(reqNonce, orderNumber), apiKey, apiSecret).map { message =>
+      KrakenApi.CancelOrder.build(reqNonce, order.orderNumber), apiKey, apiSecret).map { message =>
         if (Json.parse(message).as[JsObject].value("result").as[JsObject].value("count").as[JsNumber].as[Long] > 0) true
         else false
       }

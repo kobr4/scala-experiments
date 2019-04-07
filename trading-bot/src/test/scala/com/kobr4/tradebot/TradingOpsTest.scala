@@ -71,15 +71,16 @@ class TradingOpsTest extends FlatSpec with Matchers with ScalaFutures with Mocki
 
   "TradingOps" should "cancel an order" in {
 
+    val order = PoloOrder(CurrencyPair(Asset.Usd, Asset.Btc),"1", 1, 1)
     val apiMock = mock[ExchangeApi]
-    when(apiMock.returnOpenOrders()).thenReturn(Future.successful(List(PoloOrder(CurrencyPair(Asset.Usd, Asset.Btc),"1", 1, 1))))
-    when(apiMock.cancelOrder(any[String])).thenReturn(Future.successful(true))
+    when(apiMock.returnOpenOrders()).thenReturn(Future.successful(List(order)))
+    when(apiMock.cancelOrder(any[PoloOrder])).thenReturn(Future.successful(true))
 
     val tradingOps = new TradingOps(apiMock)
 
     tradingOps.cancelAllOpenOrders().futureValue(Timeout(10 seconds))
 
-    verify(apiMock).cancelOrder("1")
+    verify(apiMock).cancelOrder(order)
   }
 
   "TradingOps" should "load portfolio" in {

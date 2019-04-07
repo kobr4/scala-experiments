@@ -52,7 +52,7 @@ class TradingOps(val api: ExchangeApi)(implicit ec: ExecutionContext) extends St
   }
 
   def cancelAllOpenOrders(): Future[Unit] = {
-    api.returnOpenOrders().map { orderList => orderList.map { order => api.cancelOrder(order.orderNumber) } }
+    api.returnOpenOrders().map { orderList => orderList.map { order => api.cancelOrder(order) } }
   }
 
   @deprecated
