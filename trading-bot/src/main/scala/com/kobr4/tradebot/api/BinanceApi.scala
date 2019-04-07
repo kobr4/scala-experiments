@@ -1,16 +1,14 @@
 package com.kobr4.tradebot.api
 
 import java.time.{Instant, ZoneId, ZonedDateTime}
-import java.util.Base64
 
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
-import akka.http.scaladsl.model.{HttpMethod, _}
 import akka.http.scaladsl.model.headers.RawHeader
+import akka.http.scaladsl.model.{HttpMethod, _}
 import akka.http.scaladsl.unmarshalling.Unmarshal
 import akka.stream.ActorMaterializer
 import com.kobr4.tradebot.DefaultConfiguration
-import com.kobr4.tradebot.api.KrakenApi.generateSha256
 import com.kobr4.tradebot.model.Asset.Custom
 import com.kobr4.tradebot.model._
 import com.typesafe.scalalogging.StrictLogging
@@ -74,7 +72,8 @@ class BinanceApi(apiKey: String = DefaultConfiguration.BinanceApi.Key,
       (JsPath \ "origQty").read[BigDecimal]) (PoloOrder.apply _)
 
   override def returnBalances: Future[Map[Asset, Quantity]] = {
-    BinanceApi.httpGetRequest(binanceUrl, BinanceApi.ReturnBalances.Account).map { message =>
+    BinanceApi.httpRequest(binanceUrl, BinanceApi.ReturnBalances.Account, BinanceApi.ReturnBalances.build(nonce()),
+      apiKey, apiSecret, HttpMethods.GET).map { message =>
       Json.parse(message).as[JsObject].value("balances").as[JsArray].value.map { obj =>
         (Asset.fromString(obj.as[JsObject].value("asset").as[String]), Quantity(BigDecimal(obj.as[JsObject].value("free").as[String])))
       }.toMap
@@ -92,34 +91,30 @@ class BinanceApi(apiKey: String = DefaultConfiguration.BinanceApi.Key,
   }
 
   override def cancelOrder(orderNumber: String): Future[Boolean] = {
-    val reqNonce = nonce()
     BinanceApi.httpRequest(binanceUrl, BinanceApi.CancelOrder.Order,
-      BinanceApi.CancelOrder.build(reqNonce, orderNumber), apiKey, apiSecret, HttpMethods.DELETE).map { _ => true }
+      BinanceApi.CancelOrder.build(nonce(), orderNumber), apiKey, apiSecret, HttpMethods.DELETE).map { _ => true }
   }
 
   override def returnTradeHistory(start: ZonedDateTime, end: ZonedDateTime): Future[List[Order]] = {
-    val reqNonce = nonce()
-    BinanceApi.httpRequest(binanceUrl, BinanceApi.ReturnTradesHistory.MyTrades, BinanceApi.ReturnTradesHistory.build(reqNonce,
-      start.toEpochSecond, end.toEpochSecond), apiKey, apiSecret, HttpMethods.GET).map { message =>
+    val currencyPair = CurrencyPair(Asset.Btc, Asset.Tether)
+    BinanceApi.httpRequest(binanceUrl, BinanceApi.ReturnTradesHistory.MyTrades, BinanceApi.ReturnTradesHistory.build(nonce(),
+      BinanceCurrencyPairHelper.toString(currencyPair), start.toEpochSecond, end.toEpochSecond), apiKey, apiSecret, HttpMethods.GET).map { message =>
       Json.parse(message).as[JsArray].value.map(_.as[Trade].toOrder).toList
     }
   }
 
   override def buy(currencyPair: CurrencyPair, rate: BigDecimal, amount: BigDecimal): Future[String] = {
-    val reqNonce = nonce()
-    BinanceApi.httpRequest(binanceUrl, BinanceApi.BuySell.path, BinanceApi.BuySell.build(reqNonce,
+    BinanceApi.httpRequest(binanceUrl, BinanceApi.BuySell.path, BinanceApi.BuySell.build(nonce(),
       KrakenCurrencyPairHelper.toString(currencyPair), rate, amount, true), apiKey, apiSecret)
   }
 
   override def sell(currencyPair: CurrencyPair, rate: BigDecimal, amount: BigDecimal): Future[String] = {
-    val reqNonce = nonce()
-    BinanceApi.httpRequest(binanceUrl, BinanceApi.BuySell.path, BinanceApi.BuySell.build(reqNonce,
+    BinanceApi.httpRequest(binanceUrl, BinanceApi.BuySell.path, BinanceApi.BuySell.build(nonce(),
       KrakenCurrencyPairHelper.toString(currencyPair), rate, amount, false), apiKey, apiSecret)
   }
 
   override def returnTicker()(implicit ec: ExecutionContext): Future[List[Quote]] =
     BinanceApi.httpGetRequest(binanceUrl, BinanceApi.Public.returnTicker).map(message => {
-      println(message)
       Json.parse(message).as[JsArray].value.map({ elt =>
         val obj = elt.as[JsObject]
         val pairString = obj.value("symbol").as[String]
@@ -211,9 +206,13 @@ object BinanceApi extends StrictLogging {
 
     val End = "end"
 
-    def build(nonce: Long, start: Long, end: Long): FormData = akka.http.scaladsl.model.FormData(Map(
+    val Symbol = "symbol"
+
+    def build(nonce: Long, currencyPair: String, start: Long, end: Long): FormData = akka.http.scaladsl.model.FormData(Map(
       BinanceApi.timestamp -> nonce.toString,
-      BinanceApi.ReturnTradesHistory.Start -> start.toString, KrakenApi.ReturnTradesHistory.End -> end.toString))
+      BinanceApi.ReturnTradesHistory.Symbol -> currencyPair,
+      BinanceApi.ReturnTradesHistory.Start -> start.toString,
+      BinanceApi.ReturnTradesHistory.End -> end.toString))
   }
 
   object ReturnBalances {
@@ -261,20 +260,23 @@ object BinanceApi extends StrictLogging {
 
   private def httpRequest(url: String, path: String, body: FormData, apiKey: String, apiSecret: String,
                           method: HttpMethod = HttpMethods.POST)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[String] = {
-    val reqBody = FormData(body.fields.+: ("signature",generateHMAC256(apiSecret, generateSha256(body.fields.toString))))
-    val fullUrl = s"$url$path${if (method == HttpMethods.GET) "?"+reqBody.fields.toString else ""}"
-    logger.info(s"Sending post request to $url")
+
+    val reqBody = body.fields.toString + s"&signature=${generateHMAC256(apiSecret, body.fields.toString.getBytes)}"
+    val fullUrl = s"$url$path${if (method == HttpMethods.GET) "?"+reqBody else ""}"
+    logger.info(s"Sending post request to $fullUrl")
     logger.info(s"Body: ${body.fields.toString}")
     logger.info(s"Path $path")
     Http().singleRequest(HttpRequest(
       method = method,
       headers = AuthHeader.build(apiKey),
-      entity = if (method != HttpMethods.GET) reqBody.toEntity(HttpCharsets.`UTF-8`) else "",
+      entity = if (method != HttpMethods.GET) reqBody else "",
       uri = fullUrl)).flatMap { response =>
       if (response.status == StatusCodes.OK)
         Unmarshal(response.entity).to[String]
-      else
+      else {
+        Unmarshal(response.entity).to[String].map(println)
         throw new RuntimeException("Return code was " + response.status)
+      }
     }
   }
 

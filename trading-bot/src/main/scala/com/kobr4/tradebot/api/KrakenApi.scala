@@ -29,6 +29,10 @@ case object Poloniex extends SupportedExchange {
   override def toString = "poloniex"
 }
 
+case object Binance extends SupportedExchange {
+  override def toString = "binance"
+}
+
 object UnsupportedExchangeException extends RuntimeException
 
 object SupportedExchange {
