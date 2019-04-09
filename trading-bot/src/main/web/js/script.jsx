@@ -779,6 +779,7 @@ ReactDOM.render(
         <Route path='/api_keys' render={() => ( <ApiKeysPanel/>)} />
         <Route path='/inhouse_info_poloniex' render={() => ( <InHouseInfo exchange='poloniex'/>)} />
         <Route path='/inhouse_info_kraken' render={() => ( <InHouseInfo exchange='kraken'/>)} />
+        <Route path='/inhouse_info_binance' render={() => ( <InHouseInfo exchange='binance'/>)} />
         <Route path='/login' render={() => <LoginForm/>}/>
         <Route path='/logout' render={() => <SignOut/>}/>
         <Route path='/signup' render={() => <SignUpForm/>}/>
@@ -808,6 +809,7 @@ ReactDOM.render(
 
   <li><a href="inhouse_info_poloniex">In-House @ Poloniex</a></li>
   <li><a href="inhouse_info_kraken">In-House @ Kraken</a></li>
+  <li><a href="inhouse_info_binance">In-House @ Binance</a></li>
   <li><a href="prices">Crypto Prices</a></li>
   </ul>,
   document.getElementById('side')
