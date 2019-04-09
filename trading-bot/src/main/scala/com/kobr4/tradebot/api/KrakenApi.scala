@@ -22,15 +22,15 @@ import scala.concurrent.{ ExecutionContext, Future }
 sealed trait SupportedExchange
 
 case object Kraken extends SupportedExchange {
-  override def toString = "kraken"
+  override val toString = "kraken"
 }
 
 case object Poloniex extends SupportedExchange {
-  override def toString = "poloniex"
+  override val toString = "poloniex"
 }
 
 case object Binance extends SupportedExchange {
-  override def toString = "binance"
+  override val toString = "binance"
 }
 
 object UnsupportedExchangeException extends RuntimeException
@@ -38,8 +38,9 @@ object UnsupportedExchangeException extends RuntimeException
 object SupportedExchange {
 
   def fromString(input: String): SupportedExchange = input.toLowerCase match {
-    case "kraken" => Kraken
-    case "poloniex" => Poloniex
+    case Kraken.toString => Kraken
+    case Poloniex.toString => Poloniex
+    case Binance.toString => Binance
     case _ => throw UnsupportedExchangeException
   }
 }
