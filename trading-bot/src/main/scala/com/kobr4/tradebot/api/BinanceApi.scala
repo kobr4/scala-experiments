@@ -19,6 +19,16 @@ import play.api.libs.json._
 
 import scala.concurrent.{ExecutionContext, Future}
 
+
+sealed trait TimeInForce
+
+case object GTC extends TimeInForce { override def toString = "GTC" }
+
+case object IOC extends TimeInForce { override def toString = "IOC" }
+
+case object FOK extends TimeInForce { override def toString = "FOK" }
+
+
 object BinanceCurrencyPairHelper {
   def fromString(s: String): CurrencyPair = {
     val pairString = s.toUpperCase
@@ -191,6 +201,8 @@ object BinanceApi extends StrictLogging {
 
     val side = "side"
 
+    val TimeInForce = "timeInForce"
+
     def build(nonce: Long, currencyPair: String, rate: BigDecimal, amount: BigDecimal, isBuy: Boolean) = {
       akka.http.scaladsl.model.FormData(Map(
         BuySell.symbol -> currencyPair,
@@ -198,6 +210,7 @@ object BinanceApi extends StrictLogging {
         BuySell.quantity -> amount.underlying().toPlainString,
         BuySell.`type` -> "LIMIT",
         BuySell.side -> (if (isBuy) BuySell.buy else BuySell.sell),
+        BuySell.TimeInForce -> GTC.toString,
         BinanceApi.timestamp -> nonce.toString)
       )
     }
