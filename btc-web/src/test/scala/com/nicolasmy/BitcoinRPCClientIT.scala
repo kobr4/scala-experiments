@@ -1,12 +1,18 @@
 package com.nicolasmy
 
+import java.time.{Instant, ZoneId, ZonedDateTime}
+
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import org.scalatest.concurrent.PatienceConfiguration.Timeout
-import org.scalatest.{ FlatSpec, Ignore, Matchers }
+import org.scalatest.{FlatSpec, Ignore, Matchers}
 import org.scalatest.concurrent.ScalaFutures
 import play.api.libs.json._
+
 import scala.concurrent.duration._
+import scodec.bits._
+
+
 
 //@Ignore
 class BitcoinRPCClientIT extends FlatSpec with Matchers with ScalaFutures {

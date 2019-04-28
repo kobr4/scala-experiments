@@ -119,8 +119,9 @@ class BinanceApi(apiKey: String = DefaultConfiguration.BinanceApi.Key,
   }
 
   override def buy(currencyPair: CurrencyPair, rate: BigDecimal, amount: BigDecimal): Future[String] = {
+    //TODO: Rounding only works for USDT pair trading...
     BinanceApi.httpRequest(binanceUrl, BinanceApi.BuySell.path, BinanceApi.BuySell.build(nonce(),
-      KrakenCurrencyPairHelper.toString(currencyPair), rate, amount, true), apiKey, apiSecret)
+      KrakenCurrencyPairHelper.toString(currencyPair), rate, amount.setScale(6, BigDecimal.RoundingMode.DOWN), true), apiKey, apiSecret)
   }
 
   override def sell(currencyPair: CurrencyPair, rate: BigDecimal, amount: BigDecimal): Future[String] = {

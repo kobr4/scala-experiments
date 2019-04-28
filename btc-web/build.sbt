@@ -16,7 +16,8 @@ lazy val root = (project in file(".")).enablePlugins(SbtWeb).enablePlugins(Docke
       "com.typesafe.akka" %% "akka-http-spray-json" % akkaHttpVersion,
       "com.typesafe.akka" %% "akka-http-xml"        % akkaHttpVersion,
       "com.typesafe.akka" %% "akka-stream"          % akkaVersion,
-
+      "org.scodec"        %% "scodec-core"          % "1.10.3",
+      "org.scodec"        %% "scodec-bits"          % "1.1.6",
       "com.typesafe.play" %% "play-json" % "2.6.0",
 
       "com.typesafe.scala-logging" %% "scala-logging" % "3.9.0",
