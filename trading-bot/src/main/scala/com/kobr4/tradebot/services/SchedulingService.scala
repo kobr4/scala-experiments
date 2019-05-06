@@ -23,7 +23,7 @@ class SchedulingService(implicit arf: ActorSystem, am: ActorMaterializer, ec: Ex
   def schedule(name: String, cronExpression: String, func: () => Unit): Date = {
 
     //Fix calls that are not thread-safe
-    synchronized(scheduler) {
+    scheduler.synchronized {
 
       logger.info("Create schedule [{}] cron [{}]", name, cronExpression)
 
@@ -36,14 +36,20 @@ class SchedulingService(implicit arf: ActorSystem, am: ActorMaterializer, ec: Ex
   }
 
   def listJobs(): List[String] = {
-    synchronized(scheduler) {
+
+    scheduler.synchronized {
+
       scheduler.schedules.keys.toList
+
     }
   }
 
   def cancelJob(name: String): Boolean = {
-    synchronized(scheduler) {
+
+    scheduler.synchronized {
+
       scheduler.cancelJob(name)
+
     }
   }
 }
