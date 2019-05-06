@@ -143,6 +143,26 @@ class BitcoinRPCClientIT extends FlatSpec with Matchers with ScalaFutures {
 
     val response = client.getBlock("000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f",0).futureValue(Timeout(10 seconds))
 
+    val hexBlock = Json.parse(response).as[JsObject].value("result").as[JsString].value
+
+    val vector = BitVector.fromHex(hexBlock).get
+
+    BitcoinBlock.decode(vector).print
+
+    val v = ByteVector.fromHex(hexBlock).get
+    val first = v.take(4)
+    val prevHash = v.drop(4).take(32).toHex
+    val rootHash = v.drop(36).take(32).toHex
+    val time = v.drop(68).take(4).toLong(signed = false, ByteOrdering.LittleEndian)
+
+    println(first.toHex)
+    println("Previous hash: "+prevHash)
+    println("Root hash: "+rootHash)
+    println(ZonedDateTime.ofInstant(Instant.ofEpochSecond(time), ZoneId.of("UTC")))
+    println(first.toLong(signed = false, ByteOrdering.LittleEndian))
+
+
+
     response shouldNot be(empty)
 
   }

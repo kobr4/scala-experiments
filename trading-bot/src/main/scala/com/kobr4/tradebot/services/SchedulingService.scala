@@ -22,19 +22,28 @@ class SchedulingService(implicit arf: ActorSystem, am: ActorMaterializer, ec: Ex
 
   def schedule(name: String, cronExpression: String, func: () => Unit): Date = {
 
-    logger.info("Create schedule [{}] cron [{}]", name, cronExpression)
+    //Fix calls that are not thread-safe
+    synchronized(scheduler) {
 
-    scheduler.createSchedule(name, None, cronExpression, None, TimeZone.getTimeZone("UTC"))
+      logger.info("Create schedule [{}] cron [{}]", name, cronExpression)
 
-    val actorRef = arf.actorOf(Props(classOf[WorkerActor], func), name)
-    scheduler.schedule(name, actorRef, "run", None)
+      scheduler.createSchedule(name, None, cronExpression, None, TimeZone.getTimeZone("UTC"))
+
+      val actorRef = arf.actorOf(Props(classOf[WorkerActor], func), name)
+      scheduler.schedule(name, actorRef, "run", None)
+
+    }
   }
 
   def listJobs(): List[String] = {
-    scheduler.schedules.keys.toList
+    synchronized(scheduler) {
+      scheduler.schedules.keys.toList
+    }
   }
 
   def cancelJob(name: String): Boolean = {
-    scheduler.cancelJob(name)
+    synchronized(scheduler) {
+      scheduler.cancelJob(name)
+    }
   }
 }
