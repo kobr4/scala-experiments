@@ -62,7 +62,7 @@ object CurrencyPair {
 
 object PoloCurrencyPairHelper {
 
-  def fromString(s: String) : CurrencyPair = {
+  def fromString(s: String): CurrencyPair = {
     val cP = s.toUpperCase.split('_').map(s => Asset.fromString(s)).toList
     CurrencyPair(cP.head, cP.last)
   }

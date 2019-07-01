@@ -13,14 +13,14 @@ import akka.stream.ActorMaterializer
 import com.kobr4.tradebot.QuickstartServer
 import com.kobr4.tradebot.api._
 import com.kobr4.tradebot.engine.Strategy
-import com.kobr4.tradebot.model.{Asset, Order, Quantity}
+import com.kobr4.tradebot.model.{ Asset, Order, Quantity }
 import com.kobr4.tradebot.routes.stub.Foo
-import com.kobr4.tradebot.scheduler.{BinanceDailyJob, KrakenDailyJob, TradeBotDailyJob}
+import com.kobr4.tradebot.scheduler.{ BinanceDailyJob, KrakenDailyJob, TradeBotDailyJob }
 import com.kobr4.tradebot.services._
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{ ExecutionContext, Future }
 
 case class ExchangeCreds(exchange: SupportedExchange, apiKey: String, apiSecret: String)
 

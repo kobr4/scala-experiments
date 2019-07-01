@@ -94,7 +94,7 @@ object Asset {
   }
 
   case class Custom(code: String) extends Asset {
-    override val displayName: String =  code
+    override val displayName: String = code
   }
 
   def fromStringExact(s: String): Option[Asset] = s match {

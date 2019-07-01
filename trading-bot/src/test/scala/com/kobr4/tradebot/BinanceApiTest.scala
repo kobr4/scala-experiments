@@ -137,4 +137,9 @@ class BinanceApiTest extends FlatSpec with Matchers with ScalaFutures with Befor
     signature should be("c8db56825ae71d6d79447849e617115f4a920fa2acdcab2b053c4b2838bd6b71")
   }
 
+  it should "return a rounded stepSize amount" in {
+
+    BinanceApi.lotSizeAmount(3.8, 1.0) shouldBe BigDecimal(3)
+  }
+
 }

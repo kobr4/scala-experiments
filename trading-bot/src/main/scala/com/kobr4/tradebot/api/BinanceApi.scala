@@ -19,26 +19,45 @@ import play.api.libs.json._
 
 import scala.concurrent.{ExecutionContext, Future}
 
-
 sealed trait TimeInForce
 
-case object GTC extends TimeInForce { override def toString = "GTC" }
+case object GTC extends TimeInForce {
+  override def toString = "GTC"
+}
 
-case object IOC extends TimeInForce { override def toString = "IOC" }
+case object IOC extends TimeInForce {
+  override def toString = "IOC"
+}
 
-case object FOK extends TimeInForce { override def toString = "FOK" }
+case object FOK extends TimeInForce {
+  override def toString = "FOK"
+}
 
+case class LotSize(minQty: BigDecimal, maxQty: BigDecimal, stepSize: BigDecimal)
+
+case class PairProp(baseAssetPrecision: BigDecimal, quotePrecision: BigDecimal, lotSize: LotSize)
 
 object BinanceCurrencyPairHelper {
   def fromString(s: String): CurrencyPair = {
     val pairString = s.toUpperCase
+    println(pairString)
     val (a, b) = pairString.length match {
+      case 5 =>
+        (pairString.substring(0, 2), pairString.substring(2))
       case 6 =>
         (pairString.substring(0, 3), pairString.substring(3))
       case 7 =>
-        (pairString.substring(0, 4), pairString.substring(4))
+        (pairString.substring(0, 3), pairString.substring(3))
       case 8 =>
-        (pairString.substring(1, 4), pairString.substring(5))
+        (pairString.substring(0, 4), pairString.substring(4))
+      case 9 | 10 =>
+        (pairString.substring(0, 6), pairString.substring(6))
+      case _ if pairString == "AEBTC" => ("AE", "BTC")
+      case _ if pairString == "AEETH" => ("AE", "ETH")
+      case _ if pairString == "AEBNB" => ("AE", "BNB")
+      case _ if pairString == "SCBTC" => ("SC", "BTC")
+      case _ if pairString == "SCETH" => ("SC", "ETH")
+      case _ if pairString == "SCBNB" => ("SC", "BNB")
     }
 
     CurrencyPair(Asset.fromString(b), Asset.fromString(a))
@@ -53,20 +72,30 @@ object BinanceCurrencyPairHelper {
   }
 }
 
-class BinanceApi(apiKey: String = DefaultConfiguration.BinanceApi.Key,
-                 apiSecret: String = DefaultConfiguration.BinanceApi.Secret, binanceUrl: String = BinanceApi.url)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext) extends ExchangeApi {
+class BinanceApi(
+                  apiKey: String = DefaultConfiguration.BinanceApi.Key,
+                  apiSecret: String = DefaultConfiguration.BinanceApi.Secret, binanceUrl: String = BinanceApi.url)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext) extends ExchangeApi {
   private def nonce() = System.currentTimeMillis()
+
+  private val pairProp = getPairProp()
 
   import play.api.libs.functional.syntax._
 
   case class Trade(symbol: CurrencyPair, price: BigDecimal, quantity: BigDecimal, isBuyer: Boolean, date: ZonedDateTime) {
     def toOrder: Order = {
-      isBuyer match {
-        case true => Buy(symbol, price, quantity, date)
-        case false => Sell(symbol, price, quantity, date)
+      if (isBuyer) {
+        Buy(symbol, price, quantity, date)
+      } else {
+        Sell(symbol, price, quantity, date)
       }
     }
   }
+
+  implicit val lotSizeReads: Reads[LotSize] = (
+    (JsPath \ "minQty").read[BigDecimal] and
+      (JsPath \ "maxQty").read[BigDecimal] and
+      (JsPath \ "stepSize").read[BigDecimal]
+    ) (LotSize.apply _)
 
   implicit val tradeReads: Reads[Trade] = (
     (JsPath \ "symbol").read[String].map(BinanceCurrencyPairHelper.fromString) and
@@ -75,12 +104,27 @@ class BinanceApi(apiKey: String = DefaultConfiguration.BinanceApi.Key,
       (JsPath \ "isBuyer").read[Boolean] and
       (JsPath \ "time").read[Long].map(t => ZonedDateTime.ofInstant(Instant.ofEpochSecond(t), ZoneId.of("UTC")))) (Trade.apply _)
 
-
   implicit val poloOrderReads: Reads[PoloOrder] = (
     (JsPath \ "symbol").read[String].map(BinanceCurrencyPairHelper.fromString) and
       (JsPath \ "orderId").read[Long].map(_.toString) and
       (JsPath \ "price").read[BigDecimal] and
       (JsPath \ "origQty").read[BigDecimal]) (PoloOrder.apply _)
+
+  def getPairProp(): Future[Map[CurrencyPair, PairProp]] = {
+    BinanceApi.httpGetRequest(BinanceApi.exchangeInfoUrl, "").map { message =>
+      Json.parse(message).as[JsObject].value("symbols").as[JsArray].value.map { obj =>
+        val pair = BinanceCurrencyPairHelper.fromString(obj.as[JsObject].value("symbol").as[String])
+        val baseAssetPrecision = obj.as[JsObject].value("baseAssetPrecision").as[Int]
+        val quotePrecision = obj.as[JsObject].value("quotePrecision").as[Int]
+        val lotSize = obj.as[JsObject].value("filters").as[JsArray].value.filter(_.as[JsObject].value("filterType").as[String] == "LOT_SIZE").map(_.as[LotSize]).head
+        (pair, PairProp(baseAssetPrecision, quotePrecision, lotSize))
+      }.filter(q => (q._1.right, q._1.left) match {
+        case (_: Custom, _) => false
+        case (_, _: Custom) => false
+        case _ => true
+      }).toMap
+    }
+  }
 
   override def returnBalances: Future[Map[Asset, Quantity]] = {
     BinanceApi.httpRequest(binanceUrl, BinanceApi.ReturnBalances.Account, BinanceApi.ReturnBalances.build(nonce()),
@@ -109,7 +153,8 @@ class BinanceApi(apiKey: String = DefaultConfiguration.BinanceApi.Key,
 
   override def returnTradeHistory(start: ZonedDateTime, end: ZonedDateTime): Future[List[Order]] = {
     val evList = BinanceDailyJob.pairList.map { pair =>
-      BinanceApi.httpRequest(binanceUrl, BinanceApi.ReturnTradesHistory.MyTrades, BinanceApi.ReturnTradesHistory.build(nonce(),
+      BinanceApi.httpRequest(binanceUrl, BinanceApi.ReturnTradesHistory.MyTrades, BinanceApi.ReturnTradesHistory.build(
+        nonce(),
         BinanceCurrencyPairHelper.toString(pair), start.toEpochSecond, end.toEpochSecond), apiKey, apiSecret, HttpMethods.GET).map { message =>
         Json.parse(message).as[JsArray].value.map(_.as[Trade].toOrder).toList
       }
@@ -120,13 +165,23 @@ class BinanceApi(apiKey: String = DefaultConfiguration.BinanceApi.Key,
 
   override def buy(currencyPair: CurrencyPair, rate: BigDecimal, amount: BigDecimal): Future[String] = {
     //TODO: Rounding only works for USDT pair trading...
-    BinanceApi.httpRequest(binanceUrl, BinanceApi.BuySell.path, BinanceApi.BuySell.build(nonce(),
-      KrakenCurrencyPairHelper.toString(currencyPair), rate, amount.setScale(6, BigDecimal.RoundingMode.DOWN), true), apiKey, apiSecret)
+    (for {
+      lotAmount <- pairProp.map(pairPropMap => BinanceApi.lotSizeAmount(amount, pairPropMap(currencyPair).lotSize.stepSize))
+    } yield {
+      BinanceApi.httpRequest(binanceUrl, BinanceApi.BuySell.path, BinanceApi.BuySell.build(
+        nonce(),
+        KrakenCurrencyPairHelper.toString(currencyPair), rate, lotAmount, true), apiKey, apiSecret)
+    }).flatten
   }
 
   override def sell(currencyPair: CurrencyPair, rate: BigDecimal, amount: BigDecimal): Future[String] = {
-    BinanceApi.httpRequest(binanceUrl, BinanceApi.BuySell.path, BinanceApi.BuySell.build(nonce(),
-      KrakenCurrencyPairHelper.toString(currencyPair), rate, amount, false), apiKey, apiSecret)
+    (for {
+      lotAmount <- pairProp.map(pairPropMap => BinanceApi.lotSizeAmount(amount, pairPropMap(currencyPair).lotSize.stepSize))
+    } yield {
+      BinanceApi.httpRequest(binanceUrl, BinanceApi.BuySell.path, BinanceApi.BuySell.build(
+        nonce(),
+        KrakenCurrencyPairHelper.toString(currencyPair), rate, amount, false), apiKey, apiSecret)
+    }).flatten
   }
 
   override def returnTicker()(implicit ec: ExecutionContext): Future[List[Quote]] =
@@ -151,7 +206,6 @@ class BinanceApi(apiKey: String = DefaultConfiguration.BinanceApi.Key,
           case 10 =>
             (pairString.substring(0, 6), pairString.substring(6))
 
-
         }
         Quote(CurrencyPair(Asset.fromString(b), Asset.fromString(a)), obj.value("price").as[BigDecimal], 0, 0, 0, 0, 0)
       }).toList.filter(q => (q.pair.right, q.pair.left) match {
@@ -169,6 +223,8 @@ object BinanceApi extends StrictLogging {
 
   val timestamp = "timestamp"
 
+  def lotSizeAmount(amount: BigDecimal, stepSize: BigDecimal): BigDecimal = (amount / stepSize).setScale(0, BigDecimal.RoundingMode.FLOOR) * stepSize
+
   object Public {
 
     val returnTicker = "ticker/price"
@@ -176,6 +232,8 @@ object BinanceApi extends StrictLogging {
   }
 
   val url = s"$rootUrl/api/v3/"
+
+  val exchangeInfoUrl = s"$rootUrl/api/v1/exchangeInfo"
 
   object ReturnOpenOrders {
 
@@ -212,8 +270,7 @@ object BinanceApi extends StrictLogging {
         BuySell.`type` -> "LIMIT",
         BuySell.side -> (if (isBuy) BuySell.buy else BuySell.sell),
         BuySell.TimeInForce -> GTC.toString,
-        BinanceApi.timestamp -> nonce.toString)
-      )
+        BinanceApi.timestamp -> nonce.toString))
     }
   }
 
@@ -284,7 +341,7 @@ object BinanceApi extends StrictLogging {
                           method: HttpMethod = HttpMethods.POST)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[String] = {
 
     val reqBody = body.fields.toString + s"&signature=${generateHMAC256(apiSecret, body.fields.toString.getBytes)}"
-    val fullUrl = s"$url$path${if (method == HttpMethods.GET) "?"+reqBody else ""}"
+    val fullUrl = s"$url$path${if (method == HttpMethods.GET) "?" + reqBody else ""}"
     logger.info(s"Sending post request to $fullUrl")
     logger.info(s"Body: ${body.fields.toString}")
     logger.info(s"Path $path")

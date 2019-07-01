@@ -16,7 +16,7 @@ class BinanceApiIT extends FlatSpec with ScalaFutures with Matchers {
   implicit val as = ActorSystem()
   implicit val am = ActorMaterializer()
   implicit val ec = as.dispatcher
-
+/*
   it should "return ticker" in {
 
     val binanceApi = new BinanceApi()
@@ -52,5 +52,14 @@ class BinanceApiIT extends FlatSpec with ScalaFutures with Matchers {
     val tradeList = binanceApi.returnTradeHistory().futureValue(Timeout(10 seconds))
 
     println(tradeList)
+  }
+*/
+  it should "return pair props" in {
+
+    val binanceApi = new BinanceApi(DefaultConfiguration.BinanceApi.Key, DefaultConfiguration.BinanceApi.Secret)
+
+    val pairProp = binanceApi.getPairProp().futureValue(Timeout(10 seconds))
+
+    println(pairProp)
   }
 }

@@ -2,7 +2,7 @@ package com.kobr4.tradebot.scheduler
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
-import com.kobr4.tradebot.api.{Binance, CurrencyPair, ExchangeApi}
+import com.kobr4.tradebot.api.{ Binance, CurrencyPair, ExchangeApi }
 import com.kobr4.tradebot.model.Asset
 
 import scala.concurrent.ExecutionContext
