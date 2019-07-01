@@ -50,9 +50,9 @@ dockerfile in docker := {
   new Dockerfile {
     from("openjdk:8-jre")
     add(artifact, artifactTargetPath)
-    add(file("lib/bcpkix-jdk15on-1.60.jar"),"/docker-java-home/jre/lib/ext/")
-    add(file("lib/bcprov-jdk15on-1.60.jar"),"/docker-java-home/jre/lib/ext/")
-    runRaw("/bin/echo 'security.provider.10=org.bouncycastle.jce.provider.BouncyCastleProvider' >> /docker-java-home/jre/lib/security/java.security")
+    add(file("lib/bcpkix-jdk15on-1.60.jar"),"$JAVA_HOME/jre/lib/ext/")
+    add(file("lib/bcprov-jdk15on-1.60.jar"),"$JAVA_HOME/jre/lib/ext/")
+    runRaw("/bin/echo 'security.provider.10=org.bouncycastle.jce.provider.BouncyCastleProvider' >> $JAVA_HOME/jre/lib/security/java.security")
     entryPoint("java", "-jar", artifactTargetPath)
   }
 }
