@@ -40,7 +40,6 @@ case class PairProp(baseAssetPrecision: BigDecimal, quotePrecision: BigDecimal, 
 object BinanceCurrencyPairHelper {
   def fromString(s: String): CurrencyPair = {
     val pairString = s.toUpperCase
-    println(pairString)
     val (a, b) = pairString.length match {
       case 5 =>
         (pairString.substring(0, 2), pairString.substring(2))
@@ -52,12 +51,6 @@ object BinanceCurrencyPairHelper {
         (pairString.substring(0, 4), pairString.substring(4))
       case 9 | 10 =>
         (pairString.substring(0, 6), pairString.substring(6))
-      case _ if pairString == "AEBTC" => ("AE", "BTC")
-      case _ if pairString == "AEETH" => ("AE", "ETH")
-      case _ if pairString == "AEBNB" => ("AE", "BNB")
-      case _ if pairString == "SCBTC" => ("SC", "BTC")
-      case _ if pairString == "SCETH" => ("SC", "ETH")
-      case _ if pairString == "SCBNB" => ("SC", "BNB")
     }
 
     CurrencyPair(Asset.fromString(b), Asset.fromString(a))
@@ -164,7 +157,6 @@ class BinanceApi(
   }
 
   override def buy(currencyPair: CurrencyPair, rate: BigDecimal, amount: BigDecimal): Future[String] = {
-    //TODO: Rounding only works for USDT pair trading...
     (for {
       lotAmount <- pairProp.map(pairPropMap => BinanceApi.lotSizeAmount(amount, pairPropMap(currencyPair).lotSize.stepSize))
     } yield {
