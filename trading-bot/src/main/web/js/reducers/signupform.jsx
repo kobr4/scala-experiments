@@ -1,6 +1,6 @@
 import { SignUpAction } from '../actions'
 
-export default function(state = {email: '', password: '', activation: false, score: ''}, action) {
+export default function(state = {email: '', password: {}, activation: false, score: ''}, action) {
     switch (action.type) {
         case SignUpAction.SET_EMAIL:
             return {

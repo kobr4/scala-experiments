@@ -41,7 +41,7 @@ SignUpForm.propTypes = {
     formPasswordChange: PropTypes.func.isRequired,
     activation: PropTypes.bool.isRequired,
     email: PropTypes.string.isRequired,
-    password: PropTypes.string.isRequired
+    password: PropTypes.object.isRequired
   }
 
 
@@ -75,11 +75,11 @@ const mapDispatchToProps = dispatch => {
     return {
         formSubmit: (event, email, password) => { 
             event.preventDefault();
-            RestUtils.performRestPostReq((token) => {}, '/user/signup',[ ['email', email], ['password', password] ]);
+            RestUtils.performRestPostReq((token) => {}, '/user/signup',[ ['email', email], ['password', password.password] ]);
             dispatch(handleSubmit(event)) },
         formEmailChange: (event) => { dispatch(handleEmailChange(event)) },
         formPasswordScoreChange: (score, password, isValid) => {
-            dispatch(handlePasswordChange(password.password))
+            dispatch(handlePasswordChange(password))
             dispatch(handleScoreChange(score)) 
         }
        }
