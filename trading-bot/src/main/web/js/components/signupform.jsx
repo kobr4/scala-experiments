@@ -79,7 +79,7 @@ const mapDispatchToProps = dispatch => {
             dispatch(handleSubmit(event)) },
         formEmailChange: (event) => { dispatch(handleEmailChange(event)) },
         formPasswordScoreChange: (score, password, isValid) => {
-            dispatch(handlePasswordChange(password))
+            dispatch(handlePasswordChange(password.password))
             dispatch(handleScoreChange(score)) 
         }
        }

@@ -1,23 +1,22 @@
 package com.kobr4.tradebot
 
-import java.time.{Instant, ZoneId, ZonedDateTime}
+import java.time.{ Instant, ZoneId, ZonedDateTime }
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.WireMock._
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration.options
-import com.kobr4.tradebot.api.{BinanceApi, CurrencyPair, PoloOrder, Quote}
-import com.kobr4.tradebot.model.{Asset, Buy}
+import com.kobr4.tradebot.api.{ BinanceApi, CurrencyPair, PoloOrder, Quote }
+import com.kobr4.tradebot.model.{ Asset, Buy }
 import org.scalatest.concurrent.PatienceConfiguration.Timeout
 import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.{BeforeAndAfterEach, FlatSpec, Matchers}
+import org.scalatest.{ BeforeAndAfterEach, FlatSpec, Matchers }
 
 import scala.concurrent.duration._
 import scala.util.Random
 
 class BinanceApiTest extends FlatSpec with Matchers with ScalaFutures with BeforeAndAfterEach {
-
 
   val port = Math.abs(Random.nextInt()) % 4096 + 1024
   val wireMockServer = new WireMockServer(options().port(port))
@@ -37,7 +36,7 @@ class BinanceApiTest extends FlatSpec with Matchers with ScalaFutures with Befor
   it should "return open orders" in {
 
     wireMockServer.stubFor(get(urlPathEqualTo("/api/v3/openOrders"))
-      .withHeader("X-MBX-APIKEY",equalTo("vmPUZE6mv9SD5VNHk4HlWFsOr6aKE2zvsw0MuIgwCIPy6utIco14y7Ju91duEh8A"))
+      .withHeader("X-MBX-APIKEY", equalTo("vmPUZE6mv9SD5VNHk4HlWFsOr6aKE2zvsw0MuIgwCIPy6utIco14y7Ju91duEh8A"))
       .willReturn(aResponse()
         .withHeader("Content-Type", "text/plain")
         .withBody(
@@ -64,13 +63,13 @@ class BinanceApiTest extends FlatSpec with Matchers with ScalaFutures with Befor
             |]
             |""".stripMargin)))
 
-    val api = new BinanceApi("vmPUZE6mv9SD5VNHk4HlWFsOr6aKE2zvsw0MuIgwCIPy6utIco14y7Ju91duEh8A",
+    val api = new BinanceApi(
+      "vmPUZE6mv9SD5VNHk4HlWFsOr6aKE2zvsw0MuIgwCIPy6utIco14y7Ju91duEh8A",
       "NhqPtmdSJYdKjVHjA7PZj4Mge3R5YNiP1e3UZjInClVN65XAbvqqM6A7H5fATj0j", s"http://127.0.0.1:$port/api/v3/")
     val list = api.returnOpenOrders().futureValue(Timeout(10 seconds))
 
     list should contain(PoloOrder(CurrencyPair(Asset.Btc, Asset.Ltc), "1", BigDecimal(0.1), BigDecimal(1.0)))
   }
-
 
   it should "return trades history" in {
 
@@ -123,7 +122,8 @@ class BinanceApiTest extends FlatSpec with Matchers with ScalaFutures with Befor
             |]
             |""".stripMargin)))
 
-    val api = new BinanceApi("vmPUZE6mv9SD5VNHk4HlWFsOr6aKE2zvsw0MuIgwCIPy6utIco14y7Ju91duEh8A",
+    val api = new BinanceApi(
+      "vmPUZE6mv9SD5VNHk4HlWFsOr6aKE2zvsw0MuIgwCIPy6utIco14y7Ju91duEh8A",
       "NhqPtmdSJYdKjVHjA7PZj4Mge3R5YNiP1e3UZjInClVN65XAbvqqM6A7H5fATj0j", s"http://127.0.0.1:$port/api/v3/")
     val list = api.returnTicker().futureValue(Timeout(10 seconds))
     list should contain(Quote(CurrencyPair(Asset.Btc, Asset.Ltc), BigDecimal(4.000002), BigDecimal(0), BigDecimal(0), BigDecimal(0), BigDecimal(0), BigDecimal(0)))
@@ -131,7 +131,8 @@ class BinanceApiTest extends FlatSpec with Matchers with ScalaFutures with Befor
 
   it should "provide HMAC-256 signature" in {
 
-    val signature = BinanceApi.generateHMAC256("NhqPtmdSJYdKjVHjA7PZj4Mge3R5YNiP1e3UZjInClVN65XAbvqqM6A7H5fATj0j",
+    val signature = BinanceApi.generateHMAC256(
+      "NhqPtmdSJYdKjVHjA7PZj4Mge3R5YNiP1e3UZjInClVN65XAbvqqM6A7H5fATj0j",
       "symbol=LTCBTC&side=BUY&type=LIMIT&timeInForce=GTC&quantity=1&price=0.1&recvWindow=5000&timestamp=1499827319559".getBytes())
 
     signature should be("c8db56825ae71d6d79447849e617115f4a920fa2acdcab2b053c4b2838bd6b71")

@@ -2,12 +2,12 @@ package com.kobr4.tradebot
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
-import com.kobr4.tradebot.api.{BinanceApi, CurrencyPair}
+import com.kobr4.tradebot.api.{ BinanceApi, CurrencyPair }
 import com.kobr4.tradebot.model.Asset
 import com.kobr4.tradebot.scheduler.KrakenDailyJob
 import org.scalatest.concurrent.PatienceConfiguration.Timeout
 import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.{ FlatSpec, Matchers }
 
 import scala.concurrent.duration._
 
@@ -43,7 +43,6 @@ class BinanceApiIT extends FlatSpec with ScalaFutures with Matchers {
 
     println(assetMap)
   }
-
 
   it should "return trade history" in {
 
