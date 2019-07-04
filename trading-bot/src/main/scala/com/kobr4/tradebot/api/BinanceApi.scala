@@ -171,7 +171,7 @@ class BinanceApi(
     } yield {
       BinanceApi.httpRequest(binanceUrl, BinanceApi.BuySell.path, BinanceApi.BuySell.build(
         nonce(),
-        KrakenCurrencyPairHelper.toString(currencyPair), rate, amount, false), apiKey, apiSecret)
+        KrakenCurrencyPairHelper.toString(currencyPair), rate, lotAmount, false), apiKey, apiSecret)
     }).flatten
   }
 
