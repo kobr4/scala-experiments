@@ -94,7 +94,7 @@ class BinanceApi(
       (JsPath \ "price").read[BigDecimal] and
       (JsPath \ "qty").read[BigDecimal] and
       (JsPath \ "isBuyer").read[Boolean] and
-      (JsPath \ "time").read[Long].map(t => ZonedDateTime.ofInstant(Instant.ofEpochSecond(t), ZoneId.of("UTC")))) (Trade.apply _)
+      (JsPath \ "time").read[Long].map(t => ZonedDateTime.ofInstant(Instant.ofEpochSecond(t/1000), ZoneId.of("UTC")))) (Trade.apply _)
 
   implicit val poloOrderReads: Reads[PoloOrder] = (
     (JsPath \ "symbol").read[String].map(BinanceCurrencyPairHelper.fromString) and
