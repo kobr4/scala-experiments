@@ -278,8 +278,9 @@ object BinanceApi extends StrictLogging {
     def build(nonce: Long, currencyPair: String, start: Long, end: Long): FormData = akka.http.scaladsl.model.FormData(Map(
       BinanceApi.timestamp -> nonce.toString,
       BinanceApi.ReturnTradesHistory.Symbol -> currencyPair,
-      BinanceApi.ReturnTradesHistory.Start -> start.toString,
-      BinanceApi.ReturnTradesHistory.End -> end.toString))
+      BinanceApi.ReturnTradesHistory.Start -> start.toString /*,
+      BinanceApi.ReturnTradesHistory.End -> end.toString */
+    ))
   }
 
   object ReturnBalances {
