@@ -100,7 +100,7 @@ class BinanceApiTest extends FlatSpec with Matchers with ScalaFutures with Befor
     val list = api.returnTradeHistory().futureValue(Timeout(10 seconds))
 
     list should contain(Buy(CurrencyPair(Asset.Btc, Asset.Eth), BigDecimal(4.00000100), BigDecimal(12.00000000),
-      ZonedDateTime.ofInstant(Instant.ofEpochSecond(1499865549590L), ZoneId.of("UTC"))))
+      ZonedDateTime.ofInstant(Instant.ofEpochSecond(1499865549590L / 1000), ZoneId.of("UTC"))))
   }
 
   it should "return ticker prices" in {
