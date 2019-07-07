@@ -1,11 +1,14 @@
 const path = require('path');
 
+let entry = './js/script.jsx'
+let outputPath = path.join(__dirname, '/src/main/public/bundles');
+
 module.exports = {
   mode: "development",
   context: path.join(__dirname, '/src/main/web'),
-  entry: './js/script.jsx',
+  entry: entry,
   output: {
-    path: path.join(__dirname, '/src/main/public/bundles'),
+    path: outputPath,
     filename: 'bundle.js'
   },
   resolve: {
