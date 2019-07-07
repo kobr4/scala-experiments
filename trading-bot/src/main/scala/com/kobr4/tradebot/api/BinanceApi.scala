@@ -1,11 +1,11 @@
 package com.kobr4.tradebot.api
 
-import java.time.{ Instant, ZoneId, ZonedDateTime }
+import java.time.{Instant, ZoneId, ZonedDateTime}
 
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.headers.RawHeader
-import akka.http.scaladsl.model.{ HttpMethod, _ }
+import akka.http.scaladsl.model.{HttpMethod, _}
 import akka.http.scaladsl.unmarshalling.Unmarshal
 import akka.stream.ActorMaterializer
 import com.kobr4.tradebot.DefaultConfiguration
@@ -17,7 +17,7 @@ import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
 import play.api.libs.json._
 
-import scala.concurrent.{ ExecutionContext, Future }
+import scala.concurrent.{ExecutionContext, Future}
 
 sealed trait TimeInForce
 
@@ -66,8 +66,8 @@ object BinanceCurrencyPairHelper {
 }
 
 class BinanceApi(
-  apiKey: String = DefaultConfiguration.BinanceApi.Key,
-  apiSecret: String = DefaultConfiguration.BinanceApi.Secret, binanceUrl: String = BinanceApi.url)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext) extends ExchangeApi {
+                  apiKey: String = DefaultConfiguration.BinanceApi.Key,
+                  apiSecret: String = DefaultConfiguration.BinanceApi.Secret, binanceUrl: String = BinanceApi.url)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext) extends ExchangeApi {
   private def nonce() = System.currentTimeMillis()
 
   private val pairProp = getPairProp()
@@ -86,21 +86,21 @@ class BinanceApi(
 
   implicit val lotSizeReads: Reads[LotSize] = (
     (JsPath \ "minQty").read[BigDecimal] and
-    (JsPath \ "maxQty").read[BigDecimal] and
-    (JsPath \ "stepSize").read[BigDecimal])(LotSize.apply _)
+      (JsPath \ "maxQty").read[BigDecimal] and
+      (JsPath \ "stepSize").read[BigDecimal]) (LotSize.apply _)
 
   implicit val tradeReads: Reads[Trade] = (
     (JsPath \ "symbol").read[String].map(BinanceCurrencyPairHelper.fromString) and
-    (JsPath \ "price").read[BigDecimal] and
-    (JsPath \ "qty").read[BigDecimal] and
-    (JsPath \ "isBuyer").read[Boolean] and
-    (JsPath \ "time").read[Long].map(t => ZonedDateTime.ofInstant(Instant.ofEpochSecond(t), ZoneId.of("UTC"))))(Trade.apply _)
+      (JsPath \ "price").read[BigDecimal] and
+      (JsPath \ "qty").read[BigDecimal] and
+      (JsPath \ "isBuyer").read[Boolean] and
+      (JsPath \ "time").read[Long].map(t => ZonedDateTime.ofInstant(Instant.ofEpochSecond(t), ZoneId.of("UTC")))) (Trade.apply _)
 
   implicit val poloOrderReads: Reads[PoloOrder] = (
     (JsPath \ "symbol").read[String].map(BinanceCurrencyPairHelper.fromString) and
-    (JsPath \ "orderId").read[Long].map(_.toString) and
-    (JsPath \ "price").read[BigDecimal] and
-    (JsPath \ "origQty").read[BigDecimal])(PoloOrder.apply _)
+      (JsPath \ "orderId").read[Long].map(_.toString) and
+      (JsPath \ "price").read[BigDecimal] and
+      (JsPath \ "origQty").read[BigDecimal]) (PoloOrder.apply _)
 
   def getPairProp(): Future[Map[CurrencyPair, PairProp]] = {
     BinanceApi.httpGetRequest(BinanceApi.exchangeInfoUrl, "").map { message =>
@@ -147,7 +147,7 @@ class BinanceApi(
     val evList = BinanceDailyJob.pairList.map { pair =>
       BinanceApi.httpRequest(binanceUrl, BinanceApi.ReturnTradesHistory.MyTrades, BinanceApi.ReturnTradesHistory.build(
         nonce(),
-        BinanceCurrencyPairHelper.toString(pair), start.toEpochSecond, end.toEpochSecond), apiKey, apiSecret, HttpMethods.GET).map { message =>
+        BinanceCurrencyPairHelper.toString(pair), start.toEpochSecond * 1000, end.toEpochSecond * 1000), apiKey, apiSecret, HttpMethods.GET).map { message =>
         Json.parse(message).as[JsArray].value.map(_.as[Trade].toOrder).toList
       }
     }
@@ -329,7 +329,7 @@ object BinanceApi extends StrictLogging {
   }
 
   private def httpRequest(url: String, path: String, body: FormData, apiKey: String, apiSecret: String,
-    method: HttpMethod = HttpMethods.POST)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[String] = {
+                          method: HttpMethod = HttpMethods.POST)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[String] = {
 
     val reqBody = body.fields.toString + s"&signature=${generateHMAC256(apiSecret, body.fields.toString.getBytes)}"
     val fullUrl = s"$url$path${if (method == HttpMethods.GET) "?" + reqBody else ""}"
