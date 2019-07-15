@@ -107,6 +107,7 @@ object PairPrice extends StrictLogging {
   }
 
   def fromUrlAsync(url: String)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[PairPrices] = {
-    httpGetRequest(url).map(fromString(_, "price(USD)"))
+    logger.info("Loading prices from url {}", url)
+    httpGetRequest(url).map(fromString(_, "priceUSD"))
   }
 }
