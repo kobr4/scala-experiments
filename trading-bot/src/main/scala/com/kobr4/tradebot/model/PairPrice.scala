@@ -92,7 +92,8 @@ object PairPrice extends StrictLogging {
 
   def fromString(csvString: String, priceColumn: String): PairPrices = {
     val priceLines = csvString.lines.toList
-    val priceLineId = priceLines.head.split(',').zipWithIndex.find(_._1 == priceColumn).map(_._2).getOrElse(throw new RuntimeException("Invalid file"))
+
+    val priceLineId = priceLines.head.split(',').zipWithIndex.find(_._1 == priceColumn).map(_._2).getOrElse(throw new RuntimeException("Invalid file, price column not found : " + priceColumn))
     val prices =
       for (line <- priceLines.tail) yield {
         val splitted = line.split(',')
@@ -108,6 +109,6 @@ object PairPrice extends StrictLogging {
 
   def fromUrlAsync(url: String)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[PairPrices] = {
     logger.info("Loading prices from url {}", url)
-    httpGetRequest(url).map(fromString(_, "priceUSD"))
+    httpGetRequest(url).map(fromString(_, "PriceUSD"))
   }
 }
