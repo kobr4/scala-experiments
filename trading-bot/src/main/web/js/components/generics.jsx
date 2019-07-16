@@ -41,6 +41,11 @@ export function FormTextField(props) {
   return <input type="text" value={props.value} className="form-control" placeholder={props.placeholder} name={props.name} onChange={props.handleTextChange} />;
 }
 
+export function FormEmailField(props) {
+  return <input type="email" value={props.value} className="form-control form-control-lg" placeholder={props.placeholder} name={props.name} onChange={props.handleTextChange} />;
+}
+
+
 export function FormPasswordField(props) {
   return <input type="password" value={props.value} className="form-control" placeholder={props.placeholder} name={props.name} onChange={props.handleTextChange} />;
 }
