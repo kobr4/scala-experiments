@@ -104,12 +104,14 @@ export function FormRow(props) {
 
 export function Panel(props) {
   return (
-    <div className='panel panel-default'>
-      <div className='panel-heading'>
-        {props.title}
-      </div>
-      <div className='panel-body'>
-        {props.children}
+    <div className='row'>
+      <div className='card w-100 m-3'>
+        <div className='card-header'>
+          {props.title}
+        </div>
+        <div className='card-body'>
+          {props.children}
+        </div>
       </div>
     </div>
   );

@@ -794,24 +794,25 @@ ReactDOM.render(
 
 ReactDOM.render(
   <ul id="side-menu" className="nav in">
-  <li><a href="btc_price">BTC backtest</a></li>
-  <li><a href="eth_price">ETH backtest</a></li>
-  <li><a href="xmr_price">XMR backtest</a></li>
-  <li><a href="crypto_price">Crypto backtest</a></li>
-  <li><a href="stock_price">Stock backtest</a></li>
+  <li className="nav-item active"><a className="nav-link" href="btc_price">BTC backtest</a></li>
+  <li className="nav-item active"><a className="nav-link" href="eth_price">ETH backtest</a></li>
+  <li className="nav-item active"><a className="nav-link" href="xmr_price">XMR backtest</a></li>
+  <li className="nav-item active"><a className="nav-link" href="crypto_price">Crypto backtest</a></li>
+  <li className="nav-item active"><a className="nav-link" href="stock_price">Stock backtest</a></li>
   { CommonUtils.isUser() &&
-    <li><a href="trading">Trading</a></li>
+    <li className="nav-item active"><a className="nav-link" href="trading">Trading</a></li>
 
   }
   { CommonUtils.isUser() &&
-    <li><a href="api_keys">API Keys</a></li>
+    <li className="nav-item active"><a className="nav-link" href="api_keys">API Keys</a></li>
   }
 
-  <li><a href="inhouse_info_poloniex">In-House @ Poloniex</a></li>
-  <li><a href="inhouse_info_kraken">In-House @ Kraken</a></li>
-  <li><a href="inhouse_info_binance">In-House @ Binance</a></li>
-  <li><a href="prices">Crypto Prices</a></li>
-  </ul>,
+  <li className="nav-item active"><a className="nav-link" href="inhouse_info_poloniex">In-House @ Poloniex</a></li>
+  <li className="nav-item active"><a className="nav-link" href="inhouse_info_kraken">In-House @ Kraken</a></li>
+  <li className="nav-item active"><a className="nav-link" href="inhouse_info_binance">In-House @ Binance</a></li>
+  <li className="nav-item active"><a className="nav-link" href="prices">Crypto Prices</a></li>
+  </ul>
+  ,
   document.getElementById('side')
 )
 
