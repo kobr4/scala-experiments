@@ -1,9 +1,11 @@
 package com.kobr4.tradebot
 
+import java.time.ZonedDateTime
+
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import com.kobr4.tradebot.api._
-import com.kobr4.tradebot.model.{ Asset, Quantity }
+import com.kobr4.tradebot.model.{ Asset, Buy, Quantity }
 import com.kobr4.tradebot.services.TradingOps
 import org.mockito.Mockito._
 import org.scalatest.concurrent.PatienceConfiguration.Timeout
@@ -25,10 +27,11 @@ class TradingOpsTest extends FlatSpec with Matchers with ScalaFutures with Mocki
   implicit val ec = as.dispatcher
 
   "TradingOps" should "place a buy order at market value" in {
+    val dummyOrder = Buy(CurrencyPair(Asset.Usd, Asset.Btc), 1.0, 1.0, ZonedDateTime.now())
 
     val apiMock = mock[ExchangeApi]
     when(apiMock.returnTicker()).thenReturn(Future.successful(List(btcUsd)))
-    when(apiMock.buy(any[CurrencyPair], any[BigDecimal], any[BigDecimal])).thenReturn(Future.successful("success"))
+    when(apiMock.buy(any[CurrencyPair], any[BigDecimal], any[BigDecimal])).thenReturn(Future.successful(dummyOrder))
 
     val tradingOps = new TradingOps(apiMock)
 
@@ -38,10 +41,11 @@ class TradingOpsTest extends FlatSpec with Matchers with ScalaFutures with Mocki
   }
 
   "TradingOps" should "place a sell order at market value" in {
+    val dummyOrder = Buy(CurrencyPair(Asset.Usd, Asset.Btc), 1.0, 1.0, ZonedDateTime.now())
 
     val apiMock = mock[ExchangeApi]
     when(apiMock.returnTicker()).thenReturn(Future.successful(List(btcUsd)))
-    when(apiMock.sell(any[CurrencyPair], any[BigDecimal], any[BigDecimal])).thenReturn(Future.successful("success"))
+    when(apiMock.sell(any[CurrencyPair], any[BigDecimal], any[BigDecimal])).thenReturn(Future.successful(dummyOrder))
 
     val tradingOps = new TradingOps(apiMock)
 
@@ -50,23 +54,40 @@ class TradingOpsTest extends FlatSpec with Matchers with ScalaFutures with Mocki
     verify(apiMock).sell(CurrencyPair(Asset.Usd, Asset.Btc), 7890.55745487, 1)
   }
 
+  "TradingOps" should "sell all available assets at market value" in {
+    val dummyOrder = Buy(CurrencyPair(Asset.Usd, Asset.Btc), 1.0, 1.0, ZonedDateTime.now())
+
+    val apiMock = mock[ExchangeApi]
+    when(apiMock.returnTicker()).thenReturn(Future.successful(List(btcUsd)))
+    when(apiMock.returnBalances).thenReturn(Future.successful(Map[Asset, Quantity](Asset.Btc -> Quantity(2.5))))
+    when(apiMock.sell(any[CurrencyPair], any[BigDecimal], any[BigDecimal])).thenReturn(Future.successful(dummyOrder))
+
+    val tradingOps = new TradingOps(apiMock)
+
+    tradingOps.sellAll(Asset.Usd).futureValue(Timeout(10 seconds))
+
+    verify(apiMock).sell(CurrencyPair(Asset.Usd, Asset.Btc), 7890.55745487, 2.5)
+  }
+
   "TradingOps" should "place sell USDT_STR at market value" in {
+    val dummyOrder = Buy(CurrencyPair(Asset.Usd, Asset.Btc), 1.0, 1.0, ZonedDateTime.now())
 
     val apiMock = mock[ExchangeApi]
     val poloApi = new PoloApi()
-    val eventualTicker = poloApi.returnTicker()
-    when(apiMock.returnTicker()).thenReturn(eventualTicker)
-    when(apiMock.sell(any[CurrencyPair], any[BigDecimal], any[BigDecimal])).thenReturn(Future.successful("success"))
+    //val eventualTicker = poloApi.returnTicker()
+    when(apiMock.returnTicker()).thenReturn(Future.successful(
+      List(Quote(CurrencyPair(Asset.Tether, Asset.Xlm), 1.0, 1.0, 1.0, 1.0, 1.0, 1.0))))
+    when(apiMock.sell(any[CurrencyPair], any[BigDecimal], any[BigDecimal])).thenReturn(Future.successful(dummyOrder))
 
     val tradingOps = new TradingOps(apiMock)
 
     val pair = CurrencyPair(Asset.Tether, Asset.Xlm)
 
-    val quote = eventualTicker.futureValue(Timeout(10 seconds)).filter(q => q.pair.left == pair.left && q.pair.right == pair.right).head
+    //val quote = eventualTicker.futureValue(Timeout(10 seconds)).filter(q => q.pair.left == pair.left && q.pair.right == pair.right).head
 
-    tradingOps.sellAtMarketValue(quote.last, pair, Quantity(1)).futureValue(Timeout(10 seconds))
+    tradingOps.sellAtMarketValue(1.0, pair, Quantity(1)).futureValue(Timeout(10 seconds))
 
-    verify(apiMock).sell(CurrencyPair(Asset.Tether, Asset.Xlm), quote.last, 1)
+    verify(apiMock).sell(CurrencyPair(Asset.Tether, Asset.Xlm), 1.0, 1)
   }
 
   "TradingOps" should "cancel an order" in {
@@ -82,7 +103,7 @@ class TradingOpsTest extends FlatSpec with Matchers with ScalaFutures with Mocki
 
     verify(apiMock).cancelOrder(order)
   }
-
+/*
   "TradingOps" should "load portfolio" in {
 
     val apiMock = mock[ExchangeApi]
@@ -94,4 +115,5 @@ class TradingOpsTest extends FlatSpec with Matchers with ScalaFutures with Mocki
 
     port.assets(Asset.Eth) shouldBe Quantity(1)
   }
+*/
 }

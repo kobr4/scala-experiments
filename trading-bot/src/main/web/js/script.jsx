@@ -793,24 +793,31 @@ ReactDOM.render(
 );
 
 ReactDOM.render(
-  <ul id="side-menu" className="nav in">
-  <li className="nav-item active"><a className="nav-link" href="btc_price">BTC backtest</a></li>
-  <li className="nav-item active"><a className="nav-link" href="eth_price">ETH backtest</a></li>
-  <li className="nav-item active"><a className="nav-link" href="xmr_price">XMR backtest</a></li>
-  <li className="nav-item active"><a className="nav-link" href="crypto_price">Crypto backtest</a></li>
-  <li className="nav-item active"><a className="nav-link" href="stock_price">Stock backtest</a></li>
+  <ul id="side-menu" class="nav">
+  <li className="nav-item"><a className="nav-link" href="#" data-toggle="collapse" data-target="#collapseBacktest" aria-expanded="true" aria-controls="collapseBacktest">Backtest</a>
+    <div id="collapseBacktest" className="collapse" data-parent="#side-menu">
+      <div className="bg-white py-2 collapse-inner rounded">
+        <h6 className="collapse-header">Backtest asset</h6>
+          <a className="collapse-item" href="btc_price">BTC</a>
+          <a className="collapse-item" href="eth_price">ETH</a>
+          <a className="collapse-item" href="xmr_price">XMR</a>
+          <a className="collapse-item" href="crypto_price">Crypto</a>
+          <a className="collapse-item" href="stock_price">Stock</a>
+      </div>
+    </div> 
+  </li> 
   { CommonUtils.isUser() &&
-    <li className="nav-item active"><a className="nav-link" href="trading">Trading</a></li>
+    <li className="nav-item"><a className="nav-link" href="trading">Trading</a></li>
 
   }
   { CommonUtils.isUser() &&
-    <li className="nav-item active"><a className="nav-link" href="api_keys">API Keys</a></li>
+    <li className="nav-item"><a className="nav-link" href="api_keys">API Keys</a></li>
   }
 
-  <li className="nav-item active"><a className="nav-link" href="inhouse_info_poloniex">In-House @ Poloniex</a></li>
-  <li className="nav-item active"><a className="nav-link" href="inhouse_info_kraken">In-House @ Kraken</a></li>
-  <li className="nav-item active"><a className="nav-link" href="inhouse_info_binance">In-House @ Binance</a></li>
-  <li className="nav-item active"><a className="nav-link" href="prices">Crypto Prices</a></li>
+  <li className="nav-item"><a className="nav-link" href="inhouse_info_poloniex">In-House @ Poloniex</a></li>
+  <li className="nav-item"><a className="nav-link" href="inhouse_info_kraken">In-House @ Kraken</a></li>
+  <li className="nav-item"><a className="nav-link" href="inhouse_info_binance">In-House @ Binance</a></li>
+  <li className="nav-item"><a className="nav-link" href="prices">Crypto Prices</a></li>
   </ul>
   ,
   document.getElementById('side')

@@ -43,7 +43,7 @@ case class Quantity(quantity: BigDecimal)
 
 object Order extends StrictLogging {
 
-  def process(order: Order, tradingOps: TradingOps)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[(Order, String)] = {
+  def process(order: Order, tradingOps: TradingOps)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[(Order, Option[Order])] = {
 
     val eventualResult = order match {
       case b: Buy =>
@@ -58,7 +58,7 @@ object Order extends StrictLogging {
     }.recover {
       case NonFatal(t) =>
         logger.error("Order {} was not processed with error: {}", order, t.getMessage)
-        (order, t.getMessage)
+        (order, None)
     }
   }
 

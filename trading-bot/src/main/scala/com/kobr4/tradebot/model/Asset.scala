@@ -93,6 +93,11 @@ object Asset {
     val displayName = "Tether"
   }
 
+  case object Eur extends Asset {
+    val code = "EUR"
+    val displayName = "Euro"
+  }
+
   case class Custom(code: String) extends Asset {
     override val displayName: String = code
   }
@@ -118,6 +123,7 @@ object Asset {
     case "ZEC" => Some(Asset.Zec)
     case "MAID" => Some(Asset.Maid)
     case "TETHER" => Some(Asset.Tether)
+    case "EURO" => Some(Asset.Eur)
     case xs if xs != "XUSD" && xs.startsWith("X") && xs.length == 4 => fromStringExact(xs.substring(1))
     case other => None
   }

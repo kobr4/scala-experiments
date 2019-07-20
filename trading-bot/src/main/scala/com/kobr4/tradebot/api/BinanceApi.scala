@@ -155,23 +155,25 @@ class BinanceApi(
     Future.sequence(evList).map(_.flatten.sortBy(_.date.toEpochSecond))
   }
 
-  override def buy(currencyPair: CurrencyPair, rate: BigDecimal, amount: BigDecimal): Future[String] = {
+  override def buy(currencyPair: CurrencyPair, rate: BigDecimal, amount: BigDecimal): Future[Order] = {
     (for {
       lotAmount <- pairProp.map(pairPropMap => BinanceApi.lotSizeAmount(amount, pairPropMap(currencyPair).lotSize.stepSize))
     } yield {
       BinanceApi.httpRequest(binanceUrl, BinanceApi.BuySell.path, BinanceApi.BuySell.build(
         nonce(),
         KrakenCurrencyPairHelper.toString(currencyPair), rate, lotAmount, true), apiKey, apiSecret)
+        .map(_ => Buy(currencyPair, rate, amount, ZonedDateTime.now()))
     }).flatten
   }
 
-  override def sell(currencyPair: CurrencyPair, rate: BigDecimal, amount: BigDecimal): Future[String] = {
+  override def sell(currencyPair: CurrencyPair, rate: BigDecimal, amount: BigDecimal): Future[Order] = {
     (for {
       lotAmount <- pairProp.map(pairPropMap => BinanceApi.lotSizeAmount(amount, pairPropMap(currencyPair).lotSize.stepSize))
     } yield {
       BinanceApi.httpRequest(binanceUrl, BinanceApi.BuySell.path, BinanceApi.BuySell.build(
         nonce(),
         KrakenCurrencyPairHelper.toString(currencyPair), rate, lotAmount, false), apiKey, apiSecret)
+        .map(_ => Sell(currencyPair, rate, amount, ZonedDateTime.now()))
     }).flatten
   }
 

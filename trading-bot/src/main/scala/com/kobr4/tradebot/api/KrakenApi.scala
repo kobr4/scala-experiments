@@ -206,19 +206,19 @@ class KrakenApi(
       }
   }
 
-  override def buy(currencyPair: CurrencyPair, rate: BigDecimal, amount: BigDecimal): Future[String] = {
+  override def buy(currencyPair: CurrencyPair, rate: BigDecimal, amount: BigDecimal): Future[Order] = {
     val reqNonce = nonce()
     KrakenApi.httpRequestPost(krakenUrl, s"$privateUrl/${KrakenApi.BuySell.AddOrder}", reqNonce,
       KrakenApi.BuySell.build(reqNonce, KrakenCurrencyPairHelper.toString(currencyPair), rate, amount, isBuy = true), apiKey, apiSecret).map { message =>
-        message
+        Buy(currencyPair, rate, amount, ZonedDateTime.now())
       }
   }
 
-  override def sell(currencyPair: CurrencyPair, rate: BigDecimal, amount: BigDecimal): Future[String] = {
+  override def sell(currencyPair: CurrencyPair, rate: BigDecimal, amount: BigDecimal): Future[Order] = {
     val reqNonce = nonce()
     KrakenApi.httpRequestPost(krakenUrl, s"$privateUrl/${KrakenApi.BuySell.AddOrder}", reqNonce,
       KrakenApi.BuySell.build(reqNonce, KrakenCurrencyPairHelper.toString(currencyPair), rate, amount, isBuy = false), apiKey, apiSecret).map { message =>
-        message
+        Sell(currencyPair, rate, amount, ZonedDateTime.now())
       }
   }
 

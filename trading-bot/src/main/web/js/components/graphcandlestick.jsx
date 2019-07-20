@@ -40,7 +40,7 @@ const canvasGradient = createVerticalLinearGradient([
     ];
     
     return (
-<ChartCanvas ratio={props.ratio} width={props.width} height={600}
+<ChartCanvas ratio={props.ratio} width={props.width}
         margin={{ left: 50, right: 50, top:10, bottom: 30 }}
         seriesName="MSFT"
         data={calculatedData} type="svg"
