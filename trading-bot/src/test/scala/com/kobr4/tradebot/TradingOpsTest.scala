@@ -103,7 +103,7 @@ class TradingOpsTest extends FlatSpec with Matchers with ScalaFutures with Mocki
 
     verify(apiMock).cancelOrder(order)
   }
-/*
+  /*
   "TradingOps" should "load portfolio" in {
 
     val apiMock = mock[ExchangeApi]
