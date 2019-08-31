@@ -5,13 +5,14 @@ import java.time.ZonedDateTime
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import com.kobr4.tradebot.api._
-import com.kobr4.tradebot.model.{ Asset, Buy, Quantity }
+import com.kobr4.tradebot.engine.SafeStrategy
+import com.kobr4.tradebot.model.{Asset, Buy, Quantity}
 import com.kobr4.tradebot.services.TradingOps
 import org.mockito.Mockito._
 import org.scalatest.concurrent.PatienceConfiguration.Timeout
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.mockito.MockitoSugar
-import org.scalatest.{ BeforeAndAfterEach, FlatSpec, Matchers }
+import org.scalatest.{BeforeAndAfterEach, FlatSpec, Matchers}
 import org.mockito.Matchers.any
 
 import scala.concurrent.Future
@@ -103,6 +104,18 @@ class TradingOpsTest extends FlatSpec with Matchers with ScalaFutures with Mocki
 
     verify(apiMock).cancelOrder(order)
   }
+
+  "TradingOps" should "not return an order" in {
+
+    SafeStrategy.MaybeBuy(CurrencyPair(Asset.Tether, Asset.Eth), BigDecimal("0.00000825"), BigDecimal("173.17579748685"), ZonedDateTime.now()) shouldBe None
+
+    SafeStrategy.MaybeSell(CurrencyPair(Asset.Tether, Asset.Eth), BigDecimal("0.00000825"), BigDecimal("173.17579748685"), ZonedDateTime.now()) shouldBe None
+
+    SafeStrategy.MaybeSell(CurrencyPair(Asset.Tether, Asset.Eth), BigDecimal("0.1"), BigDecimal("173.17579748685"), ZonedDateTime.now()).isDefined shouldBe true
+
+    SafeStrategy.MaybeSell(CurrencyPair(Asset.Btc, Asset.Eth), BigDecimal("0.1"), BigDecimal("0.01763540"), ZonedDateTime.now()).isDefined shouldBe true
+  }
+
   /*
   "TradingOps" should "load portfolio" in {
 

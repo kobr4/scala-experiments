@@ -11,6 +11,7 @@ import scala.math.BigDecimal.RoundingMode
 trait Strategy {
 
   val minOrderValue = BigDecimal(5)
+  val minOrderValueBtc = BigDecimal("0.00052")
 
   def runStrategy(pair: CurrencyPair, current: ZonedDateTime, priceData: PairPrices, portfolio: Portfolio, weight: BigDecimal = BigDecimal(1)): Option[Order]
 
@@ -20,8 +21,15 @@ trait Strategy {
     } else BigDecimal(0)
   }
 
-  def MaybeBuy(pair: CurrencyPair, quantity: BigDecimal, assetPrice: BigDecimal, current: ZonedDateTime): Option[Buy] =
-    if (quantity * assetPrice > minOrderValue) Option(Buy(pair, assetPrice, quantity, current)) else None
+  def MaybeBuy(pair: CurrencyPair, quantity: BigDecimal, assetPrice: BigDecimal, current: ZonedDateTime): Option[Buy] = {
+    val minimum = if (pair.left == Asset.Btc) minOrderValueBtc else minOrderValue
+    if (quantity * assetPrice > minimum) Option(Buy(pair, assetPrice, quantity, current)) else None
+  }
+
+  def MaybeSell(pair: CurrencyPair, quantity: BigDecimal, assetPrice: BigDecimal, current: ZonedDateTime): Option[Sell] = {
+    val minimum = if (pair.left == Asset.Btc) minOrderValueBtc else minOrderValue
+    if (quantity * assetPrice > minimum) Option(Sell(pair, assetPrice, quantity, current)) else None
+  }
 }
 
 object Strategy {
@@ -59,7 +67,8 @@ object SafeStrategy extends Strategy {
     val currentPrice = priceData.currentPrice(current)
     implicit val port = portfolio
 
-    val maybeSellAll = Option(Sell(pair, currentPrice, portfolio.assets(pair.right).quantity, current))
+    //val maybeSellAll = Option(Sell(pair, currentPrice, portfolio.assets(pair.right).quantity, current))
+    val maybeSellAll = MaybeSell(pair, portfolio.assets(pair.right).quantity, currentPrice, current)
 
     maybeSellAll
       .when(portfolio.assets(pair.right).quantity > 0)
