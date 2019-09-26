@@ -18,3 +18,9 @@ export const TradingGlobalAction = ({
     END_FETCH_TRADE: 'END_FETCH_TRADE'
 })
 
+export const TradingFormAction = ({
+    SET_TRADE_WEIGHT: 'SET_TRADE_WEIGHT',
+    ADD_TRADE_WEIGHT: 'ADD_TRADE_WEIGHT',
+    ADD_TRADING_JOB: 'ADD_TRADING_JOB',
+    SET_TRADING_JOB: 'SET_TRADING_JOB'
+})
