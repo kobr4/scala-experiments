@@ -18,8 +18,10 @@ import 'react-datepicker/dist/react-datepicker.css';
 import SignUpForm from './components/signupform'
 import LoginForm from './components/loginform'
 import TradingGlobal from './components/tradingglobal'
+import TradingForm from './components/tradingform'
 
 import GraphCanvas from './components/graphcandlestick'
+import { allAssets, defaultStrategy } from './constants'
 
 
 const priceEndpoint = '/price_api/price_data';
@@ -28,56 +30,6 @@ const priceAtEndpoint = '/price_api/price_at';
 const movingEndpoint = '/price_api/moving';
 const balanceEndpoint = '/trading_api/balances';
 const openOrdersEndpoint = '/trading_api/open_orders';
-
-function allAssets() {
-  return [['BTC','BTC'],['ETH','ETH'],['XMR','XMR'],['XRP','XRP'],
-  ['XLM','XLM'],['DOGE','DOGE'],['ADA','ADA'],['LTC','LTC'],['XEM','XEM'],['ZEC','ZEC'],['DASH','DASH'],['DGB','DGB'],['TETHER', 'TETHER']];
-}
-
-function baseAssets() {
-  return [['BTC','BTC'],['USD','USD'],['TETHER','TETHER']];
-}
-
-function defaultStrategy() {
-  return {
-    strategyList : [
-      {
-        buyList: [ 
-          {
-            method : 'whenAboveMovingAverage',
-            days : 20
-          }
-        ],
-        sellList: [
-          {
-            method : 'whenBelowMovingAverage',
-            days : 20
-          }      
-        ]
-      }
-    ]
-  }
-}
-
-function defaultKrakenWeight() {
-  return {
-    BTC : 0.4,
-    ETH : 0.2,
-    XMR : 0.2,
-    XRP : 0.2
-  }
-}
-
-function defaultPoloniexWeight() {
-  return {
-    BTC : 0.3,
-    ETH : 0.2,
-    XMR : 0.1,
-    XRP : 0.2,
-    XLM : 0.1,
-    DOGE : 0.1
-  }
-}
 
 class CommonUtils {
   static isUser() {
@@ -142,180 +94,6 @@ function ExecutionResultPanel(props) {
 
 function TradingJobsField(props) {
   return <tr key={props.id}><td>{props.exchange}</td><td>{props.key}</td><td><FormButton text='Delete' handleClick={ (event) => props.handleClick(event) }/></td></tr>;
-}
-
-class TradingForm extends React.Component {
-
-  deleteTradingJob = (id) => { return ((event) =>{
-    RestUtils.performRestPostReqWithCreds(() => this.getTradingJobs(), '/trading_job/trade_job_delete',
-    [ [ 'id', id]], (status) => {});
-  })  }
-
-  getTradingJobs = () => {
-    RestUtils.performRestPostReqWithCreds((tradingJobs) => this.setState({tradingJobs:tradingJobs}), '/trading_job/trade_job_get_all',[], (status) => {});
-  }
-
-  getApiKeys = () => {
-    RestUtils.performRestPostReqWithCreds((apiKeys) => {
-      if (apiKeys.length > 0) this.setState({new_trading_apiKeyId : apiKeys[0].id});
-      this.setState({apiKeys:apiKeys});
-      this.getTradingJobs();
-    }, '/trading_job/api_key_get_all',[], (status) => {});
-  }
-
-  getComp = () => {
-    var fields = [];
-    this.state.tradingJobs.forEach(
-      (item) => {
-        item.handleClick = this.deleteTradingJob(item.id);
-        var apiKey = this.state.apiKeys.filter((apiKey) => apiKey.id === item.apiKeyId)[0];
-        item.exchange = apiKey.exchange;
-        item.key = apiKey.key;
-        fields.push(TradingJobsField(item));
-      }
-    )
-    return fields;
-  }  
-
-  addTradingJob = (event) => {
-    RestUtils.performRestPostReqWithCreds(() => this.getApiKeys(), '/trading_job/trade_job_add',
-    [ [ 'cron', this.state.new_trading_cron ], ['apiKeyId', parseInt(this.state.new_trading_apiKeyId)], [ 'strategy', this.state.new_trading_strategy],
-      [ 'userId',  0], [ 'id', 0], ['weights', this.state.tradeWeight], ['baseAsset', this.state.new_trading_base_asset] ], (status) => {});
-    event.preventDefault();
-  }
-
-
-  componentDidMount() {
-   
-    this.getApiKeys();
-  }
-
-  requestBalance = (exchange, apiKey, apiSecret) => RestUtils.performRestPostReq(
-    (balanceList)=> { this.setState({balanceFields: Helper.rowsFromObjet(balanceList)})},
-    balanceEndpoint,
-    [ ['exchange', exchange], ['apikey', apiKey],['apisecret',apiSecret]]
-  )
-
-  requestOpenOrders = () => RestUtils.performRestPostReq(
-    (balanceList)=> { this.setState({balanceFields: Helper.rowsFromObjet(balanceList)})},
-    openOrdersEndpoint,
-    [['apikey', this.state.apikey],['apisecret',this.state.apisecret]]
-  )  
-
-  getApiKeyOptions = () => {
-    return this.state.apiKeys.map( (item) => [ item.id, item.key] );
-  }
-
-  addWeight = () => {
-    var weights = this.state.tradeWeight;
-    weights[this.state.new_asset_weight] = this.state.new_weight;
-    this.setState({tradeWeight: weights})
-  }
-
-  getTradeWeightComp = () => {
-    var weightList = [];
-    Object.keys(this.state.tradeWeight).forEach((key) =>{ 
-      weightList.push(<FormRow label={key}>{this.state.tradeWeight[key]}</FormRow>)
-    })
-    return weightList;
-  }
-
-  constructor(props) {
-    super(props);
-
-    this.state = {
-      apikey :'', apisecret : '', balanceFields : null, tradingJobs : [], apiKeys: [], 
-      new_trading_apiKeyId : 0, new_trading_cron : '', new_trading_strategy : defaultStrategy(), use_custom: false, 
-      new_trading_base_asset : 'USD',
-      new_asset_weight : 'BTC', new_weight: 1.0, tradeWeight : {}} 
-  }
-
-  render() {
-    return (
-      <span>
-      <Panel title='Scheduled Trading'>
-        <ResponseTable first='Exchange' second='Key' responseFields={this.getComp() }/>
-      </Panel>        
-      <Panel title='New Scheduled Trading'>
-        <table className="table table-bordered table-hover table-striped">
-        <thead>
-          <tr><th>Asset</th><th>Weight</th></tr>
-        </thead>
-        <tbody>
-        { this.getTradeWeightComp() }
-        </tbody>
-        </table>
-        <FormContainer handleSubmit={this.addTradingJob} submit="Add">
-          <FormTable>
-              <FormRow label='Asset to trade'>
-                <FormOption name='asset' values={ allAssets() } onChange={(event) => this.setState({new_asset_weight: event.target.value}) }/>
-                <FormTextField value={this.state.new_weight} name='weight' handleTextChange={(event) => this.setState({new_weight: event.target.value})} />  
-                <FormButton text='Add Weight' handleClick={ (event) => { this.addWeight() } }/>
-              </FormRow>  
-              <FormRow label='Set default Asset/Weight'>
-                <FormButton text='Kraken Default' handleClick={ (event) => { this.setState({tradeWeight: defaultKrakenWeight()}) } }/>
-                <FormButton text='Poloniex Default' handleClick={ (event) => { this.setState({tradeWeight: defaultPoloniexWeight()}) } }/>
-              </FormRow>
-              <FormRow label='Base Asset'>
-                <FormOption values={ baseAssets() } name='baseAsset' onChange={(event) => this.setState({new_trading_base_asset: event.target.value})} value={this.state.new_trading_base_asset}/> 
-                <FormButton text='Kraken Default' handleClick={ (event) => { this.setState({new_trading_base_asset: 'USD'}) } }/>
-                <FormButton text='Poloniex Default' handleClick={ (event) => { this.setState({new_trading_base_asset: 'TETHER'}) } }/>                 
-              </FormRow>
-              <FormRow label='API Key'>
-                <FormOption name='apikeyId' values={ this.getApiKeyOptions() } onChange={(event) => this.setState({new_trading_apiKeyId: event.target.value})}/> 
-              </FormRow>      
-              <FormRow label='Strategy'>
-                <FormOption name='strategy' values={[ ['safe','safe and defensive'], ['custom','custom'] ]} onChange={(event) => {
-                  if (event.target.value === 'custom') { 
-                    this.setState({use_custom: true})
-                  } else {
-                    this.setState({use_custom: false})
-                    this.setState({new_trading_strategy: defaultStrategy()})
-                  }
-                }}/>    
-              </FormRow>
-              { this.state.use_custom && 
-                <FormRow label='Custom Strategy'>
-                <textarea name="custom_strategy" onChange={(event) => {
-                  try {
-                  this.setState({new_trading_strategy: JSON.parse(event.target.value)})
-                  } catch(error) {
-                  }
-                }} value={JSON.stringify(this.state.new_trading_strategy, null, 2)}>
-                </textarea>
-                </FormRow>
-              }
-            </FormTable>          
-        </FormContainer>
-      </Panel>
-      <Panel title='Trading operations'>
-        <FormContainer handleSubmit={this.handleSubmit} submit="Run trade-bot">  
-          <FormTable>
-            <FormRow label='API Key'>
-              <FormTextField value={this.state.apikey} name="apikey" handleTextChange={(event) => this.setState({apikey: event.target.value})} />
-            </FormRow>
-            <FormRow label='API Secret'>
-              <FormTextField value={this.state.apisecret} name="apisecret" handleTextChange={(event) => this.setState({apisecret: event.target.value})} />
-            </FormRow>                
-            <FormRow>
-              <FormButton text='Show balances' handleClick={ (event) => this.requestBalance() }/>
-            </FormRow>
-            <FormRow>
-              <FormButton text='Show open orders' handleClick={ (event) => this.requestOpenOrders() }/>
-            </FormRow>            
-          </FormTable>    
-        </FormContainer>      
-      </Panel>
-      { this.state.balanceFields && 
-        <Panel title='Request output'>
-        <PanelTable>
-        {this.state.balanceFields} 
-        </PanelTable>
-        </Panel>
-      }
-      </span>
-    )
-  }
 }
 
 class SignOut extends React.Component {
@@ -415,7 +193,7 @@ class GraphResult extends React.Component {
       currency_right : this.props.asset,
       asset : this.props.asset,
       use_custom : false,
-      custom_strategy : defaultStrategy(),
+      custom_strategy : defaultStrategy,
       executionResultFields : null
     }
 
@@ -462,7 +240,7 @@ class GraphResult extends React.Component {
                 this.props.pairChoice &&                
                 <FormRow label='Pair'>
                   <FormOption name='left' values={[ ['USD','USD'], ['BTC','BTC'] ]} onChange={(event) => this.setState({currency_left: event.target.value})}/>    
-                  <FormOption name='right' values={ allAssets() } onChange={(event) => this.setState({currency_right: event.target.value})}/>    
+                  <FormOption name='right' values={ allAssets } onChange={(event) => this.setState({currency_right: event.target.value})}/>    
                 </FormRow>
               }          
               {
