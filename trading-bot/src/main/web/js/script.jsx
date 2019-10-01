@@ -92,9 +92,7 @@ function ExecutionResultPanel(props) {
   );  
 }
 
-function TradingJobsField(props) {
-  return <tr key={props.id}><td>{props.exchange}</td><td>{props.key}</td><td><FormButton text='Delete' handleClick={ (event) => props.handleClick(event) }/></td></tr>;
-}
+
 
 class SignOut extends React.Component {
   signout = () => {
@@ -571,7 +569,7 @@ ReactDOM.render(
 );
 
 ReactDOM.render(
-  <ul id="side-menu" class="nav">
+  <ul id="side-menu" className="nav">
   <li className="nav-item"><a className="nav-link" href="#" data-toggle="collapse" data-target="#collapseBacktest" aria-expanded="true" aria-controls="collapseBacktest">Backtest</a>
     <div id="collapseBacktest" className="collapse" data-parent="#side-menu">
       <div className="bg-white py-2 collapse-inner rounded">

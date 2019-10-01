@@ -5,6 +5,8 @@ import {ResponseTable, Panel, FormContainer, FormTable, FormRow, FormTextField, 
 import { TradingFormAction } from '../actions'
 import { connect } from 'react-redux'
 import { allAssets, baseAssets, defaultStrategy } from '../constants'
+import RestUtils from '../restutils'
+
 
 function defaultKrakenWeight() {
     return {
@@ -26,46 +28,46 @@ function defaultKrakenWeight() {
     }
   }
 
-const deleteTradingJob = (id) => { return ((event) =>{
-    RestUtils.performRestPostReqWithCreds(() => this.getTradingJobs(), '/trading_job/trade_job_delete',
-    [ [ 'id', id]], (status) => {});
-})  }
+const deleteTradingJob = (id, formFetchTradingJobs) => { return ((event) => {
+      RestUtils.performRestPostReqCredsWithPromise('/trading_job/trade_job_delete',[ [ 'id', id]], (status) => {}).then(() => formFetchTradingJobs())
+    })  
+}
 
 const fetchTradingJobs = () => {
-    RestUtils.performRestPostReqWithCreds((tradingJobs) => this.setState({tradingJobs:tradingJobs}), '/trading_job/trade_job_get_all',[], (status) => {});
+    return RestUtils.performRestPostReqCredsWithPromise('/trading_job/trade_job_get_all',[], (status) => {});
 }
 
 const fetchApiKeys = () => {
-    RestUtils.performRestPostReqWithCreds((apiKeys) => {
-        if (apiKeys.length > 0) this.setState({new_trading_apiKeyId : apiKeys[0].id});
-        this.setState({apiKeys:apiKeys});
-        this.getTradingJobs();
-    }, '/trading_job/api_key_get_all',[], (status) => {});
+    return RestUtils.performRestPostReqCredsWithPromise('/trading_job/api_key_get_all',[], (status) => {});
 }
 
-const buildScheduledTradings = (tradingJobs, apiKeys) => {
+function TradingJobsField(props) {
+  return <tr key={props.id}><td>{props.exchange}</td><td>{props.key}</td><td><FormButton text='Delete' handleClick={ (event) => props.handleClick(event) }/></td></tr>;
+}
+
+const buildScheduledTradings = (tradingJobs, apiKeys, formFetchTradingJobs) => {
     var fields = [];
     tradingJobs.forEach(
         (item) => {
-        item.handleClick = deleteTradingJob(item.id);
-        var apiKey = apiKeys.filter((apiKey) => apiKey.id === item.apiKeyId)[0];
-        item.exchange = apiKey.exchange;
-        item.key = apiKey.key;
-        fields.push(TradingJobsField(item));
+          item.handleClick = deleteTradingJob(item.id, formFetchTradingJobs);
+          var apiKey = apiKeys.filter((apiKey) => apiKey.id === item.apiKeyId)[0];
+          item.exchange = apiKey.exchange;
+          item.key = apiKey.key;
+          fields.push(TradingJobsField(item));
         }
     )
     return fields;
 }  
 
-const addTradingJob = (event) => {
-    RestUtils.performRestPostReqWithCreds(() => this.getApiKeys(), '/trading_job/trade_job_add',
-    [ [ 'cron', this.state.new_trading_cron ], ['apiKeyId', parseInt(this.state.new_trading_apiKeyId)], [ 'strategy', this.state.new_trading_strategy],
-        [ 'userId',  0], [ 'id', 0], ['weights', this.state.tradeWeight], ['baseAsset', this.state.new_trading_base_asset] ], (status) => {});
+const addTradingJob = (event, newTradingCron, newApiKeyId, newTradingStrategy, tradeWeights, baseAsset) => {
+    const promise = RestUtils.performRestPostReqCredsWithPromise( '/trading_job/trade_job_add',
+    [ [ 'cron', newTradingCron ], ['apiKeyId', parseInt(newApiKeyId)], [ 'strategy', newTradingStrategy],
+        [ 'userId',  0], [ 'id', 0], ['weights', tradeWeights], ['baseAsset', baseAsset] ], (status) => {});
     event.preventDefault();
+    return promise;
 }
 
-const fetchBalance = (exchange, apiKey, apiSecret) => RestUtils.performRestPostReq(
-        (balanceList)=> { this.setState({balanceFields: Helper.rowsFromObjet(balanceList)})},
+const fetchBalance = (exchange, apiKey, apiSecret) => RestUtils.performRestReqWithPromise(
         balanceEndpoint,
         [ ['exchange', exchange], ['apikey', apiKey],['apisecret',apiSecret]]
 )
@@ -80,16 +82,10 @@ const getApiKeyOptions = (apiKeys) => {
         return apiKeys.map( (item) => [ item.id, item.key] );
 }
     
-const addWeight = () => {
-        var weights = this.state.tradeWeight;
-        weights[this.state.new_asset_weight] = this.state.new_weight;
-        this.setState({tradeWeight: weights})
-}
-    
 const buildTradeWeightComp = (tradeWeights) => {
         var weightList = [];
         Object.keys(tradeWeights).forEach((key) =>{ 
-          weightList.push(<FormRow label={key}>{tradeWeights[key]}</FormRow>)
+          weightList.push(<FormRow label={key} key={key}>{tradeWeights[key]}</FormRow>)
         })
         return weightList;
 }
@@ -100,18 +96,16 @@ const handleTradeWeightChange = (tradeWeights) => ({
 })
 
 const handleAddTradeWeightChange = (tradeWeight) => ({
-    type : TradingFormAction.ADD_TRADE_WEIGHT,
-    tradeWeight : tradeWeight
+    type : TradingFormAction.ADD_TRADE_WEIGHT
 })
 
-const handleAddTradingJob = (tradingJob) => ({
-    type : TradingFormAction.ADD_TRADING_JOB,
-    tradingJob : tradingJob
+const handleAddTradingJob = () => ({
+    type : TradingFormAction.ADD_TRADING_JOB
 })
 
-const handleSetTradingJob = (tradingJob) => ({
-    type: TradingFormAction.SET_TRADING_JOB,
-    tradingJob: tradingJob
+const handleSetScheduledTradings = (tradingJobs) => ({
+  type: TradingFormAction.SET_SCHEDULED_TRADINGS,
+  scheduledTradings: tradingJobs
 })
 
 const handleSetAsset = (asset) => ({
@@ -144,12 +138,22 @@ const handleSetCustomStrategy = (strategy) => ({
     customStrategy: strategy
 })
 
+const handleSetBalanceFields = (balanceFields) => ({
+  type: TradingFormAction.SET_BALANCE_FIELDS,
+  balanceFields: balanceFields
+})
 
-const TradingForm = ({scheduledTradings, tradingJob, apiKeys, baseAsset, tradeWeights, newWeight, useCustom, apiKey, apiSecret, newTradingStrategy, formTradeWeightChange, formAddTradeWeightChange, 
-    formAddTradingJob, formSetTradingJob, formDeleteTradingJob, formSetAsset, formSetWeight, formSetBaseAsset, formSetApiKeyId, formSetUseCustom, formSetUseCustomStrategy}) => (
+const handleSetApiKeys = (apiKeys) => ({
+  type: TradingFormAction.SET_API_KEYS,
+  apiKeys: apiKeys
+})
+
+
+const TradingForm = ({scheduledTradings, apiKeys, baseAsset, tradeWeights, newAsset, newWeight, useCustom, apiKeyId, apiKey, apiSecret, newTradingStrategy, balanceFields, newTradingCron, formTradeWeightChange, formAddTradeWeightChange, 
+    formAddTradingJob, formSetAsset, formSetWeight, formSetBaseAsset, formSetApiKeyId, formSetUseCustom, formSetUseCustomStrategy, formFetchTradingJobs, formFetchBalanceFields, formSetScheduledTrading}) => (
         <span>
         <Panel title='Scheduled Trading'>
-          <ResponseTable first='Exchange' second='Key' responseFields={ buildScheduledTradings(scheduledTradings, apiKeys) }/>
+          <ResponseTable first='Exchange' second='Key' responseFields={ buildScheduledTradings(scheduledTradings, apiKeys, formFetchTradingJobs) }/>
         </Panel>        
         <Panel title='New Scheduled Trading'>
           <table className="table table-bordered table-hover table-striped">
@@ -160,7 +164,7 @@ const TradingForm = ({scheduledTradings, tradingJob, apiKeys, baseAsset, tradeWe
           { buildTradeWeightComp(tradeWeights) }
           </tbody>
           </table>
-          <FormContainer handleSubmit={formAddTradingJob(tradingJob)} submit="Add">
+          <FormContainer handleSubmit={(event) => formAddTradingJob(event, newTradingCron, apiKeyId, newTradingStrategy, tradeWeights, baseAsset, formFetchTradingJobs)} submit="Add">
             <FormTable>
                 <FormRow label='Asset to trade'>
                   <FormOption name='asset' values={ allAssets } onChange={ formSetAsset }/>
@@ -204,7 +208,7 @@ const TradingForm = ({scheduledTradings, tradingJob, apiKeys, baseAsset, tradeWe
           </FormContainer>
         </Panel>
         <Panel title='Trading operations'>
-          <FormContainer handleSubmit={handleSubmit} submit="Run trade-bot">  
+          <FormContainer handleSubmit={null} submit="Run trade-bot">  
             <FormTable>
               <FormRow label='API Key'>
                 <FormTextField value={apiKey} name="apikey" handleTextChange={(event) => this.setState({apikey: event.target.value})} />
@@ -221,15 +225,36 @@ const TradingForm = ({scheduledTradings, tradingJob, apiKeys, baseAsset, tradeWe
             </FormTable>    
           </FormContainer>      
         </Panel>
-        { this.state.balanceFields && 
+        { balanceFields && 
           <Panel title='Request output'>
           <PanelTable>
-          {this.state.balanceFields} 
+          { balanceFields } 
           </PanelTable>
           </Panel>
         }
         </span>
       )
+
+class TradingFormContainer extends React.Component {
+
+  componentDidMount() {
+    fetchApiKeys().then( apiKeys => {
+      this.props.formSetApiKeys(apiKeys)
+      this.props.formFetchTradingJobs()
+    })
+  }
+
+  constructor(props) {
+    super(props);
+  }
+
+  render() {
+    return (
+      <TradingForm {...this.props}/>
+    )
+  }
+}
+
 
 TradingForm.propTypes = {
     scheduledTradings: PropTypes.array.isRequired
@@ -238,15 +263,18 @@ TradingForm.propTypes = {
 const mapStateToProps = state => {
     return {
         scheduledTradings: state.getTradingForm.scheduledTradings,
-        tradingJob: state.getTradingForm.tradingJob,
         apiKeys: state.getTradingForm.apiKeys,
         baseAsset: state.getTradingForm.baseAsset,
         tradeWeights: state.getTradingForm.tradeWeights,
+        newAsset: state.getTradingForm.newAsset,
         newWeight: state.getTradingForm.newWeight,
         useCustom: state.getTradingForm.useCustom,
+        apiKeyId: state.getTradingForm.apiKeyId,
         apiKey: state.getTradingForm.apiKey,
         apiSecret: state.getTradingForm.apiSecret,
-        newTradingStrategy: state.getTradingForm.newTradingStrategy       
+        newTradingStrategy: state.getTradingForm.newTradingStrategy,
+        balanceFields: state.getTradingForm.balanceFields,
+        newTradingCron: state.getTradingForm.newTradingCron       
     }
 }
 
@@ -254,19 +282,27 @@ const mapDispatchToProps = dispatch => {
     return {
         formTradeWeightChange: (event) => { dispatch(handleTradeWeightChange(event)) },
         formAddTradeWeightChange: (event) => { dispatch(handleAddTradeWeightChange(event)) },
-        formAddTradingJob: (tradingJob) => { dispatch(handleAddTradingJob(tradingJob)) },
-        formSetTradingJob: (tradingJob) => { dispatch(handleSetTradingJob(tradingJob)) },
-        formDeleteTradingJob: (id) => { deleteTradingJob(id)},
+        formAddTradingJob: (event, newTradingCron, newApiKeyId, newTradingStrategy, tradeWeights, baseAsset, formFetchTradingJobs) => { 
+          addTradingJob(event, newTradingCron, newApiKeyId, newTradingStrategy, tradeWeights, baseAsset, formFetchTradingJobs).then(() => {
+          dispatch(handleAddTradingJob())
+          formFetchTradingJobs()
+        })   },
         formSetAsset: (event) => { dispatch(handleSetAsset(event.target.value)) },
         formSetWeight: (event) => { dispatch(handleSetWeight(event.target.value)) },
         formSetBaseAsset: (asset) => { dispatch(handleSetBaseAsset(asset)) },
         formSetApiKeyId: (event) => { dispatch(handleSetApiKeyId(event.target.value)) },
         formSetUseCustom: (use) => { dispatch(handleSetUseCustom(use)) },
-        formSetUseCustomStrategy: (strategy) => { dispatch(handleSetCustomStrategy(strategy)) }
+        formSetUseCustomStrategy: (strategy) => { dispatch(handleSetCustomStrategy(strategy)) },
+        formFetchTradingJobs: () => fetchTradingJobs().then( (tradingJobs) => { dispatch(handleSetScheduledTradings(tradingJobs)) }),
+        formFetchBalanceFields: (exchange, apiKey, apiSecret) => { fetchBalance().then(balanceList => dispatch(handleSetBalanceFields(Helper.rowsFromObjet(balanceList)))) },
+        formSetScheduledTrading: (scheduledTradings) => { dispatch(handleSetScheduledTradings(scheduledTradings)) },
+        formSetApiKeys: (apiKeys) => { 
+          
+          dispatch(handleSetApiKeys(apiKeys)) }
     }
 }
 
 export default connect(
     mapStateToProps,
     mapDispatchToProps
-)(TradingForm)
+)(TradingFormContainer)
