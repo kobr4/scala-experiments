@@ -66,17 +66,6 @@ const addTradingJob = (event, newTradingCron, newApiKeyId, newTradingStrategy, t
     event.preventDefault();
     return promise;
 }
-
-const fetchBalance = (exchange, apiKey, apiSecret) => RestUtils.performRestReqWithPromise(
-        balanceEndpoint,
-        [ ['exchange', exchange], ['apikey', apiKey],['apisecret',apiSecret]]
-)
-    
-const fetchOpenOrders = () => RestUtils.performRestPostReq(
-        (balanceList)=> { this.setState({balanceFields: Helper.rowsFromObjet(balanceList)})},
-        openOrdersEndpoint,
-        [['apikey', this.state.apikey],['apisecret',this.state.apisecret]]
-)  
     
 const getApiKeyOptions = (apiKeys) => {
         return apiKeys.map( (item) => [ item.id, item.key] );
@@ -138,18 +127,13 @@ const handleSetCustomStrategy = (strategy) => ({
     customStrategy: strategy
 })
 
-const handleSetBalanceFields = (balanceFields) => ({
-  type: TradingFormAction.SET_BALANCE_FIELDS,
-  balanceFields: balanceFields
-})
-
 const handleSetApiKeys = (apiKeys) => ({
   type: TradingFormAction.SET_API_KEYS,
   apiKeys: apiKeys
 })
 
 
-const TradingForm = ({scheduledTradings, apiKeys, baseAsset, tradeWeights, newAsset, newWeight, useCustom, apiKeyId, apiKey, apiSecret, newTradingStrategy, balanceFields, newTradingCron, formTradeWeightChange, formAddTradeWeightChange, 
+const TradingForm = ({scheduledTradings, apiKeys, baseAsset, tradeWeights, newWeight, useCustom, apiKeyId, newTradingStrategy, balanceFields, newTradingCron, formTradeWeightChange, formAddTradeWeightChange, 
     formAddTradingJob, formSetAsset, formSetWeight, formSetBaseAsset, formSetApiKeyId, formSetUseCustom, formSetUseCustomStrategy, formFetchTradingJobs, formFetchBalanceFields, formSetScheduledTrading}) => (
         <span>
         <Panel title='Scheduled Trading'>
@@ -207,31 +191,6 @@ const TradingForm = ({scheduledTradings, apiKeys, baseAsset, tradeWeights, newAs
               </FormTable>          
           </FormContainer>
         </Panel>
-        <Panel title='Trading operations'>
-          <FormContainer handleSubmit={null} submit="Run trade-bot">  
-            <FormTable>
-              <FormRow label='API Key'>
-                <FormTextField value={apiKey} name="apikey" handleTextChange={(event) => this.setState({apikey: event.target.value})} />
-              </FormRow>
-              <FormRow label='API Secret'>
-                <FormTextField value={apiSecret} name="apisecret" handleTextChange={(event) => this.setState({apisecret: event.target.value})} />
-              </FormRow>                
-              <FormRow>
-                <FormButton text='Show balances' handleClick={ (event) => this.requestBalance() }/>
-              </FormRow>
-              <FormRow>
-                <FormButton text='Show open orders' handleClick={ (event) => this.requestOpenOrders() }/>
-              </FormRow>            
-            </FormTable>    
-          </FormContainer>      
-        </Panel>
-        { balanceFields && 
-          <Panel title='Request output'>
-          <PanelTable>
-          { balanceFields } 
-          </PanelTable>
-          </Panel>
-        }
         </span>
       )
 
@@ -266,12 +225,9 @@ const mapStateToProps = state => {
         apiKeys: state.getTradingForm.apiKeys,
         baseAsset: state.getTradingForm.baseAsset,
         tradeWeights: state.getTradingForm.tradeWeights,
-        newAsset: state.getTradingForm.newAsset,
         newWeight: state.getTradingForm.newWeight,
         useCustom: state.getTradingForm.useCustom,
         apiKeyId: state.getTradingForm.apiKeyId,
-        apiKey: state.getTradingForm.apiKey,
-        apiSecret: state.getTradingForm.apiSecret,
         newTradingStrategy: state.getTradingForm.newTradingStrategy,
         balanceFields: state.getTradingForm.balanceFields,
         newTradingCron: state.getTradingForm.newTradingCron       
@@ -294,8 +250,6 @@ const mapDispatchToProps = dispatch => {
         formSetUseCustom: (use) => { dispatch(handleSetUseCustom(use)) },
         formSetUseCustomStrategy: (strategy) => { dispatch(handleSetCustomStrategy(strategy)) },
         formFetchTradingJobs: () => fetchTradingJobs().then( (tradingJobs) => { dispatch(handleSetScheduledTradings(tradingJobs)) }),
-        formFetchBalanceFields: (exchange, apiKey, apiSecret) => { fetchBalance().then(balanceList => dispatch(handleSetBalanceFields(Helper.rowsFromObjet(balanceList)))) },
-        formSetScheduledTrading: (scheduledTradings) => { dispatch(handleSetScheduledTradings(scheduledTradings)) },
         formSetApiKeys: (apiKeys) => { 
           
           dispatch(handleSetApiKeys(apiKeys)) }

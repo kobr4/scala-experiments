@@ -2,7 +2,7 @@ import { TradingFormAction } from '../actions'
 import { defaultStrategy } from '../constants'
 
 export default function(state = {scheduledTradings: [], tradingJob: '', apiKeys: [], tradeWeights: {}, newWeight: '', newAsset: 'BTC', 
-    baseAsset: 'BTC', useCustom: false, newTradingStrategy: defaultStrategy, balanceFields: null, newTradingCron: '', apiKeyId: null}, action) {
+    baseAsset: 'BTC', useCustom: false, newTradingStrategy: defaultStrategy, newTradingCron: '', apiKeyId: null}, action) {
     switch (action.type) {
         case TradingFormAction.ADD_TRADE_WEIGHT:
             const tradeWeights = {...state.tradeWeights}

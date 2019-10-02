@@ -13,8 +13,8 @@ class UsersRepository(dbConfigPath: String) {
 
   val db = Database.forConfig(dbConfigPath)
 
-  def insertUser(user: User): Future[Option[Int]] = {
-    db.run(UsersRepository.users ++= Seq(user))
+  def insertUser(user: User): Future[Int] = {
+    db.run((UsersRepository.users returning UsersRepository.users.map(_.id)) += user)
   }
 
   def selectUserByEmail(email: String)(implicit ec: ExecutionContext): Future[Option[User]] = {

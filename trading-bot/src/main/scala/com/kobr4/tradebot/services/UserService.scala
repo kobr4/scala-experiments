@@ -31,7 +31,7 @@ object UserService extends StrictLogging {
         usersRepository.insertUser(User(0, email, password.bcrypt, None, ZonedDateTime.now())).map { i =>
           logger.info("Sending mail to user {}", email)
           MailService.sendActivationMail(email)
-          i
+          Some(i)
         }
     }
   }
@@ -63,7 +63,7 @@ object UserService extends StrictLogging {
     }
   }
 
-  def addApiKeys(apiKey: ApiKey)(implicit ec: ExecutionContext): Future[Option[Int]] = {
+  def addApiKeys(apiKey: ApiKey)(implicit ec: ExecutionContext): Future[Int] = {
     apiKeysRepository.insertApiKey(apiKey)
   }
 
@@ -83,14 +83,12 @@ object UserService extends StrictLogging {
     apiKeysRepository.updateApiKey(apiKey)
   }
 
-  def addTradingJob(tradingJob: TradingJob, schedulingService: SchedulingService)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[Option[Int]] = {
-    tradingJobsRepository.insertTradingJob(tradingJob).map { result =>
-      result.foreach { id =>
-        val insertedTradingJob = TradingJob(id, tradingJob.userId, tradingJob.cron, tradingJob.apiKeyId,
-          tradingJob.strategy, tradingJob.weights, tradingJob.baseAsset)
-        SchedulerJob.schedule(insertedTradingJob, schedulingService)
-      }
-      result
+  def addTradingJob(tradingJob: TradingJob, schedulingService: SchedulingService)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[Int] = {
+    tradingJobsRepository.insertTradingJob(tradingJob).map { id =>
+      val insertedTradingJob = TradingJob(id, tradingJob.userId, tradingJob.cron, tradingJob.apiKeyId,
+        tradingJob.strategy, tradingJob.weights, tradingJob.baseAsset)
+      SchedulerJob.schedule(insertedTradingJob, schedulingService)
+      id
     }
   }
 
