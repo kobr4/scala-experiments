@@ -104,7 +104,11 @@ class RestUtils {
         xhttp.send(paramsString);
     }    
 
-    
+    static performRestPostReqCredsWithPromise(path, params = []) {
+        return new Promise((resolve, reject) => {
+            RestUtils.performRestPostReqWithCreds( (jsonResponse) => resolve(jsonResponse), path, params);
+        })
+    }    
   
   static performRestPriceReq(updateCallback, path, params = []) {
     var xhttp = new XMLHttpRequest();

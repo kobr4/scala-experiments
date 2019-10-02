@@ -11,8 +11,8 @@ class ApiKeysRepository(dbConfigPath: String) {
 
   val db = Database.forConfig(dbConfigPath)
 
-  def insertApiKey(apiKey: ApiKey): Future[Option[Int]] = {
-    db.run(ApiKeysRepository.apiKeys ++= Seq(apiKey))
+  def insertApiKey(apiKey: ApiKey): Future[Int] = {
+    db.run((ApiKeysRepository.apiKeys returning ApiKeysRepository.apiKeys.map(_.id)) += apiKey)
   }
 
   def selectApiLKeyByUserId(userId: Int)(implicit ec: ExecutionContext): Future[Seq[ApiKey]] = {
