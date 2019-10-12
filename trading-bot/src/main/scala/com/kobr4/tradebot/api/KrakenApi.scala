@@ -136,6 +136,8 @@ class KrakenApi(
               val (a, b) = pairString.length match {
                 case _ if pairString == "USDTZUSD" =>
                   ("USDT", "ZUSD")
+                case 5 =>
+                  (pairString.substring(0, 2), pairString.substring(2))
                 case 6 =>
                   (pairString.substring(0, 3), pairString.substring(3))
                 case 7 =>
