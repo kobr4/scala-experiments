@@ -75,7 +75,7 @@ export function FormContainer(props) {
   return (
      <form onSubmit={props.handleSubmit}>
         {props.children}
-        <input type="submit" class="btn btn-primary" value={props.submit} />
+        <input type="submit" className="btn btn-primary" value={props.submit} />
      </form>
   );
 }

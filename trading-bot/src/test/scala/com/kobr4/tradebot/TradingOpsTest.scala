@@ -6,13 +6,13 @@ import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import com.kobr4.tradebot.api._
 import com.kobr4.tradebot.engine.SafeStrategy
-import com.kobr4.tradebot.model.{Asset, Buy, Quantity}
+import com.kobr4.tradebot.model.{ Asset, Buy, Quantity }
 import com.kobr4.tradebot.services.TradingOps
 import org.mockito.Mockito._
 import org.scalatest.concurrent.PatienceConfiguration.Timeout
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.mockito.MockitoSugar
-import org.scalatest.{BeforeAndAfterEach, FlatSpec, Matchers}
+import org.scalatest.{ BeforeAndAfterEach, FlatSpec, Matchers }
 import org.mockito.Matchers.any
 
 import scala.concurrent.Future

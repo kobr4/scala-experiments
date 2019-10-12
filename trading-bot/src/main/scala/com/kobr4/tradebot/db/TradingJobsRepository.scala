@@ -36,8 +36,8 @@ class TradingJobsRepository(dbConfigPath: String) {
 
   val db = Database.forConfig(dbConfigPath)
 
-  def insertTradingJob(tradingJob: TradingJob): Future[Option[Int]] = {
-    db.run(TradingJobsRepository.tradingJobs ++= Seq(tradingJob))
+  def insertTradingJob(tradingJob: TradingJob): Future[Int] = {
+    db.run((TradingJobsRepository.tradingJobs returning TradingJobsRepository.tradingJobs.map(_.id)) += tradingJob)
   }
 
   def selectTradingJobByUserId(userId: Int)(implicit ec: ExecutionContext): Future[Seq[TradingJob]] = {
