@@ -3,7 +3,7 @@
   "version": "0.6.0",
   "description": "sri  web template project",
   "devDependencies": {
-    "acorn": "^6.3.0",
+    "acorn": "^6.4.1",
     "babel-loader": "^8.0.6",
     "mixin-deep": "1.3.2",
     "set-value": "2.0.1",
