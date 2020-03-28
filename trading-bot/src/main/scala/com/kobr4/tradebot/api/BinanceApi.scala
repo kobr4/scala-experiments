@@ -198,7 +198,8 @@ class BinanceApi(
             (pairString.substring(0, 6), pairString.substring(6))
           case 10 =>
             (pairString.substring(0, 6), pairString.substring(6))
-
+          case 11 =>
+            (pairString.substring(0, 7), pairString.substring(7))
         }
         Quote(CurrencyPair(Asset.fromString(b), Asset.fromString(a)), obj.value("price").as[BigDecimal], 0, 0, 0, 0, 0)
       }).toList.filter(q => (q.pair.right, q.pair.left) match {
@@ -317,7 +318,9 @@ object BinanceApi extends StrictLogging {
 
   private def httpGetRequest(url: String, path: String)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[String] = {
     Http().singleRequest(HttpRequest(uri = s"$url$path")).flatMap { response =>
-      Unmarshal(response.entity).to[String]
+      val s = Unmarshal(response.entity).to[String]
+      s.map(println)
+      s
     }
   }
 
@@ -344,9 +347,9 @@ object BinanceApi extends StrictLogging {
       headers = AuthHeader.build(apiKey),
       entity = if (method != HttpMethods.GET) reqBody else "",
       uri = fullUrl)).flatMap { response =>
-      if (response.status == StatusCodes.OK)
+      if (response.status == StatusCodes.OK) {
         Unmarshal(response.entity).to[String]
-      else {
+      } else {
         Unmarshal(response.entity).to[String].map(println)
         throw new RuntimeException("Return code was " + response.status)
       }
