@@ -318,9 +318,7 @@ object BinanceApi extends StrictLogging {
 
   private def httpGetRequest(url: String, path: String)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[String] = {
     Http().singleRequest(HttpRequest(uri = s"$url$path")).flatMap { response =>
-      val s = Unmarshal(response.entity).to[String]
-      s.map(println)
-      s
+      Unmarshal(response.entity).to[String]
     }
   }
 
