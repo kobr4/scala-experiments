@@ -51,6 +51,8 @@ object BinanceCurrencyPairHelper {
         (pairString.substring(0, 4), pairString.substring(4))
       case 9 | 10 =>
         (pairString.substring(0, 6), pairString.substring(6))
+      case 11 =>
+        (pairString.substring(0,7), pairString.substring(7))
     }
 
     CurrencyPair(Asset.fromString(b), Asset.fromString(a))
