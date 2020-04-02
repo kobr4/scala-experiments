@@ -1,7 +1,6 @@
 package com.kobr4.tradebot.api
 
-import java.time.{ Instant, ZoneId, ZoneOffset, ZonedDateTime }
-import java.time.format.FormatStyle
+import java.time.{Instant, ZoneId, ZoneOffset, ZonedDateTime}
 
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
@@ -16,7 +15,7 @@ import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
 import play.api.libs.json._
 
-import scala.concurrent.{ ExecutionContext, Future }
+import scala.concurrent.{ExecutionContext, Future}
 
 case class PoloOrder(currencyPair: CurrencyPair, orderNumber: String, rate: BigDecimal, amount: BigDecimal)
 
@@ -31,9 +30,9 @@ case class PoloTrade(globalTradeID: Long, tradeID: Long, date: ZonedDateTime, ra
 
 object PoloTrade {
 
-  import play.api.libs.functional.syntax._
-
   import java.time.format.DateTimeFormatter
+
+  import play.api.libs.functional.syntax._
 
   val dateTimeFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").withZone(ZoneId.of("UTC"))
 
@@ -300,6 +299,7 @@ object PoloApi extends StrictLogging {
   }
 
   private def httpRequest(url: String, command: String)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[String] = {
+
     Http().singleRequest(HttpRequest(uri = s"$url?command=$command")).flatMap { response =>
       Unmarshal(response.entity).to[String]
     }
