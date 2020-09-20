@@ -358,8 +358,10 @@ object KrakenApi extends StrictLogging {
       uri = url)).flatMap { response =>
       if (response.status == StatusCodes.OK)
         Unmarshal(response.entity).to[String]
-      else
+      else {
+        response.discardEntityBytes()
         throw new RuntimeException("Return code was " + response.status)
+      }
     }
   }
 

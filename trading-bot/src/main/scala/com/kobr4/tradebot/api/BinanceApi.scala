@@ -350,8 +350,9 @@ object BinanceApi extends StrictLogging {
       if (response.status == StatusCodes.OK) {
         Unmarshal(response.entity).to[String]
       } else {
-        Unmarshal(response.entity).to[String].map(println)
-        throw new RuntimeException("Return code was " + response.status)
+        logger.error("Unexpected response code ({}) reason ({})",response.status.value, response.status.reason())
+        response.discardEntityBytes()
+        throw new RuntimeException(s"Return code was ${response.status}")
       }
     }
   }

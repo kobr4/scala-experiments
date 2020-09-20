@@ -315,8 +315,11 @@ object PoloApi extends StrictLogging {
       uri = url)).flatMap { response =>
       if (response.status == StatusCodes.OK)
         Unmarshal(response.entity).to[String]
-      else
+      else {
+        logger.error("Unexpected response code ({}) reason ({})",response.status.value, response.status.reason())
+        response.discardEntityBytes()
         throw new RuntimeException("Return code was " + response.status)
+      }
     }
   }
 
