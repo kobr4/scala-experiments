@@ -34,7 +34,7 @@ object PoloTrade {
 
   import play.api.libs.functional.syntax._
 
-  val dateTimeFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").withZone(ZoneId.of("UTC"))
+  val dateTimeFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSSSSS").withZone(ZoneId.of("UTC"))
 
   implicit val poloTradeReads: Reads[PoloTrade] = (
     (JsPath \ "globalTradeID").read[Long] and
