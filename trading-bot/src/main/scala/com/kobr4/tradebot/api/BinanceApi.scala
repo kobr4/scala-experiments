@@ -55,6 +55,8 @@ object BinanceCurrencyPairHelper {
         (pairString.substring(0,7), pairString.substring(7))
       case 12 =>
         (pairString.substring(0, 8), pairString.substring(8))
+      case 13 =>
+        (pairString.substring(0, 9), pairString.substring(9))
     }
 
     CurrencyPair(Asset.fromString(b), Asset.fromString(a))
@@ -206,6 +208,8 @@ class BinanceApi(
             (pairString.substring(0, 7), pairString.substring(7))
           case 12 =>
             (pairString.substring(0, 8), pairString.substring(8))
+          case 13 =>
+            (pairString.substring(0, 9), pairString.substring(9))
         }
         Quote(CurrencyPair(Asset.fromString(b), Asset.fromString(a)), obj.value("price").as[BigDecimal], 0, 0, 0, 0, 0)
       }).toList.filter(q => (q.pair.right, q.pair.left) match {
