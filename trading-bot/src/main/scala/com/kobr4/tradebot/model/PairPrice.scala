@@ -86,7 +86,7 @@ object PairPrice extends StrictLogging {
 
   private def httpGetRequest(url: String)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[String] = {
     Http().singleRequest(HttpRequest(uri = url)).flatMap { response =>
-      Unmarshal(response.entity).to[String]
+      Unmarshal(response.entity.withSizeLimit(20000000)).to[String]
     }
   }
 
