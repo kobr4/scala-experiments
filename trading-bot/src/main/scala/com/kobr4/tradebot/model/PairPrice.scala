@@ -103,8 +103,8 @@ object PairPrice extends StrictLogging {
           ZonedDateTime.of(date, time, ZoneId.of("UTC")),
           if (splitted.length >= priceLineId && splitted(priceLineId) != "" && splitted(priceLineId) != "null") BigDecimal(splitted(priceLineId)) else BigDecimal(0))
       }
-    logger.info("Latest price : {}", prices.last.date)
-    PairPrices(prices)
+    logger.info("Latest price : {}", prices.filter(_.price != BigDecimal(0)).last.date)
+    PairPrices(prices.filter(_.price != BigDecimal(0)))
   }
 
   def fromUrlAsync(url: String)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[PairPrices] = {

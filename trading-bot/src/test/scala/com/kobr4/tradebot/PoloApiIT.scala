@@ -47,4 +47,11 @@ class PoloApiIT extends FlatSpec with ScalaFutures with Matchers {
     println(openOrderList)
   }
 
+  it should "return ticker" in {
+    val api = new PoloApi
+    val quotes = api.returnTicker().futureValue(Timeout(10 seconds))
+
+    println(quotes.filter(_.pair.right == Asset.Xrp))
+  }
+
 }
