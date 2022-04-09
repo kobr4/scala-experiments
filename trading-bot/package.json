@@ -4,7 +4,7 @@
   "version": "0.0.1",
   "dependencies": {
     "@babel/plugin-proposal-class-properties": "^7.1.0",
-    "moment": "^2.22.2",
+    "moment": "^2.29.2",
     "react": "^16.5.0",
     "react-datepicker": "^1.6.0",
     "react-dom": "^16.5.0",
