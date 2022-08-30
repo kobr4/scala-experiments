@@ -183,7 +183,7 @@ class PoloApiTest extends FlatSpec with Matchers with ScalaFutures with BeforeAn
           """
             |[
             |  {
-            |    "date": 1405699200,
+            |    "date": "1405699200",
             |    "high": 0.0045388,
             |    "low": 0.00403001,
             |    "open": 0.00404545,
