@@ -105,7 +105,7 @@ class PoloApi(
     (JsPath \ "quoteVolume").read[BigDecimal])(Quote.apply _)
 
   implicit val pairPriceReads: Reads[PairPrice] = (
-    (JsPath \ "date").read[Long].map(t => ZonedDateTime.ofInstant(Instant.ofEpochSecond(t), ZoneOffset.UTC)) and
+    (JsPath \ "date").read[String].map(t => ZonedDateTime.ofInstant(Instant.ofEpochSecond(t.toLong), ZoneOffset.UTC)) and
     (JsPath \ "close").read[BigDecimal])(PairPrice.apply _)
 
   override def returnBalances: Future[Map[Asset, Quantity]] =
@@ -138,7 +138,7 @@ class PoloApi(
   }
 
   override def returnTradeHistory(
-    start: ZonedDateTime = ZonedDateTime.parse("2018-01-01T01:00:00.000Z"),
+    start: ZonedDateTime = ZonedDateTime.now().minusMonths(1),
     end: ZonedDateTime = ZonedDateTime.now()): Future[List[Order]] = {
     PoloApi.httpRequestPost(tradingUrl, ReturnTradeHistory.build(nonce, start.toEpochSecond, end.toEpochSecond), apiKey, apiSecret).map { message =>
       Json.parse(message).as[JsObject].fields.flatMap {
@@ -173,10 +173,11 @@ class PoloApi(
 
   def returnChartData(currencyPair: CurrencyPair, period: Int, start: ZonedDateTime, end: ZonedDateTime): Future[PairPrices] =
     PoloApi.httpRequest(publicUrl, Public.returnChartData + "&" + ReturnChartData.build(currencyPair.toString, period, start.toEpochSecond, end.toEpochSecond).fields.toString).map {
-      message =>
+      message => {
         PairPrices(Json.parse(message).as[JsArray].value.toList.map { item =>
           item.as[PairPrice]
         })
+      }
     }
 
 }
