@@ -318,7 +318,8 @@ object PoloApi extends StrictLogging {
         Unmarshal(response.entity).to[String]
       else {
         logger.error("Unexpected response code ({}) reason ({})",response.status.value, response.status.reason())
-        response.discardEntityBytes()
+        //response.discardEntityBytes()
+        Unmarshal(response.entity).to[String].map(body => logger.error(body))
         throw new RuntimeException("Return code was " + response.status)
       }
     }
