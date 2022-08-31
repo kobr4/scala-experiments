@@ -156,12 +156,12 @@ class PoloApi(
   }
 
   override def buy(currencyPair: CurrencyPair, rate: BigDecimal, amount: BigDecimal): Future[Order] =
-    PoloApi.httpRequestPost(tradingUrl, BuySell.build(nonce, currencyPair.toString, rate, amount, true), apiKey, apiSecret).map { _ =>
+    PoloApi.httpRequestPost(tradingUrl, BuySell.build(nonce, currencyPair.toString, rate, amount.setScale(6, RoundingMode.DOWN), true), apiKey, apiSecret).map { _ =>
       Buy(currencyPair, rate, amount.setScale(6, RoundingMode.DOWN), ZonedDateTime.now())
     }
 
   override def sell(currencyPair: CurrencyPair, rate: BigDecimal, amount: BigDecimal): Future[Order] =
-    PoloApi.httpRequestPost(tradingUrl, BuySell.build(nonce, currencyPair.toString, rate, amount, false), apiKey, apiSecret).map { _ =>
+    PoloApi.httpRequestPost(tradingUrl, BuySell.build(nonce, currencyPair.toString, rate, amount.setScale(6, RoundingMode.DOWN), false), apiKey, apiSecret).map { _ =>
       Sell(currencyPair, rate, amount.setScale(6, RoundingMode.DOWN), ZonedDateTime.now())
     }
 
