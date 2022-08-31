@@ -53,5 +53,4 @@ class PoloApiIT extends FlatSpec with ScalaFutures with Matchers {
 
     println(quotes.filter(_.pair.right == Asset.Xrp))
   }
-
 }

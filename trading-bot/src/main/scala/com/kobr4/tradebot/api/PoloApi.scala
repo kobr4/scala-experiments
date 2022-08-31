@@ -16,6 +16,7 @@ import javax.crypto.spec.SecretKeySpec
 import play.api.libs.json._
 
 import scala.concurrent.{ExecutionContext, Future}
+import scala.math.BigDecimal.RoundingMode
 
 case class PoloOrder(currencyPair: CurrencyPair, orderNumber: String, rate: BigDecimal, amount: BigDecimal)
 
@@ -156,12 +157,12 @@ class PoloApi(
 
   override def buy(currencyPair: CurrencyPair, rate: BigDecimal, amount: BigDecimal): Future[Order] =
     PoloApi.httpRequestPost(tradingUrl, BuySell.build(nonce, currencyPair.toString, rate, amount, true), apiKey, apiSecret).map { _ =>
-      Buy(currencyPair, rate, amount, ZonedDateTime.now())
+      Buy(currencyPair, rate, amount.setScale(6, RoundingMode.DOWN), ZonedDateTime.now())
     }
 
   override def sell(currencyPair: CurrencyPair, rate: BigDecimal, amount: BigDecimal): Future[Order] =
     PoloApi.httpRequestPost(tradingUrl, BuySell.build(nonce, currencyPair.toString, rate, amount, false), apiKey, apiSecret).map { _ =>
-      Sell(currencyPair, rate, amount, ZonedDateTime.now())
+      Sell(currencyPair, rate, amount.setScale(6, RoundingMode.DOWN), ZonedDateTime.now())
     }
 
   override def returnTicker()(implicit ec: ExecutionContext): Future[List[Quote]] = PoloApi.httpRequest(publicUrl, Public.returnTicker).map { message =>
