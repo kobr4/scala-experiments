@@ -5,14 +5,14 @@ import java.time.ZonedDateTime
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import com.github.tomakehurst.wiremock.WireMockServer
-import com.github.tomakehurst.wiremock.client.WireMock._
+import com.github.tomakehurst.wiremock.client.WireMock.{aResponse, _}
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration.options
-import com.kobr4.tradebot.api.{ CurrencyPair, PoloApi, PoloOrder }
+import com.kobr4.tradebot.api.{CurrencyPair, PoloApi, PoloOrder}
 import com.kobr4.tradebot.model.Asset.Usd
-import com.kobr4.tradebot.model.{ Asset, Buy, Quantity }
+import com.kobr4.tradebot.model.{Asset, Buy, Quantity}
 import org.scalatest.concurrent.PatienceConfiguration.Timeout
 import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.{ BeforeAndAfterEach, FlatSpec, Matchers }
+import org.scalatest.{BeforeAndAfterEach, FlatSpec, Matchers}
 
 import scala.collection.immutable.Range
 import scala.concurrent.duration._
@@ -78,6 +78,28 @@ class PoloApiTest extends FlatSpec with Matchers with ScalaFutures with BeforeAn
   }
 
   it should "place a sell order" in {
+    wireMockServer.stubFor(get(urlEqualTo("/markets/USD_BTC"))
+      .willReturn(aResponse()
+      .withHeader("Content-Type", "text/plain")
+      .withBody("""[ {
+                    "symbol" : "XRP_USDT",
+                    "baseCurrencyName" : "XRP",
+                    "quoteCurrencyName" : "USDT",
+                    "displayName" : "XRP/USDT",
+                    "state" : "NORMAL",
+                    "visibleStartTime" : 1659018819871,
+                    "tradableStartTime" : 1659018819871,
+                    "symbolTradeLimit" : {
+                      "symbol" : "XRP_USDT",
+                      "priceScale" : 4,
+                      "quantityScale" : 4,
+                      "amountScale" : 4,
+                      "minQuantity" : "0.0001",
+                      "minAmount" : "1",
+                      "highestBid" : "0",
+                      "lowestAsk" : "0"
+                    }
+                  } ]""")))
 
     wireMockServer.stubFor(post(urlEqualTo("/tradingApi"))
       .willReturn(aResponse()
@@ -86,11 +108,34 @@ class PoloApiTest extends FlatSpec with Matchers with ScalaFutures with BeforeAn
           """{"orderNumber":31226040,"resultingTrades":[{"amount":"338.8732","date":"2014-10-18 23:03:21"
             |,"rate":"0.00000173","total":"0.00058625","tradeID":"16164","type":"sell"}]}""".stripMargin)))
 
-    val api = new PoloApi(DefaultConfiguration.PoloApi.Key, DefaultConfiguration.PoloApi.Secret, poloUrl)
+    val api = new PoloApi(DefaultConfiguration.PoloApi.Key, DefaultConfiguration.PoloApi.Secret, poloUrl, poloUrl)
     api.sell(CurrencyPair(Asset.Btc, Asset.Usd), BigDecimal("1"), BigDecimal("1")).futureValue(Timeout(10 seconds))
   }
 
   it should "place a buy order" in {
+
+    wireMockServer.stubFor(get(urlEqualTo("/markets/USD_BTC"))
+      .willReturn(aResponse()
+        .withHeader("Content-Type", "text/plain")
+        .withBody("""[ {
+                    "symbol" : "XRP_USDT",
+                    "baseCurrencyName" : "XRP",
+                    "quoteCurrencyName" : "USDT",
+                    "displayName" : "XRP/USDT",
+                    "state" : "NORMAL",
+                    "visibleStartTime" : 1659018819871,
+                    "tradableStartTime" : 1659018819871,
+                    "symbolTradeLimit" : {
+                      "symbol" : "XRP_USDT",
+                      "priceScale" : 4,
+                      "quantityScale" : 4,
+                      "amountScale" : 4,
+                      "minQuantity" : "0.0001",
+                      "minAmount" : "1",
+                      "highestBid" : "0",
+                      "lowestAsk" : "0"
+                    }
+                  } ]""")))
 
     wireMockServer.stubFor(post(urlEqualTo("/tradingApi"))
       .willReturn(aResponse()
@@ -99,7 +144,7 @@ class PoloApiTest extends FlatSpec with Matchers with ScalaFutures with BeforeAn
           """{"orderNumber":31226040,"resultingTrades":[{"amount":"338.8732","date":"2014-10-18 23:03:21"
             |,"rate":"0.00000173","total":"0.00058625","tradeID":"16164","type":"buy"}]}""".stripMargin)))
 
-    val api = new PoloApi(DefaultConfiguration.PoloApi.Key, DefaultConfiguration.PoloApi.Secret, poloUrl)
+    val api = new PoloApi(DefaultConfiguration.PoloApi.Key, DefaultConfiguration.PoloApi.Secret, poloUrl, poloUrl)
     api.buy(CurrencyPair(Asset.Btc, Asset.Usd), BigDecimal("1"), BigDecimal("1")).futureValue(Timeout(10 seconds))
   }
 

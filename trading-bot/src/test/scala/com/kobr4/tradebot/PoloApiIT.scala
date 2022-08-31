@@ -53,4 +53,10 @@ class PoloApiIT extends FlatSpec with ScalaFutures with Matchers {
 
     println(quotes.filter(_.pair.right == Asset.Xrp))
   }
+
+  it should "return market" in {
+    val api = new PoloApi
+    val market = api.getMarket(CurrencyPair(Asset.Tether, Asset.Eth)).futureValue(Timeout(10 seconds))
+    println(market)
+  }
 }

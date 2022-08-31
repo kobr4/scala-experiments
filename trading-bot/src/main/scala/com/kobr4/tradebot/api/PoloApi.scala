@@ -29,6 +29,39 @@ case class PoloTrade(globalTradeID: String, tradeID: Long, date: ZonedDateTime, 
   }
 }
 
+case class PoloMarket(symbol: String, baseCurrencyName: String, quoteCurrencyName: String, displayName: String,
+                      state: String, visibleStartTime: Long, tradableStartTime: Long, symbolTradeLimit: PoloSymbolTradeLimit)
+
+case class PoloSymbolTradeLimit(symbol:	String, priceScale: Int, quantityScale: Int, amountScale: Int,
+                                minQuantity: String, minAmount: String, highestBid:	String, lowestAsk: String)
+
+object PoloMarket {
+
+  import play.api.libs.functional.syntax._
+
+  implicit val poloSymbolTradeLimitReads: Reads[PoloSymbolTradeLimit] = (
+    (JsPath \ "symbol").read[String] and
+    (JsPath \ "priceScale").read[Int] and
+    (JsPath \ "quantityScale").read[Int] and
+    (JsPath \ "amountScale").read[Int] and
+    (JsPath \ "minQuantity").read[String] and
+    (JsPath \ "minAmount").read[String] and
+    (JsPath \ "highestBid").read[String] and
+    (JsPath \ "lowestAsk").read[String])(PoloSymbolTradeLimit.apply _)
+
+
+  implicit val poloMarketReads: Reads[PoloMarket] = (
+    (JsPath \ "symbol").read[String] and
+      (JsPath \ "baseCurrencyName").read[String] and
+      (JsPath \ "quoteCurrencyName").read[String] and
+      (JsPath \ "displayName").read[String] and
+      (JsPath \ "state").read[String] and
+      (JsPath \ "visibleStartTime").read[Long] and
+      (JsPath \ "tradableStartTime").read[Long] and
+      (JsPath \ "symbolTradeLimit").read[PoloSymbolTradeLimit])(PoloMarket.apply _)
+}
+
+
 object PoloTrade {
 
   import java.time.format.DateTimeFormatter
@@ -78,7 +111,7 @@ object Quote {
 class PoloApi(
   val apiKey: String = DefaultConfiguration.PoloApi.Key,
   val apiSecret: String = DefaultConfiguration.PoloApi.Secret,
-  val poloUrl: String = PoloApi.rootUrl)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext) extends ExchangeApi {
+  val poloUrl: String = PoloApi.rootUrl, val apiUrl: String = "https://api.poloniex.com")(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext) extends ExchangeApi {
 
   def nonce = System.currentTimeMillis()
 
@@ -156,13 +189,17 @@ class PoloApi(
   }
 
   override def buy(currencyPair: CurrencyPair, rate: BigDecimal, amount: BigDecimal): Future[Order] =
-    PoloApi.httpRequestPost(tradingUrl, BuySell.build(nonce, currencyPair.toString, rate, amount.setScale(6, RoundingMode.DOWN), true), apiKey, apiSecret).map { _ =>
-      Buy(currencyPair, rate, amount.setScale(6, RoundingMode.DOWN), ZonedDateTime.now())
+    getMarket(currencyPair).flatMap { market =>
+      PoloApi.httpRequestPost(tradingUrl, BuySell.build(nonce, currencyPair.toString, rate, amount.setScale(market.symbolTradeLimit.quantityScale, RoundingMode.DOWN), true), apiKey, apiSecret).map { _ =>
+        Buy(currencyPair, rate, amount.setScale(market.symbolTradeLimit.quantityScale, RoundingMode.DOWN), ZonedDateTime.now())
+      }
     }
 
   override def sell(currencyPair: CurrencyPair, rate: BigDecimal, amount: BigDecimal): Future[Order] =
-    PoloApi.httpRequestPost(tradingUrl, BuySell.build(nonce, currencyPair.toString, rate, amount.setScale(6, RoundingMode.DOWN), false), apiKey, apiSecret).map { _ =>
-      Sell(currencyPair, rate, amount.setScale(6, RoundingMode.DOWN), ZonedDateTime.now())
+    getMarket(currencyPair).flatMap { market =>
+      PoloApi.httpRequestPost(tradingUrl, BuySell.build(nonce, currencyPair.toString, rate, amount.setScale(market.symbolTradeLimit.quantityScale, RoundingMode.DOWN), false), apiKey, apiSecret).map { _ =>
+        Sell(currencyPair, rate, amount.setScale(market.symbolTradeLimit.quantityScale, RoundingMode.DOWN), ZonedDateTime.now())
+      }
     }
 
   override def returnTicker()(implicit ec: ExecutionContext): Future[List[Quote]] = PoloApi.httpRequest(publicUrl, Public.returnTicker).map { message =>
@@ -181,6 +218,13 @@ class PoloApi(
       }
     }
 
+
+  def getMarket(currencyPair: CurrencyPair): Future[PoloMarket] =
+    PoloApi.httpRequest(s"$apiUrl/markets/${currencyPair.right}_${currencyPair.left}").map { message =>
+      Json.parse(message).as[JsArray].value.toList.map { item =>
+        item.as[PoloMarket]
+      }.head
+    }
 }
 
 object PoloApi extends StrictLogging {
@@ -298,6 +342,13 @@ object PoloApi extends StrictLogging {
       PoloApi.ReturnTradeHistory.End -> end.toString,
       PoloApi.ReturnTradeHistory.CurrencyPair -> "all",
       PoloApi.Nonce -> nonce.toString))
+  }
+
+  private def httpRequest(url: String)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[String] = {
+    logger.info(s"Sending post request to $url")
+    Http().singleRequest(HttpRequest(uri = s"$url")).flatMap { response =>
+      Unmarshal(response.entity).to[String]
+    }
   }
 
   private def httpRequest(url: String, command: String)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[String] = {
