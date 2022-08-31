@@ -20,7 +20,7 @@ import scala.math.BigDecimal.RoundingMode
 
 case class PoloOrder(currencyPair: CurrencyPair, orderNumber: String, rate: BigDecimal, amount: BigDecimal)
 
-case class PoloTrade(globalTradeID: Long, tradeID: Long, date: ZonedDateTime, rate: BigDecimal, amount: BigDecimal,
+case class PoloTrade(globalTradeID: String, tradeID: Long, date: ZonedDateTime, rate: BigDecimal, amount: BigDecimal,
   total: BigDecimal, fee: BigDecimal, orderNumber: Long, `type`: String, category: String) {
 
   def toOrder(pair: CurrencyPair): Order = this.`type` match {
@@ -35,10 +35,10 @@ object PoloTrade {
 
   import play.api.libs.functional.syntax._
 
-  val dateTimeFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSSSSS").withZone(ZoneId.of("UTC"))
+  val dateTimeFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").withZone(ZoneId.of("UTC"))
 
   implicit val poloTradeReads: Reads[PoloTrade] = (
-    (JsPath \ "globalTradeID").read[Long] and
+    (JsPath \ "globalTradeID").read[String] and
     (JsPath \ "tradeID").read[String].map(_.toLong) and
     (JsPath \ "date").read[String].map(sDate => ZonedDateTime.parse(sDate, dateTimeFormatter)) and
     (JsPath \ "rate").read[BigDecimal] and
