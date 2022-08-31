@@ -130,9 +130,9 @@ class PoloApiTest extends FlatSpec with Matchers with ScalaFutures with BeforeAn
           """
             |  { "USDT_BTC": [
             |    {
-            |      "globalTradeID": 29251512,
+            |      "globalTradeID": "29251512",
             |      "tradeID": "1385888",
-            |      "date": "2016-05-03 01:29:55.000000",
+            |      "date": "2016-05-03 01:29:55",
             |      "rate": "0.00014243",
             |      "amount": "353.74692925",
             |      "total": "0.05038417",
@@ -142,9 +142,9 @@ class PoloApiTest extends FlatSpec with Matchers with ScalaFutures with BeforeAn
             |      "category": "settlement"
             |    },
             |    {
-            |      "globalTradeID": 29251511,
+            |      "globalTradeID": "29251511",
             |      "tradeID": "1385887",
-            |      "date": "2016-05-03 01:29:55.000000",
+            |      "date": "2016-05-03 01:29:55",
             |      "rate": "0.00014111",
             |      "amount": "311.24262497",
             |      "total": "0.04391944",
