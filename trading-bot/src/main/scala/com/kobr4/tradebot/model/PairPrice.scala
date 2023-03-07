@@ -91,7 +91,7 @@ object PairPrice extends StrictLogging {
   }
 
   def fromString(csvString: String, priceColumn: String): PairPrices = {
-    val priceLines = csvString.lines.toList
+    val priceLines = csvString.linesIterator.toList
 
     val priceLineId = priceLines.head.split(',').zipWithIndex.find(_._1 == priceColumn).map(_._2).getOrElse(throw new RuntimeException("Invalid file, price column not found : " + priceColumn))
     val prices =
