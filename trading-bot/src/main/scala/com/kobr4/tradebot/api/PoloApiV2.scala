@@ -446,7 +446,7 @@ object PoloApiV2 extends StrictLogging {
     val mac = Mac.getInstance("HmacSHA256")
     mac.init(secret)
     val hashString: Array[Byte] = mac.doFinal(preHashString.getBytes)
-    val b64 = new sun.misc.BASE64Encoder().encode(hashString)
+    val b64 = new String(java.util.Base64.getEncoder.encode(hashString))
     logger.debug(s"HMAC sha256 signature: $b64")
     b64
   }
