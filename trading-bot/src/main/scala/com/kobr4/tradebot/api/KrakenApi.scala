@@ -127,8 +127,7 @@ class KrakenApi(
 
   def returnTicker()(implicit ec: ExecutionContext): Future[List[Quote]] =
     tradableAsset.map(_.filter(aList =>
-      (aList.contains("ETH") || aList.contains("XMR") || aList.contains("XBT") || aList.contains("XRP") || aList.contains("USDT")) && aList.contains("ZUSD")
-    ).mkString(",")).flatMap { assetListParam =>
+      (aList.contains("ETH") || aList.contains("XMR") || aList.contains("XBT") || aList.contains("XRP") || aList.contains("USDT")) && aList.contains("ZUSD")).mkString(",")).flatMap { assetListParam =>
       {
         KrakenApi.httpRequest(publicUrl, Public.ticker(assetListParam)).map { message =>
           Json.parse(message).as[JsObject].value("result").as[JsObject].fields.flatMap {

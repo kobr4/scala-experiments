@@ -36,12 +36,13 @@ lazy val root = (project in file(".")).enablePlugins(SbtTwirl).enablePlugins(Sbt
     )),
     (managedClasspath in Runtime) += (packageBin in Assets).value,
     WebKeys.packagePrefix in Assets := "public/",
-    WebpackKeys.config in (WebpackModes.Test, webpack) := file("webpack.test.config.js"),
-    WebKeys.pipeline := WebKeys.pipeline.dependsOn(webpack.toTask("")).value,
+    //WebpackKeys.config in (WebpackModes.Test, webpack) := file("webpack.test.config.js"),
+    //WebKeys.pipeline := WebKeys.pipeline.dependsOn(webpack.toTask("")).value,
     name := "trading-bot",(managedClasspath in Runtime) += (packageBin in Assets).value,
+    //name := "trading-bot",
   )
 
-JsEngineKeys.engineType := JsEngineKeys.EngineType.Node
+//JsEngineKeys.engineType := JsEngineKeys.EngineType.Node
 
 dockerfile in docker := {
   // The assembly task generates a fat JAR file

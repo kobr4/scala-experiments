@@ -5,14 +5,14 @@ import java.time.ZonedDateTime
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import com.github.tomakehurst.wiremock.WireMockServer
-import com.github.tomakehurst.wiremock.client.WireMock.{aResponse, _}
+import com.github.tomakehurst.wiremock.client.WireMock.{ aResponse, _ }
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration.options
-import com.kobr4.tradebot.api.{CurrencyPair, PoloApi, PoloOrder}
+import com.kobr4.tradebot.api.{ CurrencyPair, PoloApi, PoloOrder }
 import com.kobr4.tradebot.model.Asset.Usd
-import com.kobr4.tradebot.model.{Asset, Buy, Quantity}
+import com.kobr4.tradebot.model.{ Asset, Buy, Quantity }
 import org.scalatest.concurrent.PatienceConfiguration.Timeout
 import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.{BeforeAndAfterEach, FlatSpec, Matchers}
+import org.scalatest.{ BeforeAndAfterEach, FlatSpec, Matchers }
 
 import scala.collection.immutable.Range
 import scala.concurrent.duration._
@@ -80,8 +80,8 @@ class PoloApiTest extends FlatSpec with Matchers with ScalaFutures with BeforeAn
   it should "place a sell order" in {
     wireMockServer.stubFor(get(urlEqualTo("/markets/USD_BTC"))
       .willReturn(aResponse()
-      .withHeader("Content-Type", "text/plain")
-      .withBody("""[ {
+        .withHeader("Content-Type", "text/plain")
+        .withBody("""[ {
                     "symbol" : "XRP_USDT",
                     "baseCurrencyName" : "XRP",
                     "quoteCurrencyName" : "USDT",

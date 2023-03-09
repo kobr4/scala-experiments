@@ -1,6 +1,6 @@
 package com.kobr4.tradebot.api
 
-import java.time.{Instant, ZoneId, ZoneOffset, ZonedDateTime}
+import java.time.{ Instant, ZoneId, ZoneOffset, ZonedDateTime }
 
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
@@ -15,9 +15,8 @@ import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
 import play.api.libs.json._
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{ ExecutionContext, Future }
 import scala.math.BigDecimal.RoundingMode
-
 
 object PoloV2CurrencyPairHelper {
 
@@ -27,27 +26,26 @@ object PoloV2CurrencyPairHelper {
   }
 }
 
-
-
-case class PoloV2Trade(id: String,
-                       symbol: String,
-                       accountType: String,
-                       orderId: String,
-                       side: String,
-                       `type`: String,
-                       matchRole: String,
-                       createTime: Long,
-                       price: BigDecimal,
-                       quantity: BigDecimal,
-                       amount: BigDecimal,
-                       feeCurrency: String,
-                       feeAmount: BigDecimal,
-                       pageId: String,
-                       clientOrderId: String) {
+case class PoloV2Trade(
+  id: String,
+  symbol: String,
+  accountType: String,
+  orderId: String,
+  side: String,
+  `type`: String,
+  matchRole: String,
+  createTime: Long,
+  price: BigDecimal,
+  quantity: BigDecimal,
+  amount: BigDecimal,
+  feeCurrency: String,
+  feeAmount: BigDecimal,
+  pageId: String,
+  clientOrderId: String) {
 
   def toOrder: Order = this.side match {
-    case "BUY" => Buy(PoloV2CurrencyPairHelper.fromString(symbol), price, quantity, ZonedDateTime.ofInstant(Instant.ofEpochMilli(createTime),ZoneId.of("UTC")))
-    case "SELL" => Sell(PoloV2CurrencyPairHelper.fromString(symbol), price, quantity, ZonedDateTime.ofInstant(Instant.ofEpochMilli(createTime),ZoneId.of("UTC")))
+    case "BUY" => Buy(PoloV2CurrencyPairHelper.fromString(symbol), price, quantity, ZonedDateTime.ofInstant(Instant.ofEpochMilli(createTime), ZoneId.of("UTC")))
+    case "SELL" => Sell(PoloV2CurrencyPairHelper.fromString(symbol), price, quantity, ZonedDateTime.ofInstant(Instant.ofEpochMilli(createTime), ZoneId.of("UTC")))
   }
 }
 
@@ -61,41 +59,41 @@ object PoloV2Trade {
 
   implicit val poloTradeReads: Reads[PoloV2Trade] = (
     (JsPath \ "id").read[String] and
-      (JsPath \ "symbol").read[String] and
-      (JsPath \ "accountType").read[String] and
-      (JsPath \ "orderId").read[String] and
-      (JsPath \ "side").read[String] and
-      (JsPath \ "type").read[String] and
-      (JsPath \ "matchRole").read[String] and
-      (JsPath \ "createTime").read[Long] and
-      (JsPath \ "price").read[BigDecimal] and
-      (JsPath \ "quantity").read[BigDecimal] and
-      (JsPath \ "amount").read[BigDecimal] and
-      (JsPath \ "feeCurrency").read[String] and
-      (JsPath \ "feeAmount").read[BigDecimal] and
-      (JsPath \ "pageId").read[String] and
-      (JsPath \ "clientOrderId").read[String]
-    )(PoloV2Trade.apply _)
+    (JsPath \ "symbol").read[String] and
+    (JsPath \ "accountType").read[String] and
+    (JsPath \ "orderId").read[String] and
+    (JsPath \ "side").read[String] and
+    (JsPath \ "type").read[String] and
+    (JsPath \ "matchRole").read[String] and
+    (JsPath \ "createTime").read[Long] and
+    (JsPath \ "price").read[BigDecimal] and
+    (JsPath \ "quantity").read[BigDecimal] and
+    (JsPath \ "amount").read[BigDecimal] and
+    (JsPath \ "feeCurrency").read[String] and
+    (JsPath \ "feeAmount").read[BigDecimal] and
+    (JsPath \ "pageId").read[String] and
+    (JsPath \ "clientOrderId").read[String])(PoloV2Trade.apply _)
 }
 
-case class PoloV2Order(id: String,
-                       clientOrderId: String,
-                       symbol: String,
-                       state: String,
-                       accountType: String,
-                       side: String,
-                       `type`: String,
-                       timeInForce: String,
-                       quantity: String,
-                       price: String,
-                       avgPrice: String,
-                       amount: String,
-                       filledQuantity: String,
-                       filledAmount: String,
-                       createTime: Long,
-                       updateTime: Long,
-                       orderSource: String,
-                       loan: Boolean) {
+case class PoloV2Order(
+  id: String,
+  clientOrderId: String,
+  symbol: String,
+  state: String,
+  accountType: String,
+  side: String,
+  `type`: String,
+  timeInForce: String,
+  quantity: String,
+  price: String,
+  avgPrice: String,
+  amount: String,
+  filledQuantity: String,
+  filledAmount: String,
+  createTime: Long,
+  updateTime: Long,
+  orderSource: String,
+  loan: Boolean) {
 
   def toPoloOrder: PoloOrder = {
     PoloOrder(PoloV2CurrencyPairHelper.fromString(symbol), id, BigDecimal(price), BigDecimal(quantity))
@@ -108,34 +106,31 @@ object PoloV2Order {
   import play.api.libs.functional.syntax._
 
   implicit def poloOrderReads: Reads[PoloV2Order] = (
-      (JsPath \ "id").read[String] and
-      (JsPath \ "clientOrderId").read[String] and
-      (JsPath \ "symbol").read[String] and
-        (JsPath \ "state").read[String] and
-        (JsPath \ "accountType").read[String] and
-        (JsPath \ "side").read[String] and
-        (JsPath \ "type").read[String] and
-        (JsPath \ "timeInForce").read[String] and
-        (JsPath \ "quantity").read[String] and
-        (JsPath \ "price").read[String] and
-        (JsPath \ "avgPrice").read[String] and
-        (JsPath \ "amount").read[String] and
-        (JsPath \ "filledQuantity").read[String] and
-        (JsPath \ "filledAmount").read[String] and
-        (JsPath \ "createTime").read[Long] and
-        (JsPath \ "updateTime").read[Long] and
-        (JsPath \ "orderSource").read[String] and
-        (JsPath \ "loan").read[Boolean]
-    )(PoloV2Order.apply _)
-
+    (JsPath \ "id").read[String] and
+    (JsPath \ "clientOrderId").read[String] and
+    (JsPath \ "symbol").read[String] and
+    (JsPath \ "state").read[String] and
+    (JsPath \ "accountType").read[String] and
+    (JsPath \ "side").read[String] and
+    (JsPath \ "type").read[String] and
+    (JsPath \ "timeInForce").read[String] and
+    (JsPath \ "quantity").read[String] and
+    (JsPath \ "price").read[String] and
+    (JsPath \ "avgPrice").read[String] and
+    (JsPath \ "amount").read[String] and
+    (JsPath \ "filledQuantity").read[String] and
+    (JsPath \ "filledAmount").read[String] and
+    (JsPath \ "createTime").read[Long] and
+    (JsPath \ "updateTime").read[Long] and
+    (JsPath \ "orderSource").read[String] and
+    (JsPath \ "loan").read[Boolean])(PoloV2Order.apply _)
 
 }
 
-
 class PoloApiV2(
-               val apiKey: String = DefaultConfiguration.PoloApi.Key,
-               val apiSecret: String = DefaultConfiguration.PoloApi.Secret,
-               val poloUrl: String = PoloApi.rootUrl, val apiUrl: String = "https://api.poloniex.com")(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext) extends ExchangeApi {
+  val apiKey: String = DefaultConfiguration.PoloApi.Key,
+  val apiSecret: String = DefaultConfiguration.PoloApi.Secret,
+  val poloUrl: String = PoloApi.rootUrl, val apiUrl: String = "https://api.poloniex.com")(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext) extends ExchangeApi {
 
   def nonce = System.currentTimeMillis()
 
@@ -147,37 +142,36 @@ class PoloApiV2(
 
   implicit def poloOrderReads(pair: CurrencyPair): Reads[PoloOrder] = (
     Reads.pure(pair) and
-      (JsPath \ "orderNumber").read[String] and
-      (JsPath \ "rate").read[BigDecimal] and
-      (JsPath \ "amount").read[BigDecimal])(PoloOrder.apply _)
+    (JsPath \ "orderNumber").read[String] and
+    (JsPath \ "rate").read[BigDecimal] and
+    (JsPath \ "amount").read[BigDecimal])(PoloOrder.apply _)
 
   def quoteReads(pair: CurrencyPair): Reads[Quote] = (
     Reads.pure(pair) and
-      (JsPath \ "last").read[BigDecimal] and
-      (JsPath \ "lowestAsk").read[BigDecimal] and
-      (JsPath \ "highestBid").read[BigDecimal] and
-      (JsPath \ "percentChange").read[BigDecimal] and
-      (JsPath \ "baseVolume").read[BigDecimal] and
-      (JsPath \ "quoteVolume").read[BigDecimal])(Quote.apply _)
+    (JsPath \ "last").read[BigDecimal] and
+    (JsPath \ "lowestAsk").read[BigDecimal] and
+    (JsPath \ "highestBid").read[BigDecimal] and
+    (JsPath \ "percentChange").read[BigDecimal] and
+    (JsPath \ "baseVolume").read[BigDecimal] and
+    (JsPath \ "quoteVolume").read[BigDecimal])(Quote.apply _)
 
   def balanceRead: Reads[(Asset, Quantity)] =
     ((JsPath \ "currency").read[String] and
       (JsPath \ "available").read[BigDecimal])((currency, available) => (Asset.fromString(currency), Quantity(available)))
 
-
   implicit val pairPriceReads: Reads[PairPrice] = (
     (JsPath \ "date").read[String].map(t => ZonedDateTime.ofInstant(Instant.ofEpochSecond(t.toLong), ZoneOffset.UTC)) and
-      (JsPath \ "close").read[BigDecimal])(PairPrice.apply _)
+    (JsPath \ "close").read[BigDecimal])(PairPrice.apply _)
 
   override def returnBalances: Future[Map[Asset, Quantity]] =
-    PoloApiV2.httpRequestGet(s"$apiUrl" ,"accounts/balances", PoloApiV2.ReturnBalances.build(), apiKey, apiSecret).map { message =>
+    PoloApiV2.httpRequestGet(s"$apiUrl", "accounts/balances", PoloApiV2.ReturnBalances.build(), apiKey, apiSecret).map { message =>
       (Json.parse(message) \\ "balances").head.as[JsArray].value
         .map(_.as[(Asset, Quantity)](balanceRead))
         .toMap
     }
 
   override def returnDepositAddresses: Future[Map[Asset, String]] =
-    PoloApiV2.httpRequestGet(s"$apiUrl","wallets/addresses", ReturnDepositAddresses.build(), apiKey, apiSecret).map { message =>
+    PoloApiV2.httpRequestGet(s"$apiUrl", "wallets/addresses", ReturnDepositAddresses.build(), apiKey, apiSecret).map { message =>
       Json.parse(message).as[JsObject].fields.map {
         case (s, v) => (Asset.fromString(s.toUpperCase), v.as[String])
       }.toMap
@@ -190,7 +184,7 @@ class PoloApiV2(
     }
 
   override def cancelOrder(order: PoloOrder): Future[Boolean] = {
-    PoloApiV2.httpRequestPost(s"$apiUrl",s"/orders/${order.orderNumber}", CancelOrder.build(nonce, order.orderNumber), apiKey, apiSecret).map { message =>
+    PoloApiV2.httpRequestPost(s"$apiUrl", s"/orders/${order.orderNumber}", CancelOrder.build(nonce, order.orderNumber), apiKey, apiSecret).map { message =>
       Json.parse(message).as[JsObject].value.get("success").exists(_.as[Int] match {
         case 1 => true
         case _ => false
@@ -199,23 +193,23 @@ class PoloApiV2(
   }
 
   override def returnTradeHistory(
-                                   start: ZonedDateTime = ZonedDateTime.now().minusMonths(1),
-                                   end: ZonedDateTime = ZonedDateTime.now()): Future[List[Order]] = {
-    PoloApiV2.httpRequestGet(s"$apiUrl","trades", ReturnTradeHistory.build(start.toInstant.toEpochMilli, end.toInstant.toEpochMilli), apiKey, apiSecret).map { message =>
+    start: ZonedDateTime = ZonedDateTime.now().minusMonths(1),
+    end: ZonedDateTime = ZonedDateTime.now()): Future[List[Order]] = {
+    PoloApiV2.httpRequestGet(s"$apiUrl", "trades", ReturnTradeHistory.build(start.toInstant.toEpochMilli, end.toInstant.toEpochMilli), apiKey, apiSecret).map { message =>
       Json.parse(message).as[JsArray].value.map(_.as[PoloV2Trade].toOrder).toList
     }
   }
 
   override def buy(currencyPair: CurrencyPair, rate: BigDecimal, amount: BigDecimal): Future[Order] =
     getMarket(currencyPair).flatMap { market =>
-      PoloApiV2.httpRequestPost(s"$apiUrl","orders", BuySell.build(currencyPair.toString, rate, amount.setScale(market.symbolTradeLimit.quantityScale, RoundingMode.DOWN), true), apiKey, apiSecret).map { _ =>
+      PoloApiV2.httpRequestPost(s"$apiUrl", "orders", BuySell.build(currencyPair.toString, rate, amount.setScale(market.symbolTradeLimit.quantityScale, RoundingMode.DOWN), true), apiKey, apiSecret).map { _ =>
         Buy(currencyPair, rate, amount.setScale(market.symbolTradeLimit.quantityScale, RoundingMode.DOWN), ZonedDateTime.now())
       }
     }
 
   override def sell(currencyPair: CurrencyPair, rate: BigDecimal, amount: BigDecimal): Future[Order] =
     getMarket(currencyPair).flatMap { market =>
-      PoloApiV2.httpRequestPost(s"$apiUrl","orders", BuySell.build(currencyPair.toString, rate, amount.setScale(market.symbolTradeLimit.quantityScale, RoundingMode.DOWN), false), apiKey, apiSecret).map { _ =>
+      PoloApiV2.httpRequestPost(s"$apiUrl", "orders", BuySell.build(currencyPair.toString, rate, amount.setScale(market.symbolTradeLimit.quantityScale, RoundingMode.DOWN), false), apiKey, apiSecret).map { _ =>
         Sell(currencyPair, rate, amount.setScale(market.symbolTradeLimit.quantityScale, RoundingMode.DOWN), ZonedDateTime.now())
       }
     }
@@ -229,13 +223,13 @@ class PoloApiV2(
 
   def returnChartData(currencyPair: CurrencyPair, period: Int, start: ZonedDateTime, end: ZonedDateTime): Future[PairPrices] =
     PoloApiV2.httpRequest(publicUrl, Public.returnChartData + "&" + toRequestString(ReturnChartData.build(currencyPair.toString, period, start.toEpochSecond, end.toEpochSecond)).toString).map {
-      message => {
-        PairPrices(Json.parse(message).as[JsArray].value.toList.map { item =>
-          item.as[PairPrice]
-        })
-      }
+      message =>
+        {
+          PairPrices(Json.parse(message).as[JsArray].value.toList.map { item =>
+            item.as[PairPrice]
+          })
+        }
     }
-
 
   def getMarket(currencyPair: CurrencyPair): Future[PoloMarket] =
     PoloApiV2.httpRequest(s"$apiUrl/markets/${currencyPair.right}_${currencyPair.left}").map { message =>
@@ -280,8 +274,7 @@ object PoloApiV2 extends StrictLogging {
         BuySell.price -> price.underlying().toPlainString,
         BuySell.quantity -> quantity.underlying().toPlainString,
         BuySell.side -> (if (isBuy) BuySell.buy else BuySell.sell),
-        BuySell.`type` -> "LIMIT"
-      )
+        BuySell.`type` -> "LIMIT")
     }
   }
 
@@ -355,14 +348,13 @@ object PoloApiV2 extends StrictLogging {
 
     val Symbol = "symbol"
 
-    val States  = "states"
+    val States = "states"
 
     val AccountType = "accountType"
 
     def build(start: Long, end: Long): Map[String, String] = Map(
       PoloApiV2.ReturnTradeHistory.EndTime -> end.toString,
-      PoloApiV2.ReturnTradeHistory.StartTime -> start.toString
-    )
+      PoloApiV2.ReturnTradeHistory.StartTime -> start.toString)
   }
 
   private def httpRequest(url: String)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[String] = {
@@ -379,22 +371,19 @@ object PoloApiV2 extends StrictLogging {
     }
   }
 
-  private def toRequestString(input: Map[String,String]): String = {
-    input.toList.sortBy(_._1).map(e => e._1+"="+e._2).mkString("&")
+  private def toRequestString(input: Map[String, String]): String = {
+    input.toList.sortBy(_._1).map(e => e._1 + "=" + e._2).mkString("&")
   }
 
-
-
-  private def httpRequestGet(url: String, method: String, body: Map[String,String], apiKey: String, apiSecret: String)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[String] = {
+  private def httpRequestGet(url: String, method: String, body: Map[String, String], apiKey: String, apiSecret: String)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[String] = {
     val signTimestamp = System.currentTimeMillis()
 
     logger.info(s"Sending get request to $url/$method")
     logger.info(s"Body: ${toRequestString(body ++ Map("signTimestamp" -> signTimestamp.toString))}")
 
-
     val bodyToSign =
-      "GET\n"+
-        s"/$method\n"+
+      "GET\n" +
+        s"/$method\n" +
         s"${toRequestString(body ++ Map("signTimestamp" -> signTimestamp.toString))}"
 
     Http().singleRequest(HttpRequest(
@@ -405,7 +394,7 @@ object PoloApiV2 extends StrictLogging {
       if (response.status == StatusCodes.OK)
         Unmarshal(response.entity).to[String]
       else {
-        logger.error("Unexpected response code ({}) reason ({})",response.status.value, response.status.reason())
+        logger.error("Unexpected response code ({}) reason ({})", response.status.value, response.status.reason())
         //response.discardEntityBytes()
         Unmarshal(response.entity).to[String].map(body => logger.error(body))
         throw new RuntimeException("Return code was " + response.status)
@@ -413,17 +402,16 @@ object PoloApiV2 extends StrictLogging {
     }
   }
 
-  private def httpRequestPost(url: String, method: String, body: Map[String,String], apiKey: String, apiSecret: String)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[String] = {
+  private def httpRequestPost(url: String, method: String, body: Map[String, String], apiKey: String, apiSecret: String)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[String] = {
     val signTimestamp = System.currentTimeMillis()
 
     logger.info(s"Sending post request to $url/$method")
     logger.info(s"Body: ${toRequestString(body ++ Map("signTimestamp" -> signTimestamp.toString))}")
 
-
     val bodyToSign =
-      "POST\n"+
-      s"/$method\n"+
-      s"requestBody=${Json.toJson(body).toString}\nsignTimestamp=$signTimestamp"
+      "POST\n" +
+        s"/$method\n" +
+        s"requestBody=${Json.toJson(body).toString}\nsignTimestamp=$signTimestamp"
 
     Http().singleRequest(HttpRequest(
       method = HttpMethods.POST,
@@ -433,7 +421,7 @@ object PoloApiV2 extends StrictLogging {
       if (response.status == StatusCodes.OK)
         Unmarshal(response.entity).to[String]
       else {
-        logger.error("Unexpected response code ({}) reason ({})",response.status.value, response.status.reason())
+        logger.error("Unexpected response code ({}) reason ({})", response.status.value, response.status.reason())
         //response.discardEntityBytes()
         Unmarshal(response.entity).to[String].map(body => logger.error(body))
         throw new RuntimeException("Return code was " + response.status)
