@@ -52,7 +52,7 @@ object BinanceCurrencyPairHelper {
       case 9 | 10 =>
         (pairString.substring(0, 6), pairString.substring(6))
       case 11 =>
-        (pairString.substring(0,7), pairString.substring(7))
+        (pairString.substring(0, 7), pairString.substring(7))
       case 12 =>
         (pairString.substring(0, 8), pairString.substring(8))
       case 13 =>
@@ -358,7 +358,7 @@ object BinanceApi extends StrictLogging {
       if (response.status == StatusCodes.OK) {
         Unmarshal(response.entity).to[String]
       } else {
-        logger.error("Unexpected response code ({}) reason ({})",response.status.value, response.status.reason())
+        logger.error("Unexpected response code ({}) reason ({})", response.status.value, response.status.reason())
         response.discardEntityBytes()
         throw new RuntimeException(s"Return code was ${response.status}")
       }

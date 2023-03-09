@@ -1,6 +1,6 @@
 package com.kobr4.tradebot.api
 
-import java.time.{Instant, ZoneId, ZoneOffset, ZonedDateTime}
+import java.time.{ Instant, ZoneId, ZoneOffset, ZonedDateTime }
 
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
@@ -15,7 +15,7 @@ import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
 import play.api.libs.json._
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{ ExecutionContext, Future }
 import scala.math.BigDecimal.RoundingMode
 
 case class PoloOrder(currencyPair: CurrencyPair, orderNumber: String, rate: BigDecimal, amount: BigDecimal)
@@ -30,10 +30,10 @@ case class PoloTrade(globalTradeID: String, tradeID: Long, date: ZonedDateTime, 
 }
 
 case class PoloMarket(symbol: String, baseCurrencyName: String, quoteCurrencyName: String, displayName: String,
-                      state: String, visibleStartTime: Long, tradableStartTime: Long, symbolTradeLimit: PoloSymbolTradeLimit)
+  state: String, visibleStartTime: Long, tradableStartTime: Long, symbolTradeLimit: PoloSymbolTradeLimit)
 
-case class PoloSymbolTradeLimit(symbol:	String, priceScale: Int, quantityScale: Int, amountScale: Int,
-                                minQuantity: String, minAmount: String, highestBid:	String, lowestAsk: String)
+case class PoloSymbolTradeLimit(symbol: String, priceScale: Int, quantityScale: Int, amountScale: Int,
+  minQuantity: String, minAmount: String, highestBid: String, lowestAsk: String)
 
 object PoloMarket {
 
@@ -49,18 +49,16 @@ object PoloMarket {
     (JsPath \ "highestBid").read[String] and
     (JsPath \ "lowestAsk").read[String])(PoloSymbolTradeLimit.apply _)
 
-
   implicit val poloMarketReads: Reads[PoloMarket] = (
     (JsPath \ "symbol").read[String] and
-      (JsPath \ "baseCurrencyName").read[String] and
-      (JsPath \ "quoteCurrencyName").read[String] and
-      (JsPath \ "displayName").read[String] and
-      (JsPath \ "state").read[String] and
-      (JsPath \ "visibleStartTime").read[Long] and
-      (JsPath \ "tradableStartTime").read[Long] and
-      (JsPath \ "symbolTradeLimit").read[PoloSymbolTradeLimit])(PoloMarket.apply _)
+    (JsPath \ "baseCurrencyName").read[String] and
+    (JsPath \ "quoteCurrencyName").read[String] and
+    (JsPath \ "displayName").read[String] and
+    (JsPath \ "state").read[String] and
+    (JsPath \ "visibleStartTime").read[Long] and
+    (JsPath \ "tradableStartTime").read[Long] and
+    (JsPath \ "symbolTradeLimit").read[PoloSymbolTradeLimit])(PoloMarket.apply _)
 }
-
 
 object PoloTrade {
 
@@ -211,13 +209,13 @@ class PoloApi(
 
   def returnChartData(currencyPair: CurrencyPair, period: Int, start: ZonedDateTime, end: ZonedDateTime): Future[PairPrices] =
     PoloApi.httpRequest(publicUrl, Public.returnChartData + "&" + ReturnChartData.build(currencyPair.toString, period, start.toEpochSecond, end.toEpochSecond).fields.toString).map {
-      message => {
-        PairPrices(Json.parse(message).as[JsArray].value.toList.map { item =>
-          item.as[PairPrice]
-        })
-      }
+      message =>
+        {
+          PairPrices(Json.parse(message).as[JsArray].value.toList.map { item =>
+            item.as[PairPrice]
+          })
+        }
     }
-
 
   def getMarket(currencyPair: CurrencyPair): Future[PoloMarket] =
     PoloApi.httpRequest(s"$apiUrl/markets/${currencyPair.right}_${currencyPair.left}").map { message =>
@@ -369,7 +367,7 @@ object PoloApi extends StrictLogging {
       if (response.status == StatusCodes.OK)
         Unmarshal(response.entity).to[String]
       else {
-        logger.error("Unexpected response code ({}) reason ({})",response.status.value, response.status.reason())
+        logger.error("Unexpected response code ({}) reason ({})", response.status.value, response.status.reason())
         //response.discardEntityBytes()
         Unmarshal(response.entity).to[String].map(body => logger.error(body))
         throw new RuntimeException("Return code was " + response.status)

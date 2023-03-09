@@ -5,13 +5,13 @@ import akka.stream.ActorMaterializer
 import com.kobr4.tradebot.model.Asset
 import com.kobr4.tradebot.services.PriceService
 import org.scalatest.concurrent.PatienceConfiguration.Timeout
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.{ FlatSpec, Matchers }
 import org.scalatest.concurrent.ScalaFutures
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
 
-class PriceServiceIT extends FlatSpec with ScalaFutures with Matchers{
+class PriceServiceIT extends FlatSpec with ScalaFutures with Matchers {
 
   implicit val as = ActorSystem()
   implicit val am = ActorMaterializer()
@@ -22,6 +22,5 @@ class PriceServiceIT extends FlatSpec with ScalaFutures with Matchers{
 
     PriceService.getPriceData(Asset.Btc).futureValue(Timeout(30 seconds))
   }
-
 
 }
