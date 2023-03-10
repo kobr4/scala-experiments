@@ -184,9 +184,9 @@ class PoloApiV2(
     }
 
   override def cancelOrder(order: PoloOrder): Future[Boolean] = {
-    PoloApiV2.httpRequestPost(s"$apiUrl", s"/orders/${order.orderNumber}", CancelOrder.build(nonce, order.orderNumber), apiKey, apiSecret).map { message =>
-      Json.parse(message).as[JsObject].value.get("success").exists(_.as[Int] match {
-        case 1 => true
+    PoloApiV2.httpRequestDelete(s"$apiUrl", s"/orders/${order.orderNumber}", CancelOrder.build(), apiKey, apiSecret).map { message =>
+      Json.parse(message).as[JsObject].value.get("code").exists(_.as[Int] match {
+        case 200 => true
         case _ => false
       })
     }
@@ -334,10 +334,7 @@ object PoloApiV2 extends StrictLogging {
 
     val OrderNumber = "orderNumber"
 
-    def build(nonce: Long, orderNumber: String): Map[String, String] = Map(
-      PoloApi.Command -> CancelOrder,
-      PoloApi.CancelOrder.OrderNumber -> orderNumber,
-      PoloApi.Nonce -> nonce.toString)
+    def build(): Map[String, String] = Map()
   }
 
   object ReturnTradeHistory {
@@ -402,16 +399,51 @@ object PoloApiV2 extends StrictLogging {
     }
   }
 
+  private def httpRequestDelete(url: String, method: String, body: Map[String, String], apiKey: String, apiSecret: String)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[String] = {
+    val signTimestamp = System.currentTimeMillis()
+
+    logger.info(s"Sending delete request to $url/$method")
+    logger.info(s"Body: ${toRequestString(body ++ Map("signTimestamp" -> signTimestamp.toString))}")
+
+    val bodyToSign = if (body.isEmpty)
+      "DELETE\n" +
+        s"/$method\n" +
+        s"signTimestamp=$signTimestamp"
+    else
+      "DELETE\n" +
+        s"/$method\n" +
+        s"requestBody=${Json.toJson(body).toString}&signTimestamp=$signTimestamp"
+
+    Http().singleRequest(HttpRequest(
+      method = HttpMethods.DELETE,
+      headers = AuthHeader.build(signTimestamp.toString, apiKey, generateHMAC256(apiSecret, bodyToSign)),
+      entity = Json.toJson(body).toString,
+      uri = s"$url/$method")).flatMap { response =>
+      if (response.status == StatusCodes.OK)
+        Unmarshal(response.entity).to[String]
+      else {
+        logger.error("Unexpected response code ({}) reason ({})", response.status.value, response.status.reason())
+        //response.discardEntityBytes()
+        Unmarshal(response.entity).to[String].map(body => logger.error(body))
+        throw new RuntimeException("Return code was " + response.status)
+      }
+    }
+  }
+
   private def httpRequestPost(url: String, method: String, body: Map[String, String], apiKey: String, apiSecret: String)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[String] = {
     val signTimestamp = System.currentTimeMillis()
 
     logger.info(s"Sending post request to $url/$method")
     logger.info(s"Body: ${toRequestString(body ++ Map("signTimestamp" -> signTimestamp.toString))}")
 
-    val bodyToSign =
+    val bodyToSign = if (body.isEmpty)
       "POST\n" +
         s"/$method\n" +
-        s"requestBody=${Json.toJson(body).toString}\nsignTimestamp=$signTimestamp"
+        s"signTimestamp=$signTimestamp"
+    else
+      "POST\n" +
+        s"/$method\n" +
+        s"requestBody=${Json.toJson(body).toString}&signTimestamp=$signTimestamp"
 
     Http().singleRequest(HttpRequest(
       method = HttpMethods.POST,

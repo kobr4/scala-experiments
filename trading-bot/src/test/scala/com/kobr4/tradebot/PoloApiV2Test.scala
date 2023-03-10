@@ -206,15 +206,20 @@ class PoloApiV2Test extends FlatSpec with Matchers with ScalaFutures with Before
                     }
                   } ]""")))
 
-    wireMockServer.stubFor(post(urlEqualTo("/tradingApi"))
+    wireMockServer.stubFor(post(urlEqualTo("/orders"))
       .willReturn(aResponse()
         .withHeader("Content-Type", "text/plain")
         .withBody(
-          """{"orderNumber":31226040,"resultingTrades":[{"amount":"338.8732","date":"2014-10-18 23:03:21"
-            |,"rate":"0.00000173","total":"0.00058625","tradeID":"16164","type":"buy"}]}""".stripMargin)))
+            """
+            |{
+            |  "id": "29772698821328896",
+            |  "clientOrderId": "1234Abc"
+            |}""".stripMargin)))
 
     val api = new PoloApiV2(DefaultConfiguration.PoloApi.Key, DefaultConfiguration.PoloApi.Secret, poloUrl, poloUrl)
-    api.buy(CurrencyPair(Asset.Btc, Asset.Usd), BigDecimal("1"), BigDecimal("1")).futureValue(Timeout(10 seconds))
+    val order = api.buy(CurrencyPair(Asset.Btc, Asset.Usd), BigDecimal("1"), BigDecimal("1")).futureValue(Timeout(10 seconds))
+
+    order.typeStr shouldBe "BUY"
   }
 
   it should "return ticker" in {
