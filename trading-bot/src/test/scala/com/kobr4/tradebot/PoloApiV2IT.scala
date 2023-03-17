@@ -59,19 +59,4 @@ class PoloApiV2IT extends FlatSpec with ScalaFutures with Matchers {
     val market = api.getMarket(CurrencyPair(Asset.Tether, Asset.Eth)).futureValue(Timeout(10 seconds))
     println(market)
   }
-
-/*
-  it should "sell 1 eth at 2000USD" in {
-    val api = new PoloApiV2
-    val sellOrder = api.sell(CurrencyPair(Asset.Tether, Asset.Eth), BigDecimal("2000"), BigDecimal(1)).futureValue(Timeout(10 seconds))
-    println(sellOrder)
-  }
-*/
-/*
-  it should "cancel order" in {
-    val api = new PoloApiV2
-    val cancelOrder = api.cancelOrder(PoloOrder(CurrencyPair(Asset.Tether, Asset.Eth), "159719425044602880", BigDecimal("1"), BigDecimal("1") )).futureValue(Timeout(10 seconds))
-    println(cancelOrder)
-  }
-*/
 }
