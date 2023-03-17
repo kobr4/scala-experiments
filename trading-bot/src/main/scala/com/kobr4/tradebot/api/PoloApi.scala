@@ -82,6 +82,10 @@ object PoloTrade {
 }
 
 case class CurrencyPair(left: Asset, right: Asset) {
+  def toInvertedString: String = {
+    s"${right.toString}_${left.toString}"
+  }
+
   override def toString: String = {
     s"${left.toString}_${right.toString}"
   }

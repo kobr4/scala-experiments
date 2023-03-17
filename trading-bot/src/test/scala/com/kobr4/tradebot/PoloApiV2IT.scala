@@ -4,11 +4,11 @@ import java.time.ZonedDateTime
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
-import com.kobr4.tradebot.api.{ CurrencyPair, PoloApiV2 }
+import com.kobr4.tradebot.api.{CurrencyPair, PoloApiV2, PoloOrder}
 import com.kobr4.tradebot.model.Asset
 import org.scalatest.concurrent.PatienceConfiguration.Timeout
 import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.{ FlatSpec, Matchers }
+import org.scalatest.{FlatSpec, Matchers}
 
 import scala.concurrent.duration._
 
@@ -60,4 +60,18 @@ class PoloApiV2IT extends FlatSpec with ScalaFutures with Matchers {
     println(market)
   }
 
+/*
+  it should "sell 1 eth at 2000USD" in {
+    val api = new PoloApiV2
+    val sellOrder = api.sell(CurrencyPair(Asset.Tether, Asset.Eth), BigDecimal("2000"), BigDecimal(1)).futureValue(Timeout(10 seconds))
+    println(sellOrder)
+  }
+*/
+/*
+  it should "cancel order" in {
+    val api = new PoloApiV2
+    val cancelOrder = api.cancelOrder(PoloOrder(CurrencyPair(Asset.Tether, Asset.Eth), "159719425044602880", BigDecimal("1"), BigDecimal("1") )).futureValue(Timeout(10 seconds))
+    println(cancelOrder)
+  }
+*/
 }
