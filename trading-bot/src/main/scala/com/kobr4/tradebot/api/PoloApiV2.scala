@@ -184,7 +184,7 @@ class PoloApiV2(
     }
 
   override def cancelOrder(order: PoloOrder): Future[Boolean] = {
-    PoloApiV2.httpRequestDelete(s"$apiUrl", s"/orders/${order.orderNumber}", CancelOrder.build(), apiKey, apiSecret).map { message =>
+    PoloApiV2.httpRequestDelete(s"$apiUrl", s"orders/${order.orderNumber}", CancelOrder.build(), apiKey, apiSecret).map { message =>
       Json.parse(message).as[JsObject].value.get("code").exists(_.as[Int] match {
         case 200 => true
         case _ => false
@@ -202,14 +202,16 @@ class PoloApiV2(
 
   override def buy(currencyPair: CurrencyPair, rate: BigDecimal, amount: BigDecimal): Future[Order] =
     getMarket(currencyPair).flatMap { market =>
-      PoloApiV2.httpRequestPost(s"$apiUrl", "orders", BuySell.build(currencyPair.toString, rate, amount.setScale(market.symbolTradeLimit.quantityScale, RoundingMode.DOWN), true), apiKey, apiSecret).map { _ =>
+      PoloApiV2.httpRequestPost(s"$apiUrl", "orders", BuySell.build(currencyPair.toInvertedString, rate, amount.setScale(market.symbolTradeLimit.quantityScale, RoundingMode.DOWN), true), apiKey, apiSecret).map { _ =>
         Buy(currencyPair, rate, amount.setScale(market.symbolTradeLimit.quantityScale, RoundingMode.DOWN), ZonedDateTime.now())
       }
     }
 
   override def sell(currencyPair: CurrencyPair, rate: BigDecimal, amount: BigDecimal): Future[Order] =
     getMarket(currencyPair).flatMap { market =>
-      PoloApiV2.httpRequestPost(s"$apiUrl", "orders", BuySell.build(currencyPair.toString, rate, amount.setScale(market.symbolTradeLimit.quantityScale, RoundingMode.DOWN), false), apiKey, apiSecret).map { _ =>
+      PoloApiV2.httpRequestPost(s"$apiUrl", "orders",
+        BuySell.build(market.symbol, rate.setScale(market.symbolTradeLimit.priceScale, RoundingMode.DOWN), amount.setScale(market.symbolTradeLimit.quantityScale, RoundingMode.DOWN), false),
+        apiKey, apiSecret).map { _ =>
         Sell(currencyPair, rate, amount.setScale(market.symbolTradeLimit.quantityScale, RoundingMode.DOWN), ZonedDateTime.now())
       }
     }
@@ -268,13 +270,19 @@ object PoloApiV2 extends StrictLogging {
 
     val side = "side"
 
+    val timeInForce = "timeInForce"
+
+    val clientOrderId = "clientOrderId"
+
     def build(currencyPair: String, price: BigDecimal, quantity: BigDecimal, isBuy: Boolean) = {
       Map(
         BuySell.symbol -> currencyPair,
         BuySell.price -> price.underlying().toPlainString,
         BuySell.quantity -> quantity.underlying().toPlainString,
         BuySell.side -> (if (isBuy) BuySell.buy else BuySell.sell),
-        BuySell.`type` -> "LIMIT")
+        BuySell.`type` -> "LIMIT",
+        BuySell.timeInForce -> "GTC",
+        BuySell.clientOrderId -> "")
     }
   }
 
@@ -434,7 +442,6 @@ object PoloApiV2 extends StrictLogging {
     val signTimestamp = System.currentTimeMillis()
 
     logger.info(s"Sending post request to $url/$method")
-    logger.info(s"Body: ${toRequestString(body ++ Map("signTimestamp" -> signTimestamp.toString))}")
 
     val bodyToSign = if (body.isEmpty)
       "POST\n" +
@@ -445,16 +452,17 @@ object PoloApiV2 extends StrictLogging {
         s"/$method\n" +
         s"requestBody=${Json.toJson(body).toString}&signTimestamp=$signTimestamp"
 
+    logger.info(bodyToSign)
+
     Http().singleRequest(HttpRequest(
       method = HttpMethods.POST,
       headers = AuthHeader.build(signTimestamp.toString, apiKey, generateHMAC256(apiSecret, bodyToSign)),
-      entity = Json.toJson(body).toString,
+      entity = HttpEntity(ContentTypes.`application/json`,Json.toJson(body).toString),
       uri = s"$url/$method")).flatMap { response =>
       if (response.status == StatusCodes.OK)
         Unmarshal(response.entity).to[String]
       else {
         logger.error("Unexpected response code ({}) reason ({})", response.status.value, response.status.reason())
-        //response.discardEntityBytes()
         Unmarshal(response.entity).to[String].map(body => logger.error(body))
         throw new RuntimeException("Return code was " + response.status)
       }
