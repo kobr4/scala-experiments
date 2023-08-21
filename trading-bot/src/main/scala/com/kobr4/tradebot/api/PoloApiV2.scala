@@ -146,14 +146,14 @@ class PoloApiV2(
     (JsPath \ "rate").read[BigDecimal] and
     (JsPath \ "amount").read[BigDecimal])(PoloOrder.apply _)
 
-  def quoteReads(pair: CurrencyPair): Reads[Quote] = (
-    Reads.pure(pair) and
-    (JsPath \ "last").read[BigDecimal] and
-    (JsPath \ "lowestAsk").read[BigDecimal] and
-    (JsPath \ "highestBid").read[BigDecimal] and
-    (JsPath \ "percentChange").read[BigDecimal] and
-    (JsPath \ "baseVolume").read[BigDecimal] and
-    (JsPath \ "quoteVolume").read[BigDecimal])(Quote.apply _)
+  def quoteReads: Reads[Quote] = (
+    (JsPath \ "symbol").read[String].map(PoloV2CurrencyPairHelper.fromString) and
+    (JsPath \ "price").read[BigDecimal] and
+    Reads.pure(BigDecimal(0)) and
+      Reads.pure(BigDecimal(0)) and
+      Reads.pure(BigDecimal(0)) and
+      Reads.pure(BigDecimal(0)) and
+      Reads.pure(BigDecimal(0)))(Quote.apply _)
 
   def balanceRead: Reads[(Asset, Quantity)] =
     ((JsPath \ "currency").read[String] and
@@ -216,22 +216,15 @@ class PoloApiV2(
       }
     }
 
-  override def returnTicker()(implicit ec: ExecutionContext): Future[List[Quote]] = PoloApiV2.httpRequest(publicUrl, Public.returnTicker).map { message =>
-    Json.parse(message).as[JsObject].fields.flatMap {
-      case (s, v) => v.asOpt[Quote](quoteReads(PoloCurrencyPairHelper.fromString(s)))
-      case _ => None
+  override def returnTicker()(implicit ec: ExecutionContext): Future[List[Quote]] = PoloApiV2.httpRequestGetNoAuth(s"$apiUrl", Public.marketsPrice).map { message =>
+    Json.parse(message).as[JsArray].value.map {
+      q => {
+        print(q)
+        q.as[Quote](quoteReads)
+
+      }
     }.toList
   }
-
-  def returnChartData(currencyPair: CurrencyPair, period: Int, start: ZonedDateTime, end: ZonedDateTime): Future[PairPrices] =
-    PoloApiV2.httpRequest(publicUrl, Public.returnChartData + "&" + toRequestString(ReturnChartData.build(currencyPair.toString, period, start.toEpochSecond, end.toEpochSecond)).toString).map {
-      message =>
-        {
-          PairPrices(Json.parse(message).as[JsArray].value.toList.map { item =>
-            item.as[PairPrice]
-          })
-        }
-    }
 
   def getMarket(currencyPair: CurrencyPair): Future[PoloMarket] =
     PoloApiV2.httpRequest(s"$apiUrl/markets/${currencyPair.right}_${currencyPair.left}").map { message =>
@@ -249,9 +242,9 @@ object PoloApiV2 extends StrictLogging {
 
   object Public {
 
-    val returnTicker = "returnTicker"
+    def marketsCandles(symbol: String) = s"markets/$symbol/candles"
 
-    val returnChartData = "returnChartData"
+    val marketsPrice = "markets/price"
   }
 
   object BuySell {
@@ -324,16 +317,14 @@ object PoloApiV2 extends StrictLogging {
 
   object ReturnChartData {
 
-    val CurrencyPair = "currencyPair"
+    val Interval = "interval"
 
-    val Period = "period"
+    val StartTime = "startTime"
 
-    val Start = "start"
+    val EndTime = "endTime"
 
-    val End = "end"
-
-    def build(currencyPair: String, period: Int, start: Long, end: Long): Map[String, String] =
-      Map(CurrencyPair -> currencyPair, Period -> period.toString, Start -> start.toString, End -> end.toString)
+    def build(interval: String, start: Long, end: Long): Map[String, String] =
+      Map(Interval -> interval, StartTime -> start.toString, EndTime -> end.toString)
   }
 
   object CancelOrder {
@@ -372,6 +363,14 @@ object PoloApiV2 extends StrictLogging {
   private def httpRequest(url: String, command: String)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[String] = {
 
     Http().singleRequest(HttpRequest(uri = s"$url?command=$command")).flatMap { response =>
+      Unmarshal(response.entity).to[String]
+    }
+  }
+
+  private def httpRequestGetNoAuth(url: String, path: String)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[String] = {
+
+    Http().singleRequest(HttpRequest(uri = s"$url/$path")).flatMap { response =>
+      print(s"$url/$path "+response.status)
       Unmarshal(response.entity).to[String]
     }
   }
