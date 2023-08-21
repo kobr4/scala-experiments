@@ -32,13 +32,6 @@ class PoloApiV2IT extends FlatSpec with ScalaFutures with Matchers {
     println(tradeList)
   }
 
-  it should "return charts data" in {
-    val api = new PoloApiV2
-    val chartData = api.returnChartData(CurrencyPair(Asset.Btc, Asset.Eth), 300,
-      ZonedDateTime.parse("2017-01-01T01:00:00.000Z"), ZonedDateTime.parse("2017-02-01T01:00:00.000Z")).futureValue(Timeout(10 seconds))
-
-    chartData.prices.length shouldNot be(0)
-  }
 
   it should "return open orders" in {
     val api = new PoloApiV2

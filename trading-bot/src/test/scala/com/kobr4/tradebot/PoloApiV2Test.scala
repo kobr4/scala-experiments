@@ -223,14 +223,20 @@ class PoloApiV2Test extends FlatSpec with Matchers with ScalaFutures with Before
   }
 
   it should "return ticker" in {
-    wireMockServer.stubFor(get(urlEqualTo("/public?command=returnTicker"))
+    wireMockServer.stubFor(get(urlEqualTo("/markets/price"))
       .willReturn(aResponse()
         .withHeader("Content-Type", "text/plain")
         .withBody(
           """
-          | {"BTC_USD":{"last":"0.0251","lowestAsk":"0.02589999","highestBid":"0.0251","percentChange":"0.02390438",
-          |"baseVolume":"6.16485315","quoteVolume":"245.82513926"},"BTC_NXT":{"last":"0.00005730","lowestAsk":"0.00005710",
-          |"highestBid":"0.00004903","percentChange":"0.16701570","baseVolume":"0.45347489","quoteVolume":"9094"}}
+            |[
+            |  {
+            |    "symbol": "USD_BTC",
+            |    "price": "0.0251",
+            |    "time": 1648823320095,
+            |    "dailyChange": "0.0113",
+            |    "ts": 1649022802046
+            |  }
+            |]
         """.stripMargin)))
 
     val api = new PoloApiV2(DefaultConfiguration.PoloApi.Key, DefaultConfiguration.PoloApi.Secret, poloUrl, poloUrl)
@@ -281,31 +287,4 @@ class PoloApiV2Test extends FlatSpec with Matchers with ScalaFutures with Before
     buy.quantity shouldBe BigDecimal(0.5)
   }
 
-  it should "return chart data" in {
-    wireMockServer.stubFor(get(urlMatching("/public\\?command=returnChartData\\&.*"))
-      .willReturn(aResponse()
-        .withHeader("Content-Type", "text/plain")
-        .withBody(
-          """
-            |[
-            |  {
-            |    "date": "1405699200",
-            |    "high": 0.0045388,
-            |    "low": 0.00403001,
-            |    "open": 0.00404545,
-            |    "close": 0.00427592,
-            |    "volume": 44.11655644,
-            |    "quoteVolume": 10259.29079097,
-            |    "weightedAverage": 0.00430015
-            |  }
-            |]
-          """.stripMargin)))
-
-    val api = new PoloApiV2(DefaultConfiguration.PoloApi.Key, DefaultConfiguration.PoloApi.Secret, poloUrl, poloUrl)
-    val chartData = api.returnChartData(CurrencyPair(Asset.Btc, Asset.Eth), 300,
-      ZonedDateTime.parse("2017-01-01T01:00:00.000Z"), ZonedDateTime.parse("2017-02-01T01:00:00.000Z")).futureValue(Timeout(10 seconds))
-
-    chartData.prices.length shouldNot be(0)
-
-  }
 }
