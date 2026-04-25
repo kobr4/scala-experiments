@@ -393,7 +393,6 @@ object PoloApiV2 extends StrictLogging {
     Http().singleRequest(HttpRequest(
       method = HttpMethods.GET,
       headers = AuthHeader.build(signTimestamp.toString, apiKey, generateHMAC256(apiSecret, bodyToSign)),
-      entity = Json.toJson(body).toString,
       uri = s"$url/$method?${toRequestString(body)}")).flatMap { response =>
       if (response.status == StatusCodes.OK)
         Unmarshal(response.entity).to[String]
