@@ -52,9 +52,9 @@ dockerfile in docker := {
   new Dockerfile {
     from("public.ecr.aws/docker/library/eclipse-temurin:8-jre-ubi9-minimal")
     add(artifact, artifactTargetPath)
-    add(file("lib/bcpkix-jdk15on-1.60.jar"),"/usr/local/openjdk-8/lib/ext/")
-    add(file("lib/bcprov-jdk15on-1.60.jar"),"/usr/local/openjdk-8/lib/ext/")
-    runRaw("/bin/echo 'security.provider.10=org.bouncycastle.jce.provider.BouncyCastleProvider' >> /usr/local/openjdk-8/lib/security/java.security")
+    add(file("lib/bcpkix-jdk15on-1.60.jar"),"${JAVA_HOME}/lib/ext/")
+    add(file("lib/bcprov-jdk15on-1.60.jar"),"${JAVA_HOME}/lib/ext/")
+    runRaw("/bin/echo 'security.provider.10=org.bouncycastle.jce.provider.BouncyCastleProvider' >> ${JAVA_HOME}/lib/security/java.security")
     entryPoint("java", "-jar", artifactTargetPath)
   }
 }
