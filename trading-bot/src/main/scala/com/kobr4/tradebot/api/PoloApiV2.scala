@@ -146,14 +146,14 @@ class PoloApiV2(
     (JsPath \ "rate").read[BigDecimal] and
     (JsPath \ "amount").read[BigDecimal])(PoloOrder.apply _)
 
-  def quoteReads(pair: CurrencyPair): Reads[Quote] = (
-    Reads.pure(pair) and
-    (JsPath \ "last").read[BigDecimal] and
-    (JsPath \ "lowestAsk").read[BigDecimal] and
-    (JsPath \ "highestBid").read[BigDecimal] and
-    (JsPath \ "percentChange").read[BigDecimal] and
-    (JsPath \ "baseVolume").read[BigDecimal] and
-    (JsPath \ "quoteVolume").read[BigDecimal])(Quote.apply _)
+  def quoteReads: Reads[Quote] = (
+    (JsPath \ "symbol").read[String].map(PoloV2CurrencyPairHelper.fromString) and
+    (JsPath \ "markPrice").read[BigDecimal] and
+      Reads.pure(null) and
+      Reads.pure(null) and
+      Reads.pure(null) and
+      Reads.pure(null) and
+      Reads.pure(null))(Quote.apply _)
 
   def balanceRead: Reads[(Asset, Quantity)] =
     ((JsPath \ "currency").read[String] and
@@ -214,15 +214,14 @@ class PoloApiV2(
       }
     }
 
-  override def returnTicker()(implicit ec: ExecutionContext): Future[List[Quote]] = PoloApiV2.httpRequest(publicUrl, Public.returnTicker).map { message =>
-    Json.parse(message).as[JsObject].fields.flatMap {
-      case (s, v) => v.asOpt[Quote](quoteReads(PoloCurrencyPairHelper.fromString(s)))
-      case _ => None
+  override def returnTicker()(implicit ec: ExecutionContext): Future[List[Quote]] = PoloApiV2.httpRequestPublic(apiUrl, Public.marketsPrice).map { message =>
+    Json.parse(message).as[JsArray].value.flatMap {
+      v => v.asOpt[Quote](quoteReads)
     }.toList
   }
 
   def returnChartData(currencyPair: CurrencyPair, period: Int, start: ZonedDateTime, end: ZonedDateTime): Future[PairPrices] =
-    PoloApiV2.httpRequest(publicUrl, Public.returnChartData + "&" + toRequestString(ReturnChartData.build(currencyPair.toString, period, start.toEpochSecond, end.toEpochSecond)).toString).map {
+    PoloApiV2.httpRequestPublic(apiUrl, s"${Public.markets}/${currencyPair.toString}/candles?"+toRequestString(ReturnChartData.build(start.toEpochSecond, end.toEpochSecond)).toString).map {
       message =>
         {
           PairPrices(Json.parse(message).as[JsArray].value.toList.map { item =>
@@ -247,9 +246,9 @@ object PoloApiV2 extends StrictLogging {
 
   object Public {
 
-    val returnTicker = "returnTicker"
+    val marketsPrice = "markets/price"
 
-    val returnChartData = "returnChartData"
+    val markets = "markets"
   }
 
   object BuySell {
@@ -320,12 +319,14 @@ object PoloApiV2 extends StrictLogging {
 
     val Period = "period"
 
-    val Start = "start"
+    val Start = "startTime"
 
-    val End = "end"
+    val End = "endTime"
 
-    def build(currencyPair: String, period: Int, start: Long, end: Long): Map[String, String] =
-      Map(CurrencyPair -> currencyPair, Period -> period.toString, Start -> start.toString, End -> end.toString)
+    val Interval = "interval"
+
+    def build(start: Long, end: Long): Map[String, String] =
+      Map(Interval -> "DAY_1", Start -> start.toString)
   }
 
   object CancelOrder {
@@ -361,9 +362,9 @@ object PoloApiV2 extends StrictLogging {
     }
   }
 
-  private def httpRequest(url: String, command: String)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[String] = {
-
-    Http().singleRequest(HttpRequest(uri = s"$url?command=$command")).flatMap { response =>
+  private def httpRequestPublic(url: String, path: String)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[String] = {
+    logger.info(s"Sending GET request to $url: $url/$path")
+    Http().singleRequest(HttpRequest(method = HttpMethods.GET, uri = s"$url/$path")).flatMap { response =>
       Unmarshal(response.entity).to[String]
     }
   }
@@ -386,7 +387,7 @@ object PoloApiV2 extends StrictLogging {
     Http().singleRequest(HttpRequest(
       method = HttpMethods.GET,
       headers = AuthHeader.build(signTimestamp.toString, apiKey, generateHMAC256(apiSecret, bodyToSign)),
-      entity = Json.toJson(body).toString,
+      //entity = Json.toJson(body).toString,
       uri = s"$url/$method?${toRequestString(body)}")).flatMap { response =>
       if (response.status == StatusCodes.OK)
         Unmarshal(response.entity).to[String]

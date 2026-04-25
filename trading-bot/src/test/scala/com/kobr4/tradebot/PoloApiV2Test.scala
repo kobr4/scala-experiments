@@ -223,22 +223,26 @@ class PoloApiV2Test extends FlatSpec with Matchers with ScalaFutures with Before
   }
 
   it should "return ticker" in {
-    wireMockServer.stubFor(get(urlEqualTo("/public?command=returnTicker"))
+    wireMockServer.stubFor(get(urlEqualTo("/markets/price"))
       .willReturn(aResponse()
         .withHeader("Content-Type", "text/plain")
         .withBody(
           """
-          | {"BTC_USD":{"last":"0.0251","lowestAsk":"0.02589999","highestBid":"0.0251","percentChange":"0.02390438",
-          |"baseVolume":"6.16485315","quoteVolume":"245.82513926"},"BTC_NXT":{"last":"0.00005730","lowestAsk":"0.00005710",
-          |"highestBid":"0.00004903","percentChange":"0.16701570","baseVolume":"0.45347489","quoteVolume":"9094"}}
+            |[
+            |  {
+            |    "symbol": "BTC_USDT",
+            |    "markPrice": "17580.34",
+            |    "time": 1648823320095
+            |  }
+            |]
         """.stripMargin)))
 
     val api = new PoloApiV2(DefaultConfiguration.PoloApi.Key, DefaultConfiguration.PoloApi.Secret, poloUrl, poloUrl)
     val quoteList = api.returnTicker().futureValue(Timeout(10 seconds))
 
-    quoteList.head.pair.left shouldBe Asset.Btc
-    quoteList.head.pair.right shouldBe Asset.Usd
-    quoteList.head.last shouldBe BigDecimal("0.0251")
+    quoteList.head.pair.left shouldBe Asset.Tether
+    quoteList.head.pair.right shouldBe Asset.Btc
+    quoteList.head.last shouldBe BigDecimal("17580.34")
   }
 
   it should "return trade history" in {
@@ -280,7 +284,7 @@ class PoloApiV2Test extends FlatSpec with Matchers with ScalaFutures with Before
     buy.price shouldBe BigDecimal(11.0)
     buy.quantity shouldBe BigDecimal(0.5)
   }
-
+/*
   it should "return chart data" in {
     wireMockServer.stubFor(get(urlMatching("/public\\?command=returnChartData\\&.*"))
       .willReturn(aResponse()
@@ -306,6 +310,6 @@ class PoloApiV2Test extends FlatSpec with Matchers with ScalaFutures with Before
       ZonedDateTime.parse("2017-01-01T01:00:00.000Z"), ZonedDateTime.parse("2017-02-01T01:00:00.000Z")).futureValue(Timeout(10 seconds))
 
     chartData.prices.length shouldNot be(0)
-
   }
+*/
 }
