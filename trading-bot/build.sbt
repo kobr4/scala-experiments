@@ -50,7 +50,7 @@ dockerfile in docker := {
   val artifactTargetPath = s"/app/${artifact.name}"
 
   new Dockerfile {
-    from("eclipse-temurin:8-jre-ubi10-minimal")
+    from("8-jre-ubi9-minimal")
     add(artifact, artifactTargetPath)
     add(file("lib/bcpkix-jdk15on-1.60.jar"),"/usr/local/openjdk-8/lib/ext/")
     add(file("lib/bcprov-jdk15on-1.60.jar"),"/usr/local/openjdk-8/lib/ext/")
