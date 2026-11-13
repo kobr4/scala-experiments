@@ -164,7 +164,7 @@ class GraphResult extends React.Component {
     for(let q of quotes) {
       if (q.pair.right === this.props.asset)
         currencyFields.push(
-          <tr>
+          <tr key={q.pair.left+' '+q.pair.right}> 
             <td>{q.pair.right}</td>
             <td>{q.last+' '+q.pair.left}</td>
             <td>{q.percentChange}</td>
@@ -230,7 +230,7 @@ class GraphResult extends React.Component {
 
           <Panel title={this.state.asset+' price history'}>
            { this.state.btcdatapoints.length > 0 &&
-            <GraphCanvas data={ this.state.btcdatapoints } ratio={1} width={800}/>
+            <GraphCanvas data={ this.state.btcdatapoints } ratio={1} width={1000}/>
            }
             <FormContainer handleSubmit={this.handleSubmit} submit="Run trade-bot">  
               <FormTable>
@@ -362,9 +362,10 @@ class InHouseInfo extends React.Component {
 
   rowsFromArray(jsArr) {
     var fields = [];  
+    let count = 0
     jsArr.forEach(function(jsObj) {
-      fields.push(<tr><td>{jsObj[0]}</td><td>{jsObj[1]}</td></tr>);
-      
+      fields.push(<tr key={count}><td>{jsObj[0]}</td><td>{jsObj[1]}</td></tr>);
+      count++
     })
     return fields;
   }

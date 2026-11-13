@@ -179,7 +179,6 @@ class PoloApiV2(
 
   override def returnOpenOrders(): Future[List[PoloOrder]] =
     PoloApiV2.httpRequestGet(s"$apiUrl", "orders", ReturnOpenOrders.build(), apiKey, apiSecret).map { message =>
-      print(message)
       Json.parse(message).as[JsArray].value.map(_.as[PoloV2Order].toPoloOrder).toList
     }
 
@@ -219,7 +218,6 @@ class PoloApiV2(
   override def returnTicker()(implicit ec: ExecutionContext): Future[List[Quote]] = PoloApiV2.httpRequestGetNoAuth(s"$apiUrl", Public.marketsPrice).map { message =>
     Json.parse(message).as[JsArray].value.map {
       q => {
-        print(q)
         q.as[Quote](quoteReads)
 
       }
@@ -370,7 +368,6 @@ object PoloApiV2 extends StrictLogging {
   private def httpRequestGetNoAuth(url: String, path: String)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext): Future[String] = {
 
     Http().singleRequest(HttpRequest(uri = s"$url/$path")).flatMap { response =>
-      print(s"$url/$path "+response.status)
       Unmarshal(response.entity).to[String]
     }
   }

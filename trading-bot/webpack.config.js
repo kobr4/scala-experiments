@@ -1,7 +1,8 @@
 const path = require('path');
 
 let entry = './js/script.jsx'
-let outputPath = path.join(__dirname, '/src/main/public/bundles');
+//let outputPath = path.join(__dirname, '/src/main/public/bundles');
+let outputPath = path.join(__dirname, '/src/main/assets/js');
 
 module.exports = {
   mode: "development",
