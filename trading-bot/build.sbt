@@ -1,11 +1,11 @@
-resolvers += "Bartek's repo at Bintray" at "https://dl.bintray.com/btomala/maven"
-
 libraryDependencies += "com.typesafe.play" %% "play-json" % "2.6.0"
-libraryDependencies += "com.typesafe.akka" %% "akka-http" % "10.0.9"
+libraryDependencies += "com.typesafe.akka" %% "akka-actor" % "2.7.0"
+libraryDependencies += "com.typesafe.akka" %% "akka-stream" % "2.7.0"
+libraryDependencies += "com.typesafe.akka" %% "akka-http" % "10.5.3"
 libraryDependencies += "ch.qos.logback" % "logback-classic" % "1.2.3"
 libraryDependencies += "com.typesafe.scala-logging" %% "scala-logging" % "3.9.0"
 libraryDependencies += "com.typesafe" % "config" % "1.3.2"
-libraryDependencies += "com.enragedginger" %% "akka-quartz-scheduler" % "1.7.0-akka-2.5.x"
+libraryDependencies += "com.enragedginger" %% "akka-quartz-scheduler" % "1.9.2-akka-2.6.x"
 libraryDependencies += "com.github.cb372" %% "scalacache-guava" % "0.24.3"
 libraryDependencies += "com.github.daddykotex" %% "courier" % "1.0.0-RC1"
 libraryDependencies += "com.typesafe.slick" %% "slick" % "3.2.3"
@@ -21,7 +21,7 @@ libraryDependencies += "com.github.t3hnar" %% "scala-bcrypt" % "3.1"
 libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.5" % Test
 libraryDependencies += "com.github.tomakehurst" % "wiremock" % "2.16.0" % Test
 libraryDependencies += "org.mockito" % "mockito-all" % "1.9.5" % Test
-libraryDependencies += "btomala" %% "akka-http-twirl" % "1.2.0"
+//libraryDependencies += "btomala" %% "akka-http-twirl" % "1.2.0"
 libraryDependencies += "com.paulgoldbaum" %% "scala-influxdb-client" % "0.6.1"
 
 Test / testOptions := Seq(Tests.Filter(s => s.endsWith("Test")))
@@ -32,7 +32,7 @@ lazy val root = (project in file(".")).enablePlugins(SbtTwirl).enablePlugins(Sbt
   settings(
     inThisBuild(List(
       organization    := "com.nicolasmy",
-      scalaVersion    := "2.12.6"
+      scalaVersion    := "2.12.19"
     )),
     (managedClasspath in Runtime) += (packageBin in Assets).value,
     WebKeys.packagePrefix in Assets := "public/",
@@ -82,3 +82,8 @@ assemblyMergeStrategy in assembly := {
 
   case x => MergeStrategy.first
 }
+
+//scalaJSUseMainModuleInitializer := true
+//Compile / fastOptJS / webpackConfigFile := Some(
+//  baseDirectory.value / "webpack.config.js"
+//)

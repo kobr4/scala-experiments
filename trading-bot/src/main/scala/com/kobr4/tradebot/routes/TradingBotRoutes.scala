@@ -5,6 +5,7 @@ import java.time.ZonedDateTime
 import akka.actor.ActorSystem
 import akka.event.Logging
 import akka.http.scaladsl.model.StatusCodes
+import akka.http.scaladsl.model.HttpResponse
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.server.directives.RouteDirectives.complete
@@ -19,6 +20,7 @@ import com.kobr4.tradebot.scheduler.{ BinanceDailyJob, KrakenDailyJob, TradeBotD
 import com.kobr4.tradebot.services._
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
+import akka.http.scaladsl.model.{ HttpEntity, ContentTypes }
 
 import scala.concurrent.{ ExecutionContext, Future }
 
@@ -246,26 +248,25 @@ trait TradingBotRoutes extends PlayJsonSupport with PriceApiRoutes with TradeJob
       }
     }
   } ~ tradeJobsRoutes ~ path("about") {
-    import akkahttptwirl.TwirlSupport._
 
     get {
       complete {
-        html.ModernBusiness.render(List())
+        HttpResponse(entity = HttpEntity(ContentTypes.`text/html(UTF-8)`, html.ModernBusiness.render(List()).toString))
       }
     }
   } ~ tradeJobsRoutes ~ path("prices") {
-    import akkahttptwirl.TwirlSupport._
 
     get {
 
       val eventualTicker = Future.sequence(Seq(ExchangeApi(Poloniex).returnTicker(), ExchangeApi(Kraken).returnTicker()))
       onSuccess(eventualTicker) {
-        case poloQuote :: krakenQuote :: Nil => complete(html.Prices.render(poloQuote, krakenQuote))
+        case poloQuote :: krakenQuote :: Nil => complete(
+            HttpResponse(entity = html.Prices.render(poloQuote, krakenQuote).toString)
+          )
       }
 
     }
   } ~ pathSingleSlash {
-    import akkahttptwirl.TwirlSupport._
     get {
       val eventualOrders = Future.sequence(Seq(
         TradeBotCachedService.run(Asset.Btc),
@@ -275,7 +276,7 @@ trait TradingBotRoutes extends PlayJsonSupport with PriceApiRoutes with TradeJob
         TradeBotCachedService.run(Asset.Ltc)))
       onSuccess(eventualOrders.map(_.map(_.last).toList)) { orders: List[Order] =>
         complete {
-          html.ModernBusiness.render(orders)
+          HttpResponse(entity = HttpEntity(ContentTypes.`text/html(UTF-8)`, html.ModernBusiness.render(orders).toString))
         }
       }
     }
@@ -283,3 +284,4 @@ trait TradingBotRoutes extends PlayJsonSupport with PriceApiRoutes with TradeJob
     getFromResource("public/api.html")
   }
 }
+

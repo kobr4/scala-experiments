@@ -4,18 +4,18 @@ import React from 'react'
 import ReactDOM from 'react-dom'
 
 export function ApiResponseField(props) {
-  return <tr><td>{props.name}</td><td><pre>{props.value}</pre></td></tr>;
+  return <tr key={props.name}><td>{props.name}</td><td><pre>{props.value}</pre></td></tr>;
 }
 
 export function ApiResponseSpanField(props) {
-  return <tr><td colSpan='2'>{props.value}</td></tr>;
+  return <tr key={props.name}><td colSpan='2'>{props.value}</td></tr>;
 }
 
 export function ResponseTable(props) {
   return (
        <table className="table table-bordered table-hover">
        <tbody>
-       <tr><th>{props.first}</th><th>{props.second}</th></tr>
+       <tr key={props.first+"_"+props.second}><th>{props.first}</th><th>{props.second}</th></tr>
        {
          props.responseFields.map(field => field)
        }
@@ -98,7 +98,7 @@ export function FormGroup(props) {
 
 export function FormRow(props) {
   return (
-    <tr>{ props.label && <td>{props.label}</td>}<td>{props.children}</td></tr>
+    <tr key={props.label}>{ props.label && <td>{props.label}</td>}<td>{props.children}</td></tr>
   );
 }
 
@@ -120,9 +120,10 @@ export function Panel(props) {
 export function PanelTable(props) {
   var headers = [];
   
-  if (props.headers)
-    for (let h of props.headers) {
-    headers.push(<th>{h}</th>);
+  if (props.headers) {
+    for (let i = 0; i < props.headers.length; i++) {
+      headers.push(<th key={i}>{props.headers[i]}</th>);
+    }
   }
 
   return (
@@ -130,7 +131,7 @@ export function PanelTable(props) {
     <table className='table table-striped table-bordered table-hover'>
     { headers.length > 0 &&
       <thead>
-        <tr>
+        <tr key={props.name}>
           {headers}
         </tr>
       </thead>
