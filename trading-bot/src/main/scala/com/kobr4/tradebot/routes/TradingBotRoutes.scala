@@ -65,7 +65,7 @@ case object UnsupportedStrategyException extends RuntimeException
 
 case class Balances(valuation: BigDecimal, assetList: List[(Asset, Quantity)])
 
-trait TradingBotRoutes extends PlayJsonSupport with PriceApiRoutes with TradeJobsRoutes {
+trait TradingBotRoutes extends PlayJsonSupport with PriceApiRoutes with TradeJobsRoutes with PolymarketRoutes {
 
   // we leave these abstract, since they will be provided by the App
   implicit def system: ActorSystem
@@ -266,7 +266,7 @@ trait TradingBotRoutes extends PlayJsonSupport with PriceApiRoutes with TradeJob
       }
 
     }
-  } ~ pathSingleSlash {
+  } ~ polymarketRoutes ~ pathSingleSlash {
     get {
       val eventualOrders = Future.sequence(Seq(
         TradeBotCachedService.run(Asset.Btc),

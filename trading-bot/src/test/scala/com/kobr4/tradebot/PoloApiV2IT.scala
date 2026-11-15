@@ -4,11 +4,11 @@ import java.time.ZonedDateTime
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
-import com.kobr4.tradebot.api.{CurrencyPair, PoloApiV2, PoloOrder}
+import com.kobr4.tradebot.api.{ CurrencyPair, PoloApiV2, PoloOrder }
 import com.kobr4.tradebot.model.Asset
 import org.scalatest.concurrent.PatienceConfiguration.Timeout
 import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.{ FlatSpec, Matchers }
 
 import scala.concurrent.duration._
 
@@ -31,7 +31,6 @@ class PoloApiV2IT extends FlatSpec with ScalaFutures with Matchers {
 
     println(tradeList)
   }
-
 
   it should "return open orders" in {
     val api = new PoloApiV2
