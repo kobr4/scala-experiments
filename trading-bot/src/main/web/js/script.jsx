@@ -18,6 +18,7 @@ import 'react-datepicker/dist/react-datepicker.css';
 import SignUpForm from './components/signupform'
 import LoginForm from './components/loginform'
 import TradingGlobal from './components/tradingglobal'
+import PolymarketTab from './components/polymarketTab'
 import TradingForm from './components/tradingform'
 
 import GraphCanvas from './components/graphcandlestick'
@@ -547,6 +548,7 @@ ReactDOM.render(
     <Provider store={store}>
     <BrowserRouter>
       <Switch>
+        <Route path='/polymarket' render={ () => <PolymarketTab/>} />
         <Route path='/btc_price' render={() => ( <GraphResult endpoint={priceEndpoint} title='BTC backtest' asset='BTC'/>)} />
         <Route path='/eth_price' render={() => ( <GraphResult endpoint={priceEndpoint} title='ETH backtest' asset='ETH'/>)} />
         <Route path='/xmr_price' render={() => ( <GraphResult endpoint={priceEndpoint} title='XMR backtest' asset='XMR'/>)} />
@@ -595,6 +597,7 @@ ReactDOM.render(
   <li className="nav-item"><a className="nav-link" href="inhouse_info_kraken">In-House @ Kraken</a></li>
   <li className="nav-item"><a className="nav-link" href="inhouse_info_binance">In-House @ Binance</a></li>
   <li className="nav-item"><a className="nav-link" href="prices">Crypto Prices</a></li>
+  <li className="nav-item"><a className="nav-link" href="polymarket">Polymarket</a></li>
   </ul>
   ,
   document.getElementById('side')

@@ -210,7 +210,7 @@ class PoloApiV2Test extends FlatSpec with Matchers with ScalaFutures with Before
       .willReturn(aResponse()
         .withHeader("Content-Type", "text/plain")
         .withBody(
-            """
+          """
             |{
             |  "id": "29772698821328896",
             |  "clientOrderId": "1234Abc"
