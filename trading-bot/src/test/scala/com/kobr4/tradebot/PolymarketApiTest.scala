@@ -158,14 +158,14 @@ class PolymarketApiTest extends FlatSpec with Matchers with ScalaFutures with Be
   }
 
   it should "return tags" in {
-    wireMockServer.stubFor(get(urlEqualTo("/tags"))
+    wireMockServer.stubFor(get(urlEqualTo("/tags?limit=100"))
       .willReturn(aResponse()
         .withHeader("Content-Type", "application/json")
         .withBody(
           """
             |[
-            |  { "id": 1, "name": "Politics", "slug": "politics" },
-            |  { "id": "2", "name": "Crypto" }
+            |  { "id": 1, "label": "Politics", "slug": "politics" },
+            |  { "id": "2", "label": "Crypto" }
             |]
             |""".stripMargin)))
 
