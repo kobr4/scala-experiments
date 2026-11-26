@@ -4,7 +4,10 @@ import java.net.URLEncoder
 
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
-import akka.http.scaladsl.model.{ HttpRequest, StatusCodes }
+import akka.http.scaladsl.model.{ HttpEntity, HttpRequest, StatusCodes, HttpResponse }
+import akka.http.scaladsl.model.headers.{ `Accept-Encoding`, `Content-Encoding`, HttpEncoding, HttpEncodings }
+import akka.http.scaladsl.coding.Coders
+import akka.util.ByteString
 import akka.http.scaladsl.unmarshalling.Unmarshal
 import akka.stream.ActorMaterializer
 import com.typesafe.scalalogging.StrictLogging
@@ -106,6 +109,42 @@ object PolymarketOrderBook {
   }
 }
 
+case class NextCursor(nextCursor: String)
+
+object NextCursor {
+
+  implicit val nextCursorReads: Reads[NextCursor] = Reads { json =>
+    PolymarketJson
+      .stringField(json, "next_cursor")
+      .orElse(PolymarketJson.stringField(json, "nextCursor"))
+      .map(v => JsSuccess(NextCursor(v)))
+      .getOrElse(JsError("Missing next_cursor"))
+  }
+}
+
+case class PolymarketTag(
+  id: Int,
+  label: String,
+  slug: Option[String])
+
+object PolymarketTag {
+
+  implicit val polymarketTagReads: Reads[PolymarketTag] = Reads { json =>
+    val idOpt: Option[Int] = (json \\ "id").headOption.flatMap(_.asOpt[Int])
+      .orElse((json \\ "id").headOption.flatMap(_.asOpt[String]).flatMap(v => Try(v.toInt).toOption))
+      .orElse(PolymarketJson.stringField(json, "id").flatMap(v => Try(v.toInt).toOption))
+
+    val nameOpt: Option[String] = PolymarketJson.stringField(json, "label")
+      .orElse(PolymarketJson.stringField(json, "title"))
+
+    (idOpt, nameOpt) match {
+      case (Some(id), Some(label)) =>
+        JsSuccess(PolymarketTag(id, label, PolymarketJson.stringField(json, "slug")))
+      case _ => JsError("Missing id or name for PolymarketTag")
+    }
+  }
+}
+
 case class PolymarketMarketsQuery(
   limit: Option[Int] = Some(100),
   offset: Option[Int] = None,
@@ -113,7 +152,8 @@ case class PolymarketMarketsQuery(
   closed: Option[Boolean] = None,
   archived: Option[Boolean] = None,
   slug: Option[String] = None,
-  id: Option[String] = None) {
+  id: Option[String] = None,
+  nextCursor: Option[String] = None) {
 
   def toQueryParams: Map[String, String] = Map(
     "limit" -> limit.map(_.toString),
@@ -122,7 +162,8 @@ case class PolymarketMarketsQuery(
     "closed" -> closed.map(_.toString),
     "archived" -> archived.map(_.toString),
     "slug" -> slug,
-    "id" -> id).collect { case (key, Some(value)) => key -> value }
+    "id" -> id,
+    "next_cursor" -> nextCursor.map(_.toString)).collect { case (key, Some(value)) => key -> value }
 }
 
 case class PolymarketEventsQuery(
@@ -144,14 +185,25 @@ case class PolymarketEventsQuery(
     "tag_id" -> tagId.map(_.toString)).collect { case (key, Some(value)) => key -> value }
 }
 
+case class TagsQuery(
+  limit: Option[Int] = Some(100),
+  offset: Option[Int] = None) {
+
+  def toQueryParams: Map[String, String] = Map(
+    "limit" -> limit.map(_.toString),
+    "offset" -> offset.map(_.toString)).collect { case (key, Some(value)) => key -> value }
+}
+
+
 class PolymarketApi(
   gammaUrl: String = PolymarketApi.gammaUrl,
   clobUrl: String = PolymarketApi.clobUrl)(implicit arf: ActorSystem, am: ActorMaterializer, ec: ExecutionContext) {
 
-  def markets(query: PolymarketMarketsQuery = PolymarketMarketsQuery()): Future[List[PolymarketMarket]] =
+  def markets(query: PolymarketMarketsQuery = PolymarketMarketsQuery()): Future[List[PolymarketMarket]] = {
     PolymarketApi.httpGet(gammaUrl, PolymarketApi.Gamma.markets, query.toQueryParams).map { message =>
       Json.parse(message).as[List[PolymarketMarket]]
     }
+  }
 
   def marketBySlug(slug: String): Future[Option[PolymarketMarket]] =
     markets(PolymarketMarketsQuery(slug = Some(slug), limit = Some(1))).map(_.headOption)
@@ -171,6 +223,19 @@ class PolymarketApi(
     PolymarketApi.httpGet(clobUrl, PolymarketApi.Clob.book, Map("token_id" -> tokenId)).map { message =>
       Json.parse(message).as[PolymarketOrderBook]
     }
+
+  def tags(params: TagsQuery = TagsQuery()): Future[List[PolymarketTag]] =
+    PolymarketApi.httpGet(gammaUrl, PolymarketApi.Gamma.tags, params.toQueryParams).map { message =>
+      Json.parse(message).as[List[PolymarketTag]]
+    }
+
+  def allTags(query: TagsQuery = TagsQuery()): Future[List[PolymarketTag]] = {
+    val tagList = tags(query)
+    for {
+      f1Res <- tagList
+      f2Res <- if (f1Res.length == query.limit.get) allTags(TagsQuery(offset=Some(query.offset.getOrElse(0)+query.limit.getOrElse(0)))) else Future(List.empty[PolymarketTag])
+    } yield (f1Res ::: f2Res)
+  }
 }
 
 object PolymarketApi extends StrictLogging {
@@ -182,6 +247,7 @@ object PolymarketApi extends StrictLogging {
   object Gamma {
     val markets = "markets"
     val events = "events"
+    val tags = "tags"
   }
 
   object Clob {
@@ -206,15 +272,44 @@ object PolymarketApi extends StrictLogging {
     val url = buildUrl(rootUrl, path, queryParams)
     logger.info(s"Sending get request to $url")
 
-    Http().singleRequest(HttpRequest(uri = url)).flatMap { response =>
-      if (response.status == StatusCodes.OK) {
-        Unmarshal(response.entity).to[String]
-      } else {
-        Unmarshal(response.entity).to[String].flatMap { body =>
-          Future.failed(new RuntimeException(s"Polymarket API returned ${response.status}: $body"))
-        }
+    val request = HttpRequest(uri = url).addHeader(`Accept-Encoding`(HttpEncodings.gzip))
+
+    Http().singleRequest(request).flatMap { response =>
+      decodeBody(response).flatMap { body =>
+        if (response.status == StatusCodes.OK) Future.successful(body)
+        else Future.failed(new RuntimeException(s"Polymarket API returned ${response.status}: $body"))
       }
     }
+  }
+
+  private def decodeBody(resp: HttpResponse)(implicit am: ActorMaterializer, ec: ExecutionContext): Future[String] = {
+    import scala.concurrent.duration._
+    // Prefer header to decide, but also sniff gzip magic in case header is missing
+    val headerSaysGzip = resp.headers.exists {
+      case `Content-Encoding`(enc) if enc == HttpEncodings.gzip => true
+      case _                                                    => false
+    }
+
+    resp.entity.toStrict(30.seconds).map(_.data).map { data =>
+      val bytes = data.toArray
+      val sniffGzip = bytes.length >= 2 && (bytes(0) == 0x1f.toByte && bytes(1) == 0x8b.toByte)
+      val shouldGunzip = headerSaysGzip || sniffGzip
+      if (shouldGunzip) gunzip(bytes) else new String(bytes, "UTF-8")
+    }
+  }
+
+  private def gunzip(bytes: Array[Byte]): String = {
+    val bais = new java.io.ByteArrayInputStream(bytes)
+    val gis = new java.util.zip.GZIPInputStream(bais)
+    val baos = new java.io.ByteArrayOutputStream()
+    val buffer = new Array[Byte](8192)
+    var read = gis.read(buffer)
+    while (read > -1) {
+      baos.write(buffer, 0, read)
+      read = gis.read(buffer)
+    }
+    gis.close()
+    baos.toString("UTF-8")
   }
 }
 

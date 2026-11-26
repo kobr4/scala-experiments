@@ -5,7 +5,7 @@ import akka.stream.ActorMaterializer
 import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.WireMock.{ aResponse, _ }
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration.options
-import com.kobr4.tradebot.api.{ PolymarketApi, PolymarketEventsQuery, PolymarketMarketsQuery, PolymarketOrderBookLevel }
+import com.kobr4.tradebot.api.{ PolymarketApi, PolymarketEventsQuery, PolymarketMarketsQuery, PolymarketOrderBookLevel, PolymarketTag }
 import org.scalatest.concurrent.PatienceConfiguration.Timeout
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.{ BeforeAndAfterEach, FlatSpec, Matchers }
@@ -155,5 +155,24 @@ class PolymarketApiTest extends FlatSpec with Matchers with ScalaFutures with Be
 
     PolymarketEventsQuery(limit = None, archived = Some(false), tagId = Some(12)).toQueryParams shouldBe
       Map("archived" -> "false", "tag_id" -> "12")
+  }
+
+  it should "return tags" in {
+    wireMockServer.stubFor(get(urlEqualTo("/tags"))
+      .willReturn(aResponse()
+        .withHeader("Content-Type", "application/json")
+        .withBody(
+          """
+            |[
+            |  { "id": 1, "name": "Politics", "slug": "politics" },
+            |  { "id": "2", "name": "Crypto" }
+            |]
+            |""".stripMargin)))
+
+    val api = new PolymarketApi(s"http://127.0.0.1:${wireMockServer.port()}", s"http://127.0.0.1:${wireMockServer.port()}")
+    val tags = api.tags().futureValue(Timeout(10 seconds))
+
+    tags should contain (PolymarketTag(1, "Politics", Some("politics")))
+    tags should contain (PolymarketTag(2, "Crypto", None))
   }
 }

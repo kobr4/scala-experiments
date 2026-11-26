@@ -19,7 +19,14 @@ class PolymarketApiIT extends FlatSpec with ScalaFutures with Matchers {
     val api = new PolymarketApi()
     val markets = api.markets().futureValue(Timeout(10 seconds))
 
-    println(markets)
+    println(markets.length)
+  }
+
+  it should "return available tags" in {
+    val api = new PolymarketApi()
+    val tags = api.allTags().futureValue(Timeout(10 seconds))
+
+    println(tags.length)
   }
 
 }
